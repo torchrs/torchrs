@@ -1,0 +1,8 @@
+[package]
+name = "torchrs"
+version = "0.1.0"
+authors = ["Matt Macy <mmacy@nextbsd.org>"]
+
+[dependencies]
+rutorch = { path = "../rutorch" }
+num = "^0.1.37"
