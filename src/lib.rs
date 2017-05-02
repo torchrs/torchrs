@@ -2,9 +2,9 @@ extern crate num;
 extern crate rutorch;
 
 use rutorch::*;
-
+use std::ops::Index;
 use num::Num;
-//use std::ops::Index;
+use std::cmp::max;
 
 
 pub trait ArgsArray<T> {
@@ -26,103 +26,40 @@ impl <T:Num + Sized> ArgsArray<T> for T  {
 }
 
 
-trait Tensor<T> {
+//fn from(args: &ArgsArray<T>) -> Self;
+
+trait Tensor<'a> : Index<&'a [isize]> {
 	fn new() -> Self;
-	fn from(args: &ArgsArray<T>) -> Self;
 }
 
-struct FloatTensor3d {
+struct FloatTensor {
 	t: *mut THFloatTensor,
+	dims: Vec<isize>,
 }
 
-/*
-struct FloatTensorCursor {
-	t: *const THFloatTensor,
-	off: usize
-}
-*/
 
-impl Tensor<f32> for FloatTensor3d {
+impl <'a>Tensor<'a> for FloatTensor {
 	fn new() -> Self {
-		unsafe { FloatTensor3d { t : THFloatTensor_new() }}
-	}
-	fn from(args : &ArgsArray<f32>) -> Self {
-		unsafe { FloatTensor3d { t : THFloatTensor_new() }}
+		unsafe { FloatTensor { t : THFloatTensor_new(), dims: Vec::new()  }}
 	}
 }
 
-struct FloatTensor2d {
-	t: *mut THFloatTensor,
-}
-
-impl Tensor<f32> for FloatTensor2d {
-	fn new() -> Self {
-		unsafe { FloatTensor2d { t : THFloatTensor_new() }}
-	}
-	fn from(args : &ArgsArray<f32>) -> Self {
-		unsafe { FloatTensor2d { t : THFloatTensor_new() }}
-	}
-}
-
-
-struct FloatTensor1d {
-	t: *mut THFloatTensor,
-}
-
-impl Tensor<f32> for FloatTensor1d {
-	fn new() -> Self {
-		unsafe { FloatTensor1d { t : THFloatTensor_new() }}
-	}
-	fn from(args : &ArgsArray<f32>) -> Self {
-		unsafe { FloatTensor1d { t : THFloatTensor_new() }}
-	}
-}
-/*
-impl <'a> Index<isize> for FloatTensor3d {
-	type Output = FloatTensor2d;
-
-	fn index(&self, idx: isize) -> &FloatTensor2d {
-		let t = Box::new(FloatTensor2d::new());
-//		let u: BoxRef<FloatTensor2d> = BoxRef::new(t);
-		t as &FloatTensor2d
-	}
-}
-
-impl Index<isize> for FloatTensor2d {
-	type Output = BoxRef<FloatTensor1d>;
-
-	fn index(&self, idx: isize) -> &BoxRef<FloatTensor1d> {
-		let t = Box::new(FloatTensor1d::new());
-		let u: BoxRef<FloatTensor1d> = BoxRef::new(t);
-		&u
-	}
-}
-
-impl Index<isize> for FloatTensor1d {
+impl <'a> Index<&'a [isize]> for FloatTensor {
 	type Output = f32;
 
-	fn index(&self, idx: isize) -> &f32 {
-		&self[idx]
+	fn index(&self, idx: &'a [isize]) -> &f32 {
+		let mut index : isize = 0;
+		let lastidx = max(0, idx.len() as isize - 1) as usize;
+		if idx.len() != self.dims.len() { panic!("bad dimlen")}
+		for i in 0..lastidx {
+			if idx[i] >= self.dims[i] { panic!("bad dimlen")}
+			index += idx[i] * self.dims[i]
+		}
+		if idx[lastidx] >= self.dims[lastidx] { panic!("bad dimlen")}
+		index += idx[lastidx];
+		unsafe {&*(*(*self.t).storage).data.offset(index)}
 	}
 }
-*/
-/*
-struct Tensor <T> {
-	t: *const ::std::os::raw::c_void;
-}
-
-pub trait TensorFuncs {
-	fn new() -> Self;
-}
-
-
-impl TensorFuncs for Tensor<Float> {
-	fn new(init: ) -> Self {
-		unsafe { Tensor { t : THFloatTensor_new() }}
-	}
-}
-*/
-
 
 #[cfg(test)]
 mod tests {
