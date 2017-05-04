@@ -59,11 +59,11 @@ impl IndexMut<isize> for FloatStorage {
 	}
 }
 
-impl <'a, f32, T>Iterator for BaseIter<'a, f32, T>
-	where T: std::ops::Index<isize, Output=f32> {
-	type Item = f32;
+impl <'a, O: Copy, T>Iterator for BaseIter<'a, O, T>
+	where T: std::ops::Index<isize, Output=O> {
+	type Item = O;
 
-	fn next(&mut self) -> Option<f32> {
+	fn next(&mut self) -> Option<O> {
 		// XXX check length ---
 		let ret = *(*self.parent).index(self.idx as isize);
 		self.idx += 1;
