@@ -15,9 +15,21 @@ struct BaseIter<'a, T, P: 'a + Index<isize>> {
 	t: std::marker::PhantomData<T>,
 }
 
-impl <'a, T, P: Index<isize> >BaseIter<'a, T, P> {
+struct BaseIterMut<'a, T, P: 'a + Index<isize>> {
+	idx: usize,
+	parent: &'a mut P,
+	t: std::marker::PhantomData<T>,
+}
+
+impl <'a, T, P: Index<isize, Output=T> >BaseIter<'a, T, P> {
 	fn new(parent: &'a P) -> Self {
 		BaseIter { idx: 0, parent: parent, t: std::default::Default::default()}
+	}
+}
+
+impl <'a, T, P: Index<isize, Output=T> >BaseIterMut<'a, T, P> {
+	fn new(parent: &'a mut P) -> Self {
+		BaseIterMut { idx: 0, parent: parent, t: std::default::Default::default()}
 	}
 }
 
@@ -40,10 +52,14 @@ impl Storage for FloatStorage {
 }
 
 impl FloatStorage {
-	fn iter(&mut self) -> BaseIter<f32, FloatStorage> {
+	fn iter(&self) -> BaseIter<f32, FloatStorage> {
 		BaseIter::new(self)
 	}
+	fn iter_mut(&mut self) -> BaseIterMut<f32, FloatStorage> {
+		BaseIterMut::new(self)
+	}
 }
+
 
 impl Index<isize> for FloatStorage {
 	type Output = f32;
@@ -59,13 +75,25 @@ impl IndexMut<isize> for FloatStorage {
 	}
 }
 
-impl <'a, O: Copy, T>Iterator for BaseIter<'a, O, T>
+impl <'a, O: 'a, T>Iterator for BaseIter<'a, O, T>
 	where T: std::ops::Index<isize, Output=O> {
-	type Item = O;
+	type Item = &'a O;
 
-	fn next(&mut self) -> Option<O> {
+	fn next(&mut self) -> Option<Self::Item> {
 		// XXX check length ---
-		let ret = *(*self.parent).index(self.idx as isize);
+		let ret = (*self.parent).index(self.idx as isize);
+		self.idx += 1;
+		Some(&ret)
+	}
+}
+
+impl <'a, O: 'a, T: 'a>Iterator for BaseIterMut<'a, O, T>
+	where T: std::ops::IndexMut<isize, Output=O> {
+	type Item = &'a mut O;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		// XXX check length ---
+		let ret = (*self.parent).index_mut(self.idx as isize);
 		self.idx += 1;
 		Some(ret)
 	}
