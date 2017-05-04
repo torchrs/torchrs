@@ -41,7 +41,7 @@ impl Storage for FloatStorage {
 
 impl FloatStorage {
 	fn iter(&mut self) -> BaseIter<f32, FloatStorage> {
-		BaseIter::new(&self)
+		BaseIter::new(self)
 	}
 }
 
@@ -59,15 +59,15 @@ impl IndexMut<isize> for FloatStorage {
 	}
 }
 
-impl <'a, f32, FloatStorage >Iterator for BaseIter<'a, f32, FloatStorage> 
-	where FloatStorage: std::ops::Index<isize> {
+impl <'a, f32, T>Iterator for BaseIter<'a, f32, T>
+	where T: std::ops::Index<isize, Output=f32> {
 	type Item = f32;
 
 	fn next(&mut self) -> Option<f32> {
 		// XXX check length ---
-		let ret = (*self.parent).index(self.idx as isize);
+		let ret = *(*self.parent).index(self.idx as isize);
 		self.idx += 1;
-		Some(*ret)
+		Some(ret)
 	}
 }
 
