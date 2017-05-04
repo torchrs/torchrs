@@ -3,27 +3,9 @@ extern crate rutorch;
 
 use rutorch::*;
 use std::ops::Index;
-use num::Num;
+//use std::convert::From;
+//use num::Num;
 use std::cmp::max;
-
-
-pub trait ArgsArray<T> {
-	fn is_leaf(&self) -> bool;
-	fn child(&self) -> &T;
-	fn dim(&self) -> usize;
-}
-
-impl <T> ArgsArray<T> for [T]  {
-	fn is_leaf(&self) -> bool { false }
-	fn child(&self) ->  &T { &self[0]}
-	fn dim(&self) -> usize { self.len()}
-}
-
-impl <T:Num + Sized> ArgsArray<T> for T  {
-	fn is_leaf(&self) -> bool { true }
-	fn child(&self) ->  &T { &self}
-	fn dim(&self) -> usize { 1 }
-}
 
 
 trait Storage {
@@ -107,18 +89,7 @@ impl <'a> Index<&'a [isize]> for FloatTensor {
 mod tests {
 	use super::*;
     #[test]
-    fn args_array_works() {
-    	let v = [[5, 2], [3, 4]];
-    	let x = v.child();
-    	let z = x.child();
-    	println!("is_leaf = {} {} {:?}, {} {} {:?}, {} {} {:?}", 
-    		v.is_leaf(), v.dim(), v, 
-            x.is_leaf(), x.dim(), x,
-            z.is_leaf(), z.dim(), z
-            );
-    }
-    fn tensor_ops_work() {
-		let v = [[5, 2], [3, 4]];
+    fn it_works() {
 
     }
 }
