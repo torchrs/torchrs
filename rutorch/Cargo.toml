@@ -1,0 +1,10 @@
+[package]
+name = "rutorch"
+version = "0.1.0"
+authors = ["Matt Macy <mmacy@torch.rs>"]
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "^0.23.1"
