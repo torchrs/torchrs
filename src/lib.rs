@@ -6,39 +6,15 @@ use rutorch::*;
 use std::ops::{Index, IndexMut};
 use rand::Rng;
 //use std::convert::From;
-use num::Num;
 use std::cmp::max;
-
-struct BaseIter<'a, T, P: 'a + Index<isize>> {
-	idx: usize,
-	parent: &'a P,
-	t: std::marker::PhantomData<T>,
-}
-
-struct BaseIterMut<'a, T, P: 'a + Index<isize>> {
-	idx: usize,
-	parent: &'a mut P,
-	t: std::marker::PhantomData<T>,
-}
-
-impl <'a, T, P: Index<isize, Output=T> >BaseIter<'a, T, P> {
-	fn new(parent: &'a P) -> Self {
-		BaseIter { idx: 0, parent: parent, t: std::default::Default::default()}
-	}
-}
-
-impl <'a, T, P: Index<isize, Output=T> >BaseIterMut<'a, T, P> {
-	fn new(parent: &'a mut P) -> Self {
-		BaseIterMut { idx: 0, parent: parent, t: std::default::Default::default()}
-	}
-}
+use std::slice;
 
 trait Storage {
 	fn new() -> Self;
 	fn sized(len: isize) -> Self;
 }
 
-struct FloatStorage {
+pub struct FloatStorage {
 	t: *mut THFloatStorage,
 }
 
@@ -52,14 +28,19 @@ impl Storage for FloatStorage {
 }
 
 impl FloatStorage {
-	fn iter(&self) -> BaseIter<f32, FloatStorage> {
-		BaseIter::new(self)
+	fn into_slice(&self) -> &[f32] {
+		unsafe {slice::from_raw_parts((*self.t).data, (*self.t).size as usize)}
 	}
-	fn iter_mut(&mut self) -> BaseIterMut<f32, FloatStorage> {
-		BaseIterMut::new(self)
+	fn into_slice_mut(&mut self) -> &mut [f32] {
+		unsafe {slice::from_raw_parts_mut((*self.t).data, (*self.t).size as usize)}
+	}
+	pub fn iter(&self) -> slice::Iter<f32> {
+		self.into_slice().iter()
+	}
+	pub fn iter_mut(&mut self) -> slice::IterMut<f32> {
+		self.into_slice_mut().iter_mut()
 	}
 }
-
 
 impl Index<isize> for FloatStorage {
 	type Output = f32;
@@ -75,30 +56,6 @@ impl IndexMut<isize> for FloatStorage {
 	}
 }
 
-impl <'a, O: 'a, T>Iterator for BaseIter<'a, O, T>
-	where T: std::ops::Index<isize, Output=O> {
-	type Item = &'a O;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		// XXX check length ---
-		let ret = (*self.parent).index(self.idx as isize);
-		self.idx += 1;
-		Some(&ret)
-	}
-}
-
-impl <'a, O: 'a, T: 'a>Iterator for BaseIterMut<'a, O, T>
-	where T: std::ops::IndexMut<isize, Output=O> {
-	type Item = &'a mut O;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		// XXX check length ---
-		let ret = (*self.parent).index_mut(self.idx as isize);
-		self.idx += 1;
-		Some(ret)
-	}
-}
-
 //fn from(args: &ArgsArray<T>) -> Self;
 
 trait Tensor<'a> : Index<&'a [isize]> {
@@ -107,7 +64,7 @@ trait Tensor<'a> : Index<&'a [isize]> {
 	fn randn(dims: &'a [isize]) -> Self;
 }
 
-struct FloatTensor {
+pub struct FloatTensor {
 	t: *mut THFloatTensor,
 	storage: FloatStorage,
 	dims: Vec<isize>,
