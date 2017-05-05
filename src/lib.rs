@@ -4,7 +4,6 @@ extern crate rutorch;
 
 use rutorch::*;
 use std::ops::{Index, IndexMut};
-use rand::Rng;
 //use std::convert::From;
 use std::cmp::max;
 use std::slice;
@@ -26,7 +25,7 @@ impl Storage for FloatStorage {
 		unsafe { FloatStorage  {t : THFloatStorage_newWithSize(size)} }
 	}
 }
-
+// XXX annotate with lifetime for safety's sake
 impl FloatStorage {
 	fn into_slice(&self) -> &[f32] {
 		unsafe {slice::from_raw_parts((*self.t).data, (*self.t).size as usize)}
@@ -74,6 +73,7 @@ impl <'a>Tensor<'a> for FloatTensor {
 	fn new() -> Self {
 		unsafe { FloatTensor { t : THFloatTensor_new(), storage: FloatStorage::new(), dims: Vec::new()  }}
 	}
+
 	fn sized(dims: &'a [isize]) -> Self {
 		let size = dims.iter().product();
 		let storage = FloatStorage::sized(size);
@@ -86,8 +86,8 @@ impl <'a>Tensor<'a> for FloatTensor {
 	}
 	fn randn(dims: &'a [isize]) -> Self {
 		/* XXX */
-		let t = Tensor::sized(dims);
-//		x = random::<f32>();
+		let mut t = FloatTensor::sized(dims);
+		for x in t.storage.iter_mut() { *x = rand::random::<f32>() }
 		t
 	}
 }
@@ -124,7 +124,14 @@ impl <'a> IndexMut<&'a [isize]> for FloatTensor {
 	}
 }
 
-
+/*
+impl fmt::Display for FloatTensor {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match (*self.t).size 
+		write!(f, "[torchrs.FloatTensor of size ]")
+	}
+}
+*/
 #[cfg(test)]
 mod tests {
 	use super::*;
