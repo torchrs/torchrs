@@ -1,35 +1,32 @@
-#![feature(trace_macros)]
-#![feature(log_syntax)]
 
-use linked_hash_map::LinkedHashMap;
-use std::rc::Rc;
 
-pub trait ModuleStruct {
-	fn init_module(&self);
+pub trait ModuleStruct<'a> {
+	fn init_module(&mut self);
+    fn get_module(&mut self, name: &str) ->  Option<&mut ModIntf<'a>>;
 }
 
 struct TorchBackend {}
 struct Parameter {}
 
-struct Module<'a> {
+pub struct Module<'a> {
 	_name: &'a str,
 	_backend : TorchBackend,
 //	_buffers: HashTable<&str, Tensor>
 //	_backward_hooks: 
 //	_forward_hooks: 
-	_params: LinkedHashMap<&'a str, &'a Parameter >,
-    _modules: LinkedHashMap<&'a str, Rc< ModIntf<'a> > >,
+	_params: Vec<&'a str>,
+    _modules: Vec<&'a str>,//LinkedHashMap<String, &'a Module<'a>  >,
 	training: bool,
 }
-
+	
 impl <'a>Module<'a> {
 	pub fn new() -> Module<'a> {
-		Module {_name: "", _backend: TorchBackend {}, _params: LinkedHashMap::new(), _modules: LinkedHashMap::new(), training: true }
+		Module {_name: "", _backend: TorchBackend {}, _params: Vec::new(), _modules: Vec::new(), training: true }
 	}
 }
 
-trait ModIntf<'a> {
-	fn delegate(&'a self) -> &'a Module<'a>;
+pub trait ModIntf<'a> {
+	fn delegate(&mut self) -> &mut Module<'a>;
 	fn forward(&mut self /* Tensor */ ) /* -> Tensor */;
 }
 
@@ -40,16 +37,16 @@ struct Linear<'a> {
 }
 
 impl <'a>Linear<'a> {
-	pub fn new(/* args: LinearArgs */) -> Rc<Linear<'a>> {
-		let t = Rc::new(Linear {delegate: Module::new(), in_features: 0 });
+	pub fn new(/* args: LinearArgs */) -> Linear<'a> {
+		let mut t = Linear {delegate: Module::new(), in_features: 0 };
 		t.init_module();
 		t
 	}
 }
 
 impl <'a> ModIntf<'a> for Linear<'a>  {
-	fn delegate(&'a self) -> &'a Module<'a> {
-		&self.delegate
+	fn delegate(&mut self) -> &mut Module<'a> {
+		&mut self.delegate
 	}
 	fn forward(&mut self/* Tensor */) /* -> Tensor */ {
 
@@ -57,15 +54,15 @@ impl <'a> ModIntf<'a> for Linear<'a>  {
 }
 
 #[derive(ModParse)]
-struct MyMod<'a> {
+pub struct MyMod<'a> {
 	delegate: Module<'a>,
 	#[module]
-	a: Rc< Linear<'a> >,
+	a: Linear<'a> ,
 }
 
 impl <'a> MyMod<'a> {
-	pub fn new() -> Rc< MyMod<'a> > {
-		let t = Rc::new( MyMod {delegate: Module::new(), a: Linear::new()} );
+	pub fn new() -> MyMod<'a>  {
+		let mut t = MyMod {delegate: Module::new(), a: Linear::new()} ;
 		t.init_module();
 		t
 	}
