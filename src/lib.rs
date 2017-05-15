@@ -1,9 +1,16 @@
 extern crate num;
 extern crate rand;
 extern crate rutorch;
+#[macro_use]
+extern crate modparse_derive;
+extern crate linked_hash_map;
 
+
+mod nn;
 use rutorch::*;
+use nn::*;
 use std::ops::{Index, IndexMut};
+use std::rc::Rc;
 //use std::convert::From;
 use std::cmp::max;
 use std::slice;
@@ -57,7 +64,7 @@ impl IndexMut<isize> for FloatStorage {
 
 //fn from(args: &ArgsArray<T>) -> Self;
 
-trait Tensor<'a> : Index<&'a [isize]> {
+trait Tensor<'a> : /* Index<&'a [isize]> */	{
 	fn new() -> Self;
 	fn sized(size: &'a [isize]) -> Self;
 	fn randn(dims: &'a [isize]) -> Self;
@@ -67,6 +74,10 @@ pub struct FloatTensor {
 	t: *mut THFloatTensor,
 	storage: FloatStorage,
 	dims: Vec<isize>,
+}
+
+pub struct Parameter {
+
 }
 
 impl <'a>Tensor<'a> for FloatTensor {
@@ -123,6 +134,18 @@ impl <'a> IndexMut<&'a [isize]> for FloatTensor {
 		&mut self.storage[index]
 	}
 }
+
+/*
+    def __init__(self):
+        self._backend = thnn_backend
+        self._parameters = OrderedDict()
+        self._buffers = OrderedDict()
+        self._backward_hooks = OrderedDict()
+        self._forward_hooks = OrderedDict()
+        self._modules = OrderedDict()
+        self.training = True
+*/
+
 
 /*
 impl fmt::Display for FloatTensor {
