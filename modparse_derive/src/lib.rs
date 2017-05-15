@@ -15,11 +15,9 @@ use proc_macro::TokenStream;
 #[proc_macro_derive(ModParse, attributes(module))]
 pub fn parse(input: TokenStream) -> TokenStream {
     let source = input.to_string();
-    let mut ast = syn::parse_derive_input(&source)
-        .expect("failed to parse rust syntax");
+    let mut ast = syn::parse_derive_input(&source).expect("failed to parse rust syntax");
     let gen = impl_parse(&mut ast);
-    gen.parse()
-        .expect("failed to serialize into rust syntax")
+    gen.parse().expect("failed to serialize into rust syntax")
 }
 
 //fn filter_attrs(input: TokenStream) -> T
@@ -47,15 +45,18 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         	//field.attrs.retain(|ref attr| !names.contains(&attr.name()) );
     		ret
         });
-    let modlist = variants.iter()
+    let modlist = variants
+        .iter()
         .filter_map(|field| {
-            let field_name = field.ident.as_ref().clone();
-          	if field.attrs.iter().any(|attr| attr.name() == "module") {
-            	Some( quote! { stringify!(#field_name) => Some(&mut self. #field_name ), } )
-            } else { None }
-		});
+                        let field_name = field.ident.as_ref().clone();
+                        if field.attrs.iter().any(|attr| attr.name() == "module") {
+                Some(quote! { stringify!(#field_name) => Some(&mut self. #field_name ), })
+            } else {
+                            None
+                        }
+                    });
     //println!("{:?}\n\n {:?}", atmatch, name);
-    //println!("ast.ident: {:?}, {:?}", ast.ident, where_clause);    
+    //println!("ast.ident: {:?}, {:?}", ast.ident, where_clause);
     let foo = quote! {
         impl #impl_generics ModuleStruct<'a> for #name  #ty_generics  #where_clause {
             fn init_module(&mut self) {
@@ -80,6 +81,5 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
-    }
+    fn it_works() {}
 }
