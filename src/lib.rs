@@ -1,3 +1,6 @@
+#![feature(trace_macros)]
+#![feature(log_syntax)]
+
 extern crate num;
 extern crate rand;
 extern crate rutorch;
@@ -10,7 +13,6 @@ mod nn;
 use rutorch::*;
 use nn::*;
 use std::ops::{Index, IndexMut};
-use std::rc::Rc;
 //use std::convert::From;
 use std::cmp::max;
 use std::slice;
