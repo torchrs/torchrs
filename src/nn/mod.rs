@@ -19,10 +19,9 @@ pub struct Module<'a> {
     _modulesp: Vec<*mut Module<'a>>,
 	training: bool,
 }
-pub struct ModuleIter<'a> {
-	mod_iter: slice::IterMut<'a, *mut Module<'a> >,
-	ptr: *mut Module<'a>,
-	_marker: marker::PhantomData<*mut Module<'a>>,
+pub struct ModuleIter<'module, 'iter> {
+	mod_iter: slice::IterMut<'iter, *mut Module<'module> >,
+//	 _marker: marker::PhantomData<&'module Module<'module>>,
 }
 
 impl <'a>Module<'a> {
@@ -38,11 +37,8 @@ impl <'a>Module<'a> {
     	self._modulesp.push(module.delegate().as_mut_ptr())
 
     }
-	pub fn modules_iter(&mut self) -> ModuleIter<'a> {
-		unsafe {
-			let p = self.as_mut_ptr();
-			ModuleIter {ptr: p, mod_iter: self._modulesp.iter_mut(), _marker: marker::PhantomData}
-		}
+	pub fn modules_iter<'b>(&mut self) -> ModuleIter<'a, 'b> {
+		ModuleIter {mod_iter: self._modulesp.iter_mut()}  //_marker: marker::PhantomData } }
 	}
 }
 
