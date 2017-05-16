@@ -1,79 +1,80 @@
+use std::slice;
 
+use std::marker;
 
 pub trait ModuleStruct<'a> {
-    fn init_module(&mut self);
-    fn get_module(&mut self, name: &str) -> Option<&mut ModIntf<'a>>;
+	fn init_module(&mut self);
 }
 
 struct TorchBackend {}
 struct Parameter {}
 
 pub struct Module<'a> {
-    _name: &'a str,
-    _backend: TorchBackend,
-    //	_buffers: HashTable<&str, Tensor>
-    //	_backward_hooks:
-    //	_forward_hooks:
-    _params: Vec<&'a str>,
-    _modules: Vec<&'a str>, //LinkedHashMap<String, &'a Module<'a>  >,
-    training: bool,
+	pub _name: &'a str,
+	_backend : TorchBackend,
+//	_buffers: HashTable<&str, Tensor>
+//	_backward_hooks: 
+//	_forward_hooks: 
+	_params: Vec<&'a str>,
+    _modulesp: Vec<*mut Module<'a>>,
+	training: bool,
+}
+pub struct ModuleIter<'a> {
+	mod_iter: slice::IterMut<'a, *mut Module<'a> >,
+	ptr: *mut Module<'a>,
+	_marker: marker::PhantomData<*mut Module<'a>>,
 }
 
-impl<'a> Module<'a> {
-    pub fn new() -> Module<'a> {
-        Module {
-            _name: "",
-            _backend: TorchBackend {},
-            _params: Vec::new(),
-            _modules: Vec::new(),
-            training: true,
-        }
+impl <'a>Module<'a> {
+	pub fn new() -> Module<'a> {
+		Module {_name: "", _backend: TorchBackend {}, _params: Vec::new(), 
+		_modulesp: Vec::new(), training: true }
+	}
+	#[inline]
+    fn as_mut_ptr(&mut self) -> *mut Module<'a> {
+        self as *mut Module<'a>
     }
+    pub fn add_module(&mut self, module: &mut ModIntf<'a>) {
+    	self._modulesp.push(module.delegate().as_mut_ptr())
+
+    }
+	pub fn modules_iter(&mut self) -> ModuleIter<'a> {
+		unsafe {
+			let p = self.as_mut_ptr();
+			ModuleIter {ptr: p, mod_iter: self._modulesp.iter_mut(), _marker: marker::PhantomData}
+		}
+	}
 }
 
 pub trait ModIntf<'a> {
-    fn delegate(&mut self) -> &mut Module<'a>;
-    fn forward(&mut self);
+	fn delegate(&mut self) -> &mut Module<'a>;
+	fn forward(&mut self /* Tensor */ ) /* -> Tensor */;
 }
 
 #[derive(ModParse)]
-struct Linear<'a> {
-    delegate: Module<'a>,
-    in_features: u32,
+pub struct Linear<'a> {
+	delegate: Module<'a> ,
+	in_features: u32,
 }
 
-impl<'a> Linear<'a> {
-    pub fn new() -> Linear<'a> {
-        let mut t = Linear {
-            delegate: Module::new(),
-            in_features: 0,
-        };
-        t.init_module();
-        t
-    }
+impl <'a>Linear<'a> {
+	pub fn new(/* args: LinearArgs */) -> Linear<'a> {
+		let mut t = Linear {delegate: Module::new(), in_features: 0 };
+		t.init_module();
+		t
+	}
 }
 
-impl<'a> ModIntf<'a> for Linear<'a> {
-    fn delegate(&mut self) -> &mut Module<'a> {
-        &mut self.delegate
-    }
-    fn forward(&mut self) {}
+impl <'a> ModIntf<'a> for Linear<'a>  {
+	fn delegate(&mut self) -> &mut Module<'a> {
+		&mut self.delegate
+	}
+	fn forward(&mut self/* Tensor */) /* -> Tensor */ {
+
+	}
 }
 
-#[derive(ModParse)]
-pub struct MyMod<'a> {
-    delegate: Module<'a>,
-    #[module]
-    a: Linear<'a>,
-}
 
-impl<'a> MyMod<'a> {
-    pub fn new() -> MyMod<'a> {
-        let mut t = MyMod {
-            delegate: Module::new(),
-            a: Linear::new(),
-        };
-        t.init_module();
-        t
-    }
-}
+
+
+
