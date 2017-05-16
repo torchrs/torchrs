@@ -38,34 +38,19 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         		Some( quote! { self.delegate._params.push(stringify!(#field_name) ) } )
         	} else if field.attrs.iter().any(|attr| attr.name() == "module") {
 //        		Some ( quote! { self.delegate._modules.insert(stringify!(#field_name).to_owned(), self. #field_name .delegate()) } )
-        		Some ( quote! { self.delegate._modules.push(stringify!(#field_name)) } )
+        		Some ( quote! { 
+        			self.delegate.add_module(&mut self. #field_name );
+        		 } )
         	} else { None };
         	//field.attrs.retain(|ref attr| !names.contains(&attr.name()) );
     		ret
         });
-    let modlist = variants
-        .iter()
-        .filter_map(
-        	|field| {
-            	let field_name = field.ident.as_ref().clone();
-                if field.attrs.iter().any(|attr| attr.name() == "module") {
-                	Some(quote! { stringify!(#field_name) => Some(&mut self. #field_name ), })
-            	} else {
-                            None
-                        }
-                    });
     let foo = quote! {
         impl #impl_generics ModuleStruct<'a> for #name  #ty_generics  #where_clause {
             fn init_module(&mut self) {
             	self.delegate._name = stringify!(#name);
 				#(#atmatch);* 
 				;
-            }
-            fn get_module(&mut self, name: &str) ->  Option<&mut ModIntf<'a>> {
-            	match name {
-                    #(#modlist),*
-                    _ => None,
-                } 
             }
         }
     };
