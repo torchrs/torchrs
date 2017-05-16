@@ -65,10 +65,8 @@ impl IndexMut<isize> for FloatStorage {
 
 //fn from(args: &ArgsArray<T>) -> Self;
 
-trait Tensor<'a> {
-    fn new() -> Self;
-    fn sized(size: &'a [isize]) -> Self;
-    fn randn(dims: &'a [isize]) -> Self;
+trait Tensor {
+	 fn _dummy(&self);
 }
 
 pub struct FloatTensor {
@@ -77,9 +75,11 @@ pub struct FloatTensor {
     dims: Vec<isize>,
 }
 
-pub struct Parameter {}
+pub struct Parameter {
+	data: Tensor,
+}
 
-impl<'a> Tensor<'a> for FloatTensor {
+impl FloatTensor {
     fn new() -> Self {
         unsafe {
             FloatTensor {
@@ -90,7 +90,7 @@ impl<'a> Tensor<'a> for FloatTensor {
         }
     }
 
-    fn sized(dims: &'a [isize]) -> Self {
+    fn sized(dims: & [isize]) -> Self {
         let size = dims.iter().product();
         let storage = FloatStorage::sized(size);
         let strides = vec![1; dims.len()];
@@ -109,7 +109,7 @@ impl<'a> Tensor<'a> for FloatTensor {
             dims: Vec::from(dims),
         }
     }
-    fn randn(dims: &'a [isize]) -> Self {
+    fn randn(dims: & [isize]) -> Self {
         /* XXX */
         let mut t = FloatTensor::sized(dims);
         for x in t.storage.iter_mut() {
