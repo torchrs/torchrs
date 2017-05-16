@@ -9,9 +9,8 @@ extern crate modparse_derive;
 extern crate linked_hash_map;
 
 
-mod nn;
+pub mod nn;
 use rutorch::*;
-use nn::*;
 use std::ops::{Index, IndexMut};
 //use std::convert::From;
 use std::cmp::max;
@@ -187,6 +186,57 @@ impl fmt::Display for FloatTensor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nn::*;
+
+#[derive(ModParse)]
+
+pub struct MyModSmallA<'a> {
+	delegate: Module<'a>,	
+}
+
+impl <'a>MyModSmallA<'a> {
+	pub fn new() -> Self {
+		let mut t = MyModSmallA {delegate: Module::new()};
+		t.init_module();
+		t
+	}
+}
+
+#[derive(ModParse)]
+pub struct MyModBig<'a> {
+	delegate: Module<'a>,
+	#[module]
+	a: Linear<'a> ,
+	#[module]
+	b: MyModSmallA<'a>
+}
+
+impl <'a>ModIntf<'a> for MyModBig<'a> {
+	fn delegate(&mut self) -> &mut Module<'a> {
+				&mut self.delegate
+
+	}
+	fn forward(&mut self /* Tensor */ ) /* -> Tensor */{}
+}
+impl <'a>ModIntf<'a> for MyModSmallA<'a> {
+	fn delegate(&mut self) -> &mut Module<'a> {
+				&mut self.delegate
+
+	}
+	fn forward(&mut self /* Tensor */ ) /* -> Tensor */{}
+}
+impl <'a> MyModBig<'a> {
+	pub fn new() -> MyModBig<'a>  {
+		let mut t = MyModBig {delegate: Module::new(), 
+			a: Linear::new(), b: MyModSmallA::new()} ;
+		t.init_module();
+		t
+	}
+}
+
+
     #[test]
-    fn it_works() {}
+    fn it_works() {
+    	let x = MyModBig::new();
+    }
 }
