@@ -65,7 +65,7 @@ impl IndexMut<isize> for FloatStorage {
 
 //fn from(args: &ArgsArray<T>) -> Self;
 
-trait Tensor {
+pub trait Tensor {
 	 fn _dummy(&self);
 }
 
