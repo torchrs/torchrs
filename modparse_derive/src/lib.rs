@@ -42,7 +42,6 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         			self.delegate.add_module(&mut self. #field_name );
         		 } )
         	} else { None };
-        	//field.attrs.retain(|ref attr| !names.contains(&attr.name()) );
     		ret
         });
     let foo = quote! {
