@@ -5,3 +5,4 @@ Cargo.lock
 */*~
 src/tmp*
 src/*/tmp*
+src/*/*/tmp*
