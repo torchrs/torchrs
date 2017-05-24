@@ -8,4 +8,4 @@ rutorch = { path = "rutorch" }
 modparse_derive = { path = "modparse_derive"}
 num = "^0.1.37"
 rand = "^0.3"
-linked-hash-map = "0.4.2"
+derive_builder = "^0.4.7"

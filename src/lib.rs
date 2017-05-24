@@ -6,7 +6,8 @@ extern crate rand;
 extern crate rutorch;
 #[macro_use]
 extern crate modparse_derive;
-
+#[macro_use]
+extern crate derive_builder;
 
 pub mod nn;
 pub mod autograd;
