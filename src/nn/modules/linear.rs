@@ -35,7 +35,7 @@ impl<'a> Linear<'a> {
 pub struct LinearArgs {
     in_features: u32,
     out_features: u32,
-    #[builder(default="false")]
+    #[builder(default="true")]
     bias: bool
 }
 impl LinearArgsBuilder {
