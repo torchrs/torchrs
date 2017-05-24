@@ -9,15 +9,15 @@ pub struct Linear<'a> {
     #[ignore]
     out_features: u32,
     weight: Parameter<'a>,
-    bias: Option<Parameter<'a>>
+    bias: Option<Parameter<'a>>,
 }
 
 impl<'a> Linear<'a> {
-	pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder {
-		LinearArgsBuilder::default()
-			.in_features(in_features)
-			.out_features(out_features)
-	}
+    pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder {
+        LinearArgsBuilder::default()
+            .in_features(in_features)
+            .out_features(out_features)
+    }
     pub fn new(args: LinearArgs) -> Linear<'a> {
         let mut t = Linear {
             delegate: Module::new(),
@@ -36,13 +36,13 @@ pub struct LinearArgs {
     in_features: u32,
     out_features: u32,
     #[builder(default="true")]
-    bias: bool
+    bias: bool,
 }
 impl LinearArgsBuilder {
-	pub fn done<'a>(self) -> Linear<'a> {
-		let args = self.build().unwrap();
-		Linear::new(args)
-	}
+    pub fn done<'a>(self) -> Linear<'a> {
+        let args = self.build().unwrap();
+        Linear::new(args)
+    }
 }
 
 

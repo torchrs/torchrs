@@ -15,7 +15,7 @@ pub struct Module<'a> {
     pub _name: &'a str,
     _backend: TorchBackend,
 
-   	_buffers: HashMap<&'a str, &'a mut Tensor>,
+    _buffers: HashMap<&'a str, &'a mut Tensor>,
     //	_backward_hooks:
     //	_forward_hooks:
     _params: HashMap<&'a str, *mut Parameter<'a>>,
@@ -46,7 +46,7 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
     type Item = (&'a str, &'a T);
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((name, t)) = self.mod_iter.next() {
-            Some((name, unsafe { & **t as & T }))
+            Some((name, unsafe { &**t as &T }))
         } else {
             None
         }
@@ -55,15 +55,16 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
 
 impl<'a> Module<'a> {
     pub fn new() -> Module<'a> {
-        unsafe { Module {
-            _name: "",
-            _backend: TorchBackend {},
-            _buffers: HashMap::new(),
-            _params: HashMap::new(),
-            _modules: HashMap::new(),
-            training: true,
+        unsafe {
+            Module {
+                _name: "",
+                _backend: TorchBackend {},
+                _buffers: HashMap::new(),
+                _params: HashMap::new(),
+                _modules: HashMap::new(),
+                training: true,
+            }
         }
-    }
     }
     #[inline]
     fn as_mut_ptr(&mut self) -> *mut Module<'a> {
@@ -95,7 +96,7 @@ impl<'a> Module<'a> {
             module._apply(callback)
         }
         for (_, param) in self.params_iter_mut() {
-        	param.apply(callback)
+            param.apply(callback)
             /*
 			if let Some(g) = p._grad {
 					callback(g.data)
@@ -111,7 +112,7 @@ impl<'a> Module<'a> {
         callback(self)
     }
     pub fn repr(&mut self) -> String {
-        let mut tmpstr = format!("{} (\n", self._name );
+        let mut tmpstr = format!("{} (\n", self._name);
         for (key, module) in self.modules_iter_mut() {
             let modstr = module.repr();
             let modstr = format!("  {}", modstr);
