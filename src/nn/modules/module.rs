@@ -74,6 +74,10 @@ impl<'a> Module<'a> {
         self._modules.insert(m._name, m.as_mut_ptr());
 
     }
+    pub fn add_param(&mut self, name: &'a str, param: &mut Parameter<'a>) {
+        self._params.insert(name, param.as_mut_ptr());
+
+    }
     pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<'a>> {
         PtrIterMut { mod_iter: self._modules.iter_mut() }
     }
