@@ -1,19 +1,23 @@
 extern crate torchrs;
+#[macro_use]
+extern crate modparse_derive;
+
 
 use torchrs::nn::{Module, Conv2d, Linear};
-
+use torchrs::nn::modules::module::*;
+use torchrs::tensor::Tensor;
 
 use torchrs::nn::functional::{max_pool2d, relu, dropout, dropout2d, log_softmax};
-#[derive(Serialize, Deserialize, Debug, ModuleParse)]
+#[derive(Debug, ModParse)]
 struct Net<'a> {
-    delegate: nn::Module<'a>,
+    delegate: Module<'a>,
     conv1: Conv2d<'a>,
     conv2: Conv2d<'a>,
     fc1: Linear<'a>,
     fc2: Linear<'a>,
 }
 
-impl Net<'a> {
+impl <'a>Net<'a> {
     pub fn new() -> Net<'a> {
         let t = Net {
         delegate: Module::new(),
@@ -33,16 +37,18 @@ impl Net<'a> {
 
 // a) as a near verbatim implementation of the python version 
 impl <'a>ModIntf<'a> for Net<'a> {
-    fn forward(&mut self, args: &[&mut Tensor]) -> [&mut Tensor] {
+    fn forward<'b>(&mut self, args: &'b [&'b mut Tensor]) -> &'b [&'b mut Tensor] {
         let training = self.delegate.training;
-        let x = relu(max_pool2d(self.conv1(&args[0]), 2), false);
+        let x = relu(max_pool2d(self.conv1(&args), 2), false);
         let x = relu(max_pool2d(dropout2d(self.conv2(&x), training, 0.5), 2), false);
         let x = x.view(-1, 320);
         let x = relu(self.fc1(&x), false);
         let x = dropout(&x, training, 0.5);
         let x = self.fc2(&x);
-        [log_softmax(&x)]
+        log_softmax(&x)
     }
+    fn delegate(&mut self) -> &mut Module<'a> {&mut self.delegate}
+
  }
 
 fn main () {
