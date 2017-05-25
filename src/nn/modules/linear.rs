@@ -1,6 +1,7 @@
 use nn::modules::module::*;
 use nn::parameter::Parameter;
-use tensor::Tensor;
+use autograd::variable::Variable;
+
 
 #[derive(ModParse)]
 pub struct Linear<'a, T: 'a> {
@@ -13,7 +14,7 @@ pub struct Linear<'a, T: 'a> {
     bias: Option<Parameter<'a, T>>,
 }
 
-impl<'a, T: 'a> Linear<'a, T> {
+impl<'a, T> Linear<'a, T> {
     pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder {
         LinearArgsBuilder::default()
             .in_features(in_features)
@@ -45,11 +46,11 @@ impl LinearArgsBuilder {
         Linear::new(args)
     }
 }
-impl<'a, T: 'a> ModIntf<'a, T> for Linear<'a, T> {
+impl<'a, T> ModIntf<'a, T> for Linear<'a, T> {
     fn delegate(&mut self) -> &mut Module<'a, T> {
         &mut self.delegate
     }
-    fn forward<'b>(&'a mut self, input: &'b Vec<Tensor<'a, T>>) -> Vec<Tensor<'a, T>> {
+    fn forward<'b>(&'a mut self, input: &'b Vec<Variable<'a, T>>) -> Vec<Variable<'a, T>> {
         input.clone()
     }
 }

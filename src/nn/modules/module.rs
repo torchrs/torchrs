@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::hash_map;
 use tensor::*;
+use autograd::variable::Variable;
 use nn::Parameter;
 
 
@@ -53,7 +54,7 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
     }
 }
 
-impl<'a, T: 'a> Module<'a, T> {
+impl<'a, T> Module<'a, T> {
     pub fn new() -> Module<'a, T> {
         Module {
             _name: "",
@@ -131,7 +132,7 @@ impl<'a, T: 'a> Module<'a, T> {
     }
 }
 
-pub trait ModIntf<'a, T: 'a> {
+pub trait ModIntf<'a, T> {
     fn delegate(&mut self) -> &mut Module<'a, T>;
-    fn forward<'b>(&'a mut self, input: &'b Vec<Tensor<'a, T>>) -> Vec<Tensor<'a, T>>;
+    fn forward<'b>(&'a mut self, input: &'b Vec<Variable<'a, T>>) -> Vec<Variable<'a, T>>;
 }
