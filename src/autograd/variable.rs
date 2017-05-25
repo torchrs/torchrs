@@ -1,35 +1,31 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use autograd::function::*;
 use tensor::Tensor;
+use ::*;
 
 
-type RcMut<T> = Rc<RefCell<T>>;
-type OptRcMut<T> = Option<RcMut<T>>;
-
-pub struct Variable<'a> {
-	data: Option<&'a mut Tensor>,
-	grad_fn: OptRcMut<Function<'a>>,
-	grad: OptRcMut<Variable<'a>>,
+pub struct Variable<'a, T: 'a> {
+	data: Option<&'a mut Tensor<'a, T>>,
+	grad_fn: OptRcMut<Function<'a, T>>,
+	grad: OptRcMut<Variable<'a, T>>,
 	// version_counter etc ...
 }
 
-pub struct SavedVariable<'a> {
-	data: &'a mut Tensor,
-	grad_fn: OptRcMut<Function<'a>>,
-	grad: OptRcMut<Variable<'a>>,
+pub struct SavedVariable<'a, T: 'a> {
+	data: &'a mut Tensor<'a, T>,
+	grad_fn: OptRcMut<Function<'a, T>>,
+	grad: OptRcMut<Variable<'a, T>>,
 	// version_counter etc ...
 }
 
-impl <'a>Variable<'a> {
-	pub fn apply(&mut self,  callback: fn(&mut Tensor)) {
+impl <'a, T: 'a>Variable<'a, T> {
+	pub fn apply(&mut self,  callback: fn(&mut Tensor<'a, T>)) {
 		if let Some(ref mut t) = self.data {
 			callback(*t)
 		}
 	}
 }
 
-impl <'a>Default for Variable<'a> {
+impl <'a, T: 'a>Default for Variable<'a, T> {
 	fn default() -> Self {
 		Variable {data: None, grad_fn: None, grad: None}
 	}

@@ -11,15 +11,15 @@ pub trait ModuleStruct<'a> {
     fn init_module(&mut self);
 }
 
-pub struct Module<'a> {
+pub struct Module<'a, T: 'a> {
     pub _name: &'a str,
     _backend: TorchBackend,
 
-    _buffers: HashMap<&'a str, &'a mut Tensor>,
+    _buffers: HashMap<&'a str, &'a mut Tensor<'a, T>>,
     //	_backward_hooks:
     //	_forward_hooks:
-    _params: HashMap<&'a str, *mut Parameter<'a>>,
-    _modules: HashMap<&'a str, *mut Module<'a>>,
+    _params: HashMap<&'a str, *mut Parameter<'a, T>>,
+    _modules: HashMap<&'a str, *mut Module<'a, T>>,
     training: bool,
 }
 pub struct PtrIterMut<'a, T: 'a> {
@@ -53,45 +53,43 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
     }
 }
 
-impl<'a> Module<'a> {
-    pub fn new() -> Module<'a> {
-        unsafe {
-            Module {
-                _name: "",
-                _backend: TorchBackend {},
-                _buffers: HashMap::new(),
-                _params: HashMap::new(),
-                _modules: HashMap::new(),
-                training: true,
-            }
+impl<'a, T: 'a> Module<'a, T> {
+    pub fn new() -> Module<'a, T> {
+        Module {
+            _name: "",
+            _backend: TorchBackend {},
+            _buffers: HashMap::new(),
+            _params: HashMap::new(),
+            _modules: HashMap::new(),
+            training: true,
         }
     }
     #[inline]
-    fn as_mut_ptr(&mut self) -> *mut Module<'a> {
-        self as *mut Module<'a>
+    fn as_mut_ptr(&mut self) -> *mut Module<'a, T> {
+        self as *mut Module<'a, T>
     }
-    pub fn add_module(&mut self, module: &mut ModIntf<'a>) {
+    pub fn add_module(&mut self, module: &mut ModIntf<'a, T>) {
         let m = module.delegate();
         self._modules.insert(m._name, m.as_mut_ptr());
 
     }
-    pub fn add_param(&mut self, name: &'a str, param: &mut Parameter<'a>) {
+    pub fn add_param(&mut self, name: &'a str, param: &mut Parameter<'a, T>) {
         self._params.insert(name, param.as_mut_ptr());
 
     }
-    pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<'a>> {
+    pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<'a, T>> {
         PtrIterMut { mod_iter: self._modules.iter_mut() }
     }
-    pub fn modules_iter(&mut self) -> PtrIter<Module<'a>> {
+    pub fn modules_iter(&mut self) -> PtrIter<Module<'a, T>> {
         PtrIter { mod_iter: self._modules.iter() }
     }
-    pub fn params_iter_mut(&mut self) -> PtrIterMut<Parameter<'a>> {
+    pub fn params_iter_mut(&mut self) -> PtrIterMut<Parameter<'a, T>> {
         PtrIterMut { mod_iter: self._params.iter_mut() }
     }
-    pub fn register_buffer(&mut self, name: &'a str, tensor: &'a mut Tensor) {
+    pub fn register_buffer(&mut self, name: &'a str, tensor: &'a mut Tensor<'a, T>) {
         self._buffers.insert(name, tensor);
     }
-    fn _apply(&mut self, callback: fn(&mut Tensor)) {
+    fn _apply(&mut self, callback: fn(&mut Tensor<'a, T>)) {
         for (_, module) in self.modules_iter_mut() {
             module._apply(callback)
         }
@@ -133,7 +131,7 @@ impl<'a> Module<'a> {
     }
 }
 
-pub trait ModIntf<'a> {
-    fn delegate(&mut self) -> &mut Module<'a>;
-    fn forward(&mut self);
+pub trait ModIntf<'a, T: 'a> {
+    fn delegate(&mut self) -> &mut Module<'a, T>;
+    fn forward<'b>(&'a mut self, input: &'b Vec<Tensor<'a, T>>) -> Vec<Tensor<'a, T>>;
 }

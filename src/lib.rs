@@ -13,7 +13,16 @@ pub mod nn;
 pub mod autograd;
 pub mod tensor;
 pub mod storage;
+use std::rc::Rc;
+use std::cell::RefCell;
 
+
+pub type RcMut<T> = Rc<RefCell<T>>;
+pub type OptRcMut<T> = Option<RcMut<T>>;
+
+pub fn RcMutNew<T>(arg: T) -> RcMut<T> {
+	Rc::new(RefCell::new(arg))
+}
 
 #[cfg(test)]
 mod tests {

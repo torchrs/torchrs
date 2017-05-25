@@ -1,12 +1,29 @@
 use rutorch::*;
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Deref, DerefMut};
 //use std::convert::From;
 use std::cmp::max;
 
 use storage::*;
 use rand;
+use std::marker::PhantomData;
+use super::*;
 
-pub trait Tensor {
+pub struct Tensor<'a, T: 'a> {
+    value: RcMut<TensorImpl<'a, T, Output = T>>,
+}
+impl<'a, T> Clone for Tensor<'a, T> {
+    fn clone(&self) -> Self {
+        Tensor { value: self.value.clone() }
+    }
+}
+/*
+impl<'a> Tensor<'a> {
+    fn view<'a>(&self, dims: &[i32]) -> Tensor<'a> {
+    }
+}
+*/
+pub trait TensorImpl<'a, T: 'a>: Index<&'a [isize], Output = T> {
+    //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
 }
 
 pub struct FloatTensor {
@@ -14,6 +31,13 @@ pub struct FloatTensor {
     storage: FloatStorage,
     dims: Vec<isize>,
 }
+
+impl Default for FloatTensor {
+    fn default() -> Self {
+        FloatTensor::new()
+    }
+}
+
 
 impl FloatTensor {
     fn new() -> Self {
@@ -25,8 +49,7 @@ impl FloatTensor {
             }
         }
     }
-
-    fn with_capacity(dims: & [isize]) -> Self {
+    fn with_capacity(dims: &[isize]) -> Self {
         let size = dims.iter().product();
         let storage = FloatStorage::with_capacity(size);
         let strides = vec![1; dims.len()];
@@ -45,7 +68,7 @@ impl FloatTensor {
             dims: Vec::from(dims),
         }
     }
-    fn randn(dims: & [isize]) -> Self {
+    fn randn(dims: &[isize]) -> Self {
         /* XXX */
         let mut t = FloatTensor::with_capacity(dims);
         for x in t.storage.iter_mut() {
@@ -58,7 +81,7 @@ impl FloatTensor {
 impl<'a> Index<&'a [isize]> for FloatTensor {
     type Output = f32;
 
-    fn index(&self, idx: &'a [isize]) -> &f32 {
+    fn index(&self, idx: &'a [isize]) -> &Self::Output {
         let mut index: isize = 0;
         let lastidx = max(0, idx.len() as isize - 1) as usize;
         if idx.len() != self.dims.len() {
@@ -79,7 +102,7 @@ impl<'a> Index<&'a [isize]> for FloatTensor {
 }
 
 impl<'a> IndexMut<&'a [isize]> for FloatTensor {
-    fn index_mut(&mut self, idx: &'a [isize]) -> &mut f32 {
+    fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
         let mut index: isize = 0;
         let lastidx = max(0, idx.len() as isize - 1) as usize;
         if idx.len() != self.dims.len() {
