@@ -2,42 +2,46 @@ use autograd::function::*;
 use tensor::Tensor;
 use ::*;
 
-pub struct VariableImpl<'a, T: 'a> {
-	data: Option<&'a mut Tensor<'a, T>>,
-	grad_fn: OptRcMut<Function<'a, T>>,
-	grad: OptRcMut<Variable<'a, T>>,
+pub struct VariableImpl<T> {
+    data: Option<Tensor<T>>,
+    grad_fn: OptRcMut<Function<T>>,
+    grad: OptRcMut<Variable<T>>,
 	// version_counter etc ...
 }
 
-pub struct Variable<'a, T: 'a> {
-	value: RcMut<VariableImpl<'a, T>>,
+pub struct Variable<T> {
+    value: RcMut<VariableImpl<T>>,
 }
 
-impl<'a, T> Clone for Variable<'a, T> {
+impl<T> Clone for Variable<T> {
     fn clone(&self) -> Self {
         Variable { value: self.value.clone() }
     }
 }
 
-pub struct SavedVariable<'a, T: 'a> {
-	data: &'a mut Tensor<'a, T>,
-	grad_fn: OptRcMut<Function<'a, T>>,
-	grad: OptRcMut<Variable<'a, T>>,
+pub struct SavedVariable<T> {
+    data: Box<Tensor<T>>,
+    grad_fn: OptRcMut<Function<T>>,
+    grad: OptRcMut<Variable<T>>,
 	// version_counter etc ...
 }
 
-impl <'a, T>Variable<'a, T> {
-	pub fn apply(&mut self,  callback: fn(&mut Tensor<'a, T>)) {
-		let mut v = self.value.borrow_mut();
-		if let Some(ref mut t) = v.data {
-			callback(*t)
-		}
-	}
+impl<T> Variable<T> {
+    pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
+        let mut v = self.value.borrow_mut();
+        if let Some(ref mut t) = v.data {
+            callback(&mut *t);
+        }
+    }
 }
 
-impl <'a, T>Default for Variable<'a, T> {
-	fn default() -> Self {
-		let v = VariableImpl {data: None, grad_fn: None, grad: None};
-		Variable { value: RcMutNew(v) }
-	}
+impl<T> Default for Variable<T> {
+    fn default() -> Self {
+        let v = VariableImpl {
+            data: None,
+            grad_fn: None,
+            grad: None,
+        };
+        Variable { value: RcMutNew(v) }
+    }
 }

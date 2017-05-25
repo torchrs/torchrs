@@ -4,23 +4,23 @@ use autograd::variable::Variable;
 
 
 #[derive(ModParse)]
-pub struct Linear<'a, T: 'a> {
-    delegate: Module<'a, T>,
+pub struct Linear<T> {
+    delegate: Module<T>,
     #[ignore]
     in_features: u32,
     #[ignore]
     out_features: u32,
-    weight: Parameter<'a, T>,
-    bias: Option<Parameter<'a, T>>,
+    weight: Parameter<T>,
+    bias: Option<Parameter<T>>,
 }
 
-impl<'a, T> Linear<'a, T> {
+impl<T> Linear<T> {
     pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder {
         LinearArgsBuilder::default()
             .in_features(in_features)
             .out_features(out_features)
     }
-    pub fn new(args: LinearArgs) -> Linear<'a, T> {
+    pub fn new(args: LinearArgs) -> Linear<T> {
         let mut t = Linear {
             delegate: Module::new(),
             in_features: args.in_features,
@@ -41,16 +41,16 @@ pub struct LinearArgs {
     bias: bool,
 }
 impl LinearArgsBuilder {
-    pub fn done<'a, T: 'a>(self) -> Linear<'a, T> {
+    pub fn done<T>(self) -> Linear<T> {
         let args = self.build().unwrap();
         Linear::new(args)
     }
 }
-impl<'a, T> ModIntf<'a, T> for Linear<'a, T> {
-    fn delegate(&mut self) -> &mut Module<'a, T> {
+impl<T> ModIntf<T> for Linear<T> {
+    fn delegate(&mut self) -> &mut Module<T> {
         &mut self.delegate
     }
-    fn forward<'b>(&'a mut self, input: &'b Vec<Variable<'a, T>>) -> Vec<Variable<'a, T>> {
+    fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
         input.clone()
     }
 }

@@ -1,21 +1,20 @@
 use autograd::variable::Variable;
 use tensor::*;
 
-pub struct Parameter<'a, T: 'a> {
-	pub v: Variable<'a, T>,
-
+pub struct Parameter<T> {
+    pub v: Variable<T>,
 }
-impl <'a, T: 'a>Parameter<'a, T> {
-	pub fn apply(&mut self,  callback: fn(&mut Tensor<'a, T>)) {
-		self.v.apply(callback)
-	}
+impl<T> Parameter<T> {
+    pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
+        self.v.apply(callback)
+    }
     #[inline]
-    pub fn as_mut_ptr(&mut self) -> *mut Parameter<'a, T> {
-        self as *mut Parameter<'a, T>
+    pub fn as_mut_ptr(&mut self) -> *mut Parameter<T> {
+        self as *mut Parameter<T>
     }
 }
-impl <'a, T: 'a>Default for Parameter<'a, T> {
-	fn default() -> Self {
-		Parameter {v: Variable::default() }
-	}
+impl<T> Default for Parameter<T> {
+    fn default() -> Self {
+        Parameter { v: Variable::default() }
+    }
 }

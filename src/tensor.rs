@@ -6,12 +6,13 @@ use std::cmp::max;
 use storage::*;
 use rand;
 use std::marker::PhantomData;
-use super::*;
+use {Ixs, RcMut};
 
-pub struct Tensor<'a, T: 'a> {
-    value: RcMut<TensorImpl<'a, T, Output = T>>,
+pub struct Tensor<T> {
+    value: RcMut<TensorImpl<T, Output = T>>,
 }
-impl<'a, T> Clone for Tensor<'a, T> {
+
+impl<'a, T> Clone for Tensor<T> {
     fn clone(&self) -> Self {
         Tensor { value: self.value.clone() }
     }
@@ -22,9 +23,10 @@ impl<'a> Tensor<'a> {
     }
 }
 */
-pub trait TensorImpl<'a, T: 'a>: Index<&'a [isize], Output = T> {
+pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
 }
+
 
 pub struct FloatTensor {
     t: *mut THFloatTensor,

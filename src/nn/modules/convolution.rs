@@ -3,19 +3,19 @@ use nn::parameter::Parameter;
 use num::Num;
 
 #[derive(ModParse)]
-pub struct Conv2d<'a, T:'a + Num> {
-    delegate: Module<'a, T>,
-    weight: Parameter<'a, T>,
+pub struct Conv2d<T> {
+    delegate: Module<T>,
+    weight: Parameter<T>,
 }
 
-impl<'a, T: 'a + Num> Conv2d<'a, T> {
+impl<T> Conv2d<T> {
     pub fn build(in_channels: u32, out_channels: u32, kernel_size: u32) -> Conv2dArgsBuilder {
         Conv2dArgsBuilder::default()
             .in_channels(in_channels)
             .out_channels(out_channels)
             .kernel_size(kernel_size)
     }
-    pub fn new(args: Conv2dArgs) -> Conv2d<'a, T> {
+    pub fn new(args: Conv2dArgs) -> Conv2d<T> {
         Conv2d {
             delegate: Module::new(),
             weight: Parameter::default(),
@@ -41,7 +41,7 @@ pub struct Conv2dArgs {
     bias: bool,
 }
 impl Conv2dArgsBuilder {
-    pub fn done<'a, T: 'a + Num>(self) -> Conv2d<'a, T> {
+    pub fn done<T>(self) -> Conv2d<T> {
         let args = self.build().unwrap();
         Conv2d::new(args)
     }

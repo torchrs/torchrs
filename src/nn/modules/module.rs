@@ -8,32 +8,32 @@ use nn::Parameter;
 // placeholder
 struct TorchBackend {}
 
-pub trait ModuleStruct<'a> {
+pub trait ModuleStruct {
     fn init_module(&mut self);
 }
 
-pub struct Module<'a, T: 'a> {
-    pub _name: &'a str,
+pub struct Module<T> {
+    pub _name: String,
     _backend: TorchBackend,
 
-    _buffers: HashMap<&'a str, &'a mut Tensor<'a, T>>,
+    _buffers: HashMap<String, Tensor<T>>,
     //	_backward_hooks:
     //	_forward_hooks:
-    _params: HashMap<&'a str, *mut Parameter<'a, T>>,
-    _modules: HashMap<&'a str, *mut Module<'a, T>>,
+    _params: HashMap<String, *mut Parameter<T>>,
+    _modules: HashMap<String, *mut Module<T>>,
     training: bool,
 }
 pub struct PtrIterMut<'a, T: 'a> {
     //mod_iter: linked_hash_map::IterMut<'a, &'a str, *mut T>,
-    mod_iter: hash_map::IterMut<'a, &'a str, *mut T>,
+    mod_iter: hash_map::IterMut<'a, String, *mut T>,
 }
 pub struct PtrIter<'a, T: 'a> {
     //mod_iter: linked_hash_map::IterMut<'a, &'a str, *mut T>,
-    mod_iter: hash_map::Iter<'a, &'a str, *mut T>,
+    mod_iter: hash_map::Iter<'a, String, *mut T>,
 }
 
 impl<'a, T> Iterator for PtrIterMut<'a, T> {
-    type Item = (&'a str, &'a mut T);
+    type Item = (&'a String, &'a mut T);
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((name, t)) = self.mod_iter.next() {
             Some((name, unsafe { &mut **t as &mut T }))
@@ -54,10 +54,10 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
     }
 }
 
-impl<'a, T> Module<'a, T> {
-    pub fn new() -> Module<'a, T> {
+impl<T> Module<T> {
+    pub fn new() -> Module<T> {
         Module {
-            _name: "",
+            _name: String::from(""),
             _backend: TorchBackend {},
             _buffers: HashMap::new(),
             _params: HashMap::new(),
@@ -66,31 +66,32 @@ impl<'a, T> Module<'a, T> {
         }
     }
     #[inline]
-    fn as_mut_ptr(&mut self) -> *mut Module<'a, T> {
-        self as *mut Module<'a, T>
+    fn as_mut_ptr(&mut self) -> *mut Module<T> {
+        self as *mut Module<T>
     }
-    pub fn add_module(&mut self, module: &mut ModIntf<'a, T>) {
+    pub fn add_module(&mut self, module: &mut ModIntf<T>) {
         let m = module.delegate();
-        self._modules.insert(m._name, m.as_mut_ptr());
+        self._modules.insert(m._name.clone(), m.as_mut_ptr());
 
     }
-    pub fn add_param(&mut self, name: &'a str, param: &mut Parameter<'a, T>) {
-        self._params.insert(name, param.as_mut_ptr());
+    pub fn add_param(&mut self, name: &str, param: &mut Parameter<T>) {
+        let s = String::from(name);
+        self._params.insert(s, param.as_mut_ptr());
 
     }
-    pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<'a, T>> {
+    pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<T>> {
         PtrIterMut { mod_iter: self._modules.iter_mut() }
     }
-    pub fn modules_iter(&mut self) -> PtrIter<Module<'a, T>> {
+    pub fn modules_iter(&mut self) -> PtrIter<Module<T>> {
         PtrIter { mod_iter: self._modules.iter() }
     }
-    pub fn params_iter_mut(&mut self) -> PtrIterMut<Parameter<'a, T>> {
+    pub fn params_iter_mut(&mut self) -> PtrIterMut<Parameter<T>> {
         PtrIterMut { mod_iter: self._params.iter_mut() }
     }
-    pub fn register_buffer(&mut self, name: &'a str, tensor: &'a mut Tensor<'a, T>) {
-        self._buffers.insert(name, tensor);
+    pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {
+        self._buffers.insert(String::from(name), tensor.clone());
     }
-    fn _apply(&mut self, callback: fn(&mut Tensor<'a, T>)) {
+    fn _apply(&mut self, callback: fn(&mut Tensor<T>)) {
         for (_, module) in self.modules_iter_mut() {
             module._apply(callback)
         }
@@ -132,7 +133,7 @@ impl<'a, T> Module<'a, T> {
     }
 }
 
-pub trait ModIntf<'a, T> {
-    fn delegate(&mut self) -> &mut Module<'a, T>;
-    fn forward<'b>(&'a mut self, input: &'b Vec<Variable<'a, T>>) -> Vec<Variable<'a, T>>;
+pub trait ModIntf<T> {
+    fn delegate(&mut self) -> &mut Module<T>;
+    fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
 }

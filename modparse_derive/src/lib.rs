@@ -24,44 +24,47 @@ pub fn parse(input: TokenStream) -> TokenStream {
     let gen = impl_parse(&mut ast);
     gen.parse().expect("failed to serialize into rust syntax")
 }
-fn is_type(ty: &syn::Ty, name: & 'static str) -> bool {
+fn is_type(ty: &syn::Ty, name: &'static str) -> bool {
     if let syn::Ty::Path(_, ref path) = *ty {
-        if path.segments.iter().any(|seg| seg.ident.as_ref() == name) { 
-            true  
+        if path.segments.iter().any(|seg| seg.ident.as_ref() == name) {
+            true
         } else {
             false
         }
-    } else {false}
+    } else {
+        false
+    }
 }
 
 fn option_type(ty: &syn::Ty) -> &syn::Ty {
     if let syn::Ty::Path(_, ref path) = *ty {
-        if let Some(seg) = 
-            path.segments.iter().find(|seg| seg.ident.as_ref() == "Option") {
+        if let Some(seg) = path.segments
+               .iter()
+               .find(|seg| seg.ident.as_ref() == "Option") {
             if let syn::PathParameters::AngleBracketed(ref data) = seg.parameters {
-            // assume simple nesting for now
+                // assume simple nesting for now
                 &data.types[0]
             } else {
                 panic!("can't parse Option segment parameters {:?}", seg.parameters);
             }
         } else {
             panic!("Option not found!")
-        } 
+        }
     } else {
         panic!("not path")
     }
 }
 
 fn get_type(ty: &syn::Ty) -> Kind {
-        if is_type(&ty, "Option") {
-            get_type(option_type(ty))
-        } else if is_type(&ty, "Module") {
-            Kind::Module
-        } else if is_type(&ty, "Parameter"){
-            Kind::Parameter
-        } else {
-            Kind::ModIntf
-        }
+    if is_type(&ty, "Option") {
+        get_type(option_type(ty))
+    } else if is_type(&ty, "Module") {
+        Kind::Module
+    } else if is_type(&ty, "Parameter") {
+        Kind::Parameter
+    } else {
+        Kind::ModIntf
+    }
 }
 
 fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
@@ -103,9 +106,9 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         	}
         });
     let foo = quote! {
-        impl #impl_generics ModuleStruct<'a> for #name  #ty_generics  #where_clause {
+        impl #impl_generics ModuleStruct for #name  #ty_generics  #where_clause {
             fn init_module(&mut self) {
-            	self.delegate._name = stringify!(#name);
+            	self.delegate._name = String::from(stringify!(#name));
 				#(#atmatch);* 
 				;
             }

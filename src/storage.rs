@@ -51,4 +51,3 @@ impl IndexMut<isize> for FloatStorage {
 }
 
 //fn from(args: &ArgsArray<T>) -> Self;
-
