@@ -1,7 +1,7 @@
 use nn::modules::module::*;
 use nn::parameter::Parameter;
 use autograd::variable::Variable;
-
+use std::marker::PhantomData;
 
 #[derive(ModParse)]
 pub struct Linear<T> {
@@ -14,13 +14,13 @@ pub struct Linear<T> {
     bias: Option<Parameter<T>>,
 }
 
-impl<T> Linear<T> {
-    pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder {
+impl<T: Default> Linear<T> {
+    pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder<T> {
         LinearArgsBuilder::default()
             .in_features(in_features)
             .out_features(out_features)
     }
-    pub fn new(args: LinearArgs) -> Linear<T> {
+    pub fn new(args: LinearArgs<T>) -> Linear<T> {
         let mut t = Linear {
             delegate: Module::new(),
             in_features: args.in_features,
@@ -34,23 +34,28 @@ impl<T> Linear<T> {
 }
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct LinearArgs {
+pub struct LinearArgs<T: Default> {
     in_features: u32,
     out_features: u32,
     #[builder(default="true")]
     bias: bool,
+    #[builder(default="PhantomData")]
+    phantom: PhantomData<T>,
 }
-impl LinearArgsBuilder {
-    pub fn done<T>(self) -> Linear<T> {
+impl<T: Default> LinearArgsBuilder<T> {
+    pub fn done(self) -> Linear<T> {
         let args = self.build().unwrap();
         Linear::new(args)
     }
 }
-impl<T> ModIntf<T> for Linear<T> {
+impl<T: Default> ModIntf<T> for Linear<T> {
     fn delegate(&mut self) -> &mut Module<T> {
         &mut self.delegate
     }
-    fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
+    fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         input.clone()
+    }
+    fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
+        panic!("not valid");
     }
 }

@@ -15,6 +15,12 @@ pub struct MaxPoolFArgs {
     ceil_mode: bool,
 }
 
+impl Default for MaxPoolFArgs {
+    fn default() -> Self {
+        MaxPoolFArgsBuilder::default().build().unwrap()
+    }
+}
+
 pub fn max_pool2d<T>(input: &Variable<T>,
                      kernel_size: (u32, u32),
                      args: MaxPoolFArgs)
@@ -32,6 +38,14 @@ pub struct DropoutFArgs {
     #[builder(default="false")]
     inplace: bool,
 }
+
+impl Default for DropoutFArgs {
+    fn default() -> Self {
+        DropoutFArgsBuilder::default().build().unwrap()
+    }
+}
+
+
 
 pub fn dropout<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
     input.clone()

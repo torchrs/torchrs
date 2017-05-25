@@ -14,6 +14,7 @@ pub trait ModuleStruct {
 
 pub struct Module<T> {
     pub _name: String,
+    pub training: bool,
     _backend: TorchBackend,
 
     _buffers: HashMap<String, Tensor<T>>,
@@ -21,7 +22,6 @@ pub struct Module<T> {
     //	_forward_hooks:
     _params: HashMap<String, *mut Parameter<T>>,
     _modules: HashMap<String, *mut Module<T>>,
-    training: bool,
 }
 pub struct PtrIterMut<'a, T: 'a> {
     //mod_iter: linked_hash_map::IterMut<'a, &'a str, *mut T>,
@@ -135,5 +135,6 @@ impl<T> Module<T> {
 
 pub trait ModIntf<T> {
     fn delegate(&mut self) -> &mut Module<T>;
-    fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
+    fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
+    fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
 }
