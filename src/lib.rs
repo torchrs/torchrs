@@ -20,6 +20,7 @@ use std::cell::RefCell;
 pub type RcMut<T> = Rc<RefCell<T>>;
 pub type OptRcMut<T> = Option<RcMut<T>>;
 
+#[allow(non_snake_case)] 
 pub fn RcMutNew<T>(arg: T) -> RcMut<T> {
 	Rc::new(RefCell::new(arg))
 }
