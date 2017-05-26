@@ -18,15 +18,15 @@ impl<T> Function<T> {
     }
 }
 
-
 pub trait FuncIntf<T> {
     fn delegate(&mut self) -> &mut Function<T>;
-    fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
-    fn f(&mut self, mut input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
+    fn forward(&mut self, input: &mut VarList<T>) -> VarList<T>;
+    fn backward(&mut self, input: &mut VarList<T>) -> VarList<T>;
+    fn f(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         {
+            // do start graph stuff with f
             let f = self.delegate();
         }
-        // do start graph stuff with f
         let v = self.forward(&mut input);
         // do end graph stuff
         v
