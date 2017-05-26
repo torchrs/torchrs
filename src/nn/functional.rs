@@ -45,13 +45,39 @@ impl Default for DropoutFArgs {
     }
 }
 
-
-
 pub fn dropout<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
     input.clone()
 }
 
 pub fn dropout2d<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
+    input.clone()
+}
+
+
+#[builder(pattern="owned")]
+#[derive(Builder)]
+pub struct Conv2dFArgs<T:Default> {
+    #[builder(default="None")]
+    bias: Option<Variable<T>>,
+    #[builder(default="vec!(1, 1)")]
+    stride: Vec<u32>,
+    #[builder(default="vec![0, 0]")]
+    padding: Vec<u32>,
+    #[builder(default="vec![1, 1]")]
+    dilation: Vec<u32>,
+    #[builder(default="1")]
+    groups: u32,
+}
+
+impl<T:Default> Default for Conv2dFArgs<T> {
+    fn default() -> Self {
+        Conv2dFArgsBuilder::default().build().unwrap()
+    }
+}
+
+pub fn conv2d<T:Default>(input: &Variable<T>, weight: &Variable<T>, args: Conv2dFArgs<T>) -> Variable<T> {
+    //let convf = ConvNd::new(args.stride, args.padding, args.dilation, false, vec![0, 0],  args.groups));
+    //convf.f(input, weight, args.bias)
     input.clone()
 }
 
