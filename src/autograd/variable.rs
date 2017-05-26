@@ -2,6 +2,9 @@ use autograd::function::*;
 use tensor::Tensor;
 use ::*;
 
+pub type VarList<T> = Vec<Variable<T>>;
+
+
 pub struct VariableImpl<T> {
     data: Option<Tensor<T>>,
     grad_fn: OptRcMut<Function<T>>,
