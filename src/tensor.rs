@@ -5,7 +5,6 @@ use std::cmp::max;
 
 use storage::*;
 use rand;
-use std::marker::PhantomData;
 use {Ixs, RcMut};
 
 pub struct Tensor<T> {
@@ -42,7 +41,7 @@ impl Default for FloatTensor {
 
 
 impl FloatTensor {
-    fn new() -> Self {
+    pub fn new() -> Self {
         unsafe {
             FloatTensor {
                 t: THFloatTensor_new(),
@@ -51,7 +50,7 @@ impl FloatTensor {
             }
         }
     }
-    fn with_capacity(dims: &[isize]) -> Self {
+    pub fn with_capacity(dims: &[isize]) -> Self {
         let size = dims.iter().product();
         let storage = FloatStorage::with_capacity(size);
         let strides = vec![1; dims.len()];
@@ -70,7 +69,7 @@ impl FloatTensor {
             dims: Vec::from(dims),
         }
     }
-    fn randn(dims: &[isize]) -> Self {
+    pub fn randn(dims: &[isize]) -> Self {
         /* XXX */
         let mut t = FloatTensor::with_capacity(dims);
         for x in t.storage.iter_mut() {
