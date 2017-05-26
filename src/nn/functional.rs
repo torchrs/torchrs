@@ -1,6 +1,8 @@
 //use torchrs::nn::functional::{max_pool2d, relu, conv2d, dropout, dropout2d, linear, log_softmax};
 
 use autograd::variable::Variable;
+use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf};
+
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
@@ -53,32 +55,13 @@ pub fn dropout2d<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
     input.clone()
 }
 
-
-#[builder(pattern="owned")]
-#[derive(Builder)]
-pub struct Conv2dFArgs<T:Default> {
-    #[builder(default="None")]
-    bias: Option<Variable<T>>,
-    #[builder(default="vec!(1, 1)")]
-    stride: Vec<u32>,
-    #[builder(default="vec![0, 0]")]
-    padding: Vec<u32>,
-    #[builder(default="vec![1, 1]")]
-    dilation: Vec<u32>,
-    #[builder(default="1")]
-    groups: u32,
-}
-
-impl<T:Default> Default for Conv2dFArgs<T> {
-    fn default() -> Self {
-        Conv2dFArgsBuilder::default().build().unwrap()
-    }
-}
-
-pub fn conv2d<T:Default>(input: &Variable<T>, weight: &Variable<T>, args: Conv2dFArgs<T>) -> Variable<T> {
-    //let convf = ConvNd::new(args.stride, args.padding, args.dilation, false, vec![0, 0],  args.groups));
-    //convf.f(input, weight, args.bias)
-    input.clone()
+pub fn conv2d<T:Default>(input: &mut Variable<T>, weight: &mut Variable<T>, args: &mut Conv2dFArgs<T>) -> Variable<T> {
+    let mut v = match args.bias {
+        Some(ref mut bias) => vec![input.clone(), weight.clone(), bias.clone()],
+        None => vec![input.clone(), weight.clone()],
+    };
+    let mut convf = ConvNd::new(&ConvNdArgs::from(args));
+    convf.f(&mut v)[0].clone()
 }
 
 pub fn relu<T>(input: &Variable<T>, inplace: bool) -> Variable<T> {
