@@ -16,24 +16,19 @@ impl<T> Function<T> {
             next_functions: Vec::new(),
         }
     }
-    pub fn do_forward(&mut self,
-                      func: &mut FuncIntf<T>,
-                      mut args: &mut Vec<Variable<T>>)
-                      -> Vec<Variable<T>> {
-        // do start graph stuff
-        let v = func.forward(&mut args);
-        // do end graph stuff
-        v
-    }
 }
 
 
 pub trait FuncIntf<T> {
     fn delegate(&mut self) -> &mut Function<T>;
     fn forward(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
-    // Borrowing rules prevent this, but each FuncIntf implementer needs to implement
-    // the following function:
-    //    fn f(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
-    //    	  self.delegate().do_forward(&mut self, input)
-    //    }
+    fn f(&mut self, mut input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
+        {
+            let f = self.delegate();
+        }
+        // do start graph stuff with f
+        let v = self.forward(&mut input);
+        // do end graph stuff
+        v
+    }
 }
