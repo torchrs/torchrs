@@ -5,8 +5,8 @@ use std::path::PathBuf;
 
 fn main() {
     let torch_path = env::var("TORCH_PATH").expect("TORCH_PATH not defined");
-    println!("cargo:rustc-link-search=native={}/torch/lib/build/TH",
-             torch_path);
+    println!("cargo:rustc-link-search=native={}/torch/lib/build/TH", torch_path);
+    //println!("cargo:rustc-link-search=native={}/build/lib.linux-x86_64-3.6/torch/lib", torch_path);
     println!("cargo:rustc-link-lib=TH");
 
     //let cuda_path = env::var("CUDA_PATH").expect("CUDA_PATH not defined");
@@ -23,6 +23,7 @@ fn main() {
         // unstable features.
         .no_unstable_rust()
         .clang_arg(format!("-I{}/torch/lib/include/TH", torch_path))
+        .clang_arg(format!("-I{}/torch/lib/include/THNN", torch_path))
  	    .clang_arg(format!("-I{}/torch/lib", torch_path))
         //.clang_arg("-Ipytorch/torch/lib/include/THC")
         //.clang_arg(inc)
