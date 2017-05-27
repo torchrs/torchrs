@@ -137,4 +137,28 @@ pub trait ModIntf<T> {
     fn delegate(&mut self) -> &mut Module<T>;
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
     fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
+    fn f(&mut self, input: &mut Variable<T>) -> Variable<T> {
+        {
+            let mut m = self.delegate();
+            // do pre-forward hooks
+        }
+        let output = self.forward(input);
+        {
+            let mut m = self.delegate();
+            // do post-forward hooks
+        }
+        output
+    }
+    fn fv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
+        {
+            let mut m = self.delegate();
+            // do pre-forward hooks
+        }
+        let output = self.forwardv(input);
+        {
+            let mut m = self.delegate();
+            // do post-forward hooks
+        }
+        output
+    }
 }
