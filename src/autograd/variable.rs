@@ -28,6 +28,8 @@ pub struct SavedVariable<T> {
 	// version_counter etc ...
 }
 
+pub struct BackwardArgs {}
+
 impl<T> Variable<T> {
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         let mut v = self.value.borrow_mut();
@@ -38,7 +40,14 @@ impl<T> Variable<T> {
     pub fn view(&self, dims: &[i32]) -> Self {
         self.clone()
     }
-
+    // Computes the gradient of current variable w.r.t. graph leaves
+    pub fn backward(&mut self, args: &BackwardArgs) {}
+    // Detach from graph
+    pub fn detach_(&mut self) {}
+    // return a new variable detached from graph
+    pub fn detach(&self) -> Variable<T> {
+        self.clone()
+    }
 }
 
 impl<T> Default for Variable<T> {
