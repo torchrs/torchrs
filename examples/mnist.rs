@@ -8,8 +8,8 @@ use torchrs::nn::modules::module::*;
 use torchrs::autograd::variable::Variable;
 use torchrs::tensor::Tensor;
 
-use torchrs::nn::functional::{max_pool2d, relu, dropout, dropout2d, log_softmax, MaxPoolFArgs,
-                              DropoutFArgs};
+use torchrs::nn::functional::{max_pool2d, relu, dropout, dropout2d, log_softmax, MaxPool2dArgs,
+                              DropoutArgs};
 #[derive(ModParse)]
 struct Net {
     delegate: Module<f32>,
@@ -41,13 +41,12 @@ impl Net {
 impl ModIntf<f32> for Net {
     fn forward(&mut self, args: &mut Variable<f32>) -> Variable<f32> {
         let training = self.delegate.training;
-        let pool_val = MaxPoolFArgs::default();
-        let dropout_val = DropoutFArgs::default();
-        let x = relu(&max_pool2d(self.conv1(&args), (2, 2), pool_val), false);
-        let x = relu(&max_pool2d(&dropout2d(self.conv2(&x), dropout_val), (2, 2), pool_val),
-                     false);
+        let pool_val = MaxPool2dArgs::default();
+        let dropout_val = DropoutArgs::default();
+        let x = relu(&mut max_pool2d(self.conv1(&args), (2, 2), pool_val));
+        let x = relu(&mut max_pool2d(&dropout2d(self.conv2(&x), dropout_val), (2, 2), pool_val));
         let x = x.view(-1, 320);
-        let x = relu(self.fc1(&x), false);
+        let x = relu(&mut self.fc1(&x));
         let x = dropout(&x, dropout_val);
         let x = self.fc2(&x);
         log_softmax(&x)
