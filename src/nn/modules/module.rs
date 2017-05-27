@@ -161,4 +161,10 @@ pub trait ModIntf<T> {
         }
         output
     }
+    fn train(&mut self) {
+        self.delegate().train(true)
+    }
+    fn eval(&mut self) {
+        self.delegate().train(false)
+    }
 }
