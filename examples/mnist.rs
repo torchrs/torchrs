@@ -21,7 +21,7 @@ struct Net {
 
 impl Net {
     pub fn new() -> Net {
-        let t = Net {
+        let mut t = Net {
             delegate: Module::new(),
             conv1: Conv2d::build(1, 10, 5).done(),
             conv2: Conv2d::build(10, 20, 5).done(),
@@ -43,12 +43,14 @@ impl ModIntf<f32> for Net {
         let training = self.delegate.training;
         let pool_val = MaxPool2dArgs::default();
         let dropout_val = DropoutArgs::default();
-        let x = relu(&mut max_pool2d(self.conv1(&args), (2, 2), pool_val));
-        let x = relu(&mut max_pool2d(&dropout2d(self.conv2(&x), dropout_val), (2, 2), pool_val));
-        let x = x.view(-1, 320);
-        let x = relu(&mut self.fc1(&x));
-        let x = dropout(&x, dropout_val);
-        let x = self.fc2(&x);
+        let mut x = relu(&max_pool2d(&self.conv1.f(args), (2, 2), &pool_val));
+        let mut x = relu(&max_pool2d(&dropout2d(&self.conv2.f(&mut x), &dropout_val),
+                                     (2, 2),
+                                     &pool_val));
+        let mut x = x.view(&[-1, 320]);
+        let x = relu(&self.fc1.f(&mut x));
+        let mut x = dropout(&x, &dropout_val);
+        let x = self.fc2.f(&mut x);
         log_softmax(&x)
     }
     fn forwardv(&mut self, input: &mut Vec<Variable<f32>>) -> Vec<Variable<f32>> {
