@@ -1,58 +1,36 @@
 //use torchrs::nn::functional::{max_pool2d, relu, conv2d, dropout, dropout2d, linear, log_softmax};
 
 use autograd::variable::Variable;
-use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf};
+use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, MaxPool2dArgs, 
+            MaxPoolFArgs, MaxPool2d, DropoutArgs, Dropout1d, Dropout2d, 
+            Threshold, LogSoftmax};
 
 
-#[builder(pattern="owned")]
-#[derive(Builder)]
-pub struct MaxPoolFArgs {
-    #[builder(default="1")]
-    stride: u32,
-    #[builder(default="0")]
-    padding: u32,
-    #[builder(default="1")]
-    dilation: u32,
-    #[builder(default="false")]
-    ceil_mode: bool,
-}
-
-impl Default for MaxPoolFArgs {
-    fn default() -> Self {
-        MaxPoolFArgsBuilder::default().build().unwrap()
-    }
-}
 
 pub fn max_pool2d<T>(input: &Variable<T>,
                      kernel_size: (u32, u32),
-                     args: MaxPoolFArgs)
+                     args: MaxPool2dArgs)
                      -> Variable<T> {
-    input.clone()
+
+    let mut pool_args = args.v.clone();
+    pool_args.kernel_size = vec![kernel_size.0, kernel_size.1];
+    MaxPool2d::new(&pool_args)
+        .f(&mut vec![input.clone()])[0]
+        .clone()
 }
 
-#[builder(pattern="owned")]
-#[derive(Builder)]
-pub struct DropoutFArgs {
-    #[builder(default="0.5")]
-    p: f32,
-    #[builder(default="false")]
-    training: bool,
-    #[builder(default="false")]
-    inplace: bool,
+pub fn dropout<T>(input: &Variable<T>, args: DropoutArgs) -> Variable<T> {
+    if args.training == false {return input.clone()}
+    Dropout1d::new(&args)
+        .f(&mut vec![input.clone()])[0]
+        .clone()
 }
 
-impl Default for DropoutFArgs {
-    fn default() -> Self {
-        DropoutFArgsBuilder::default().build().unwrap()
-    }
-}
-
-pub fn dropout<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
-    input.clone()
-}
-
-pub fn dropout2d<T>(input: &Variable<T>, args: DropoutFArgs) -> Variable<T> {
-    input.clone()
+pub fn dropout2d<T>(input: &Variable<T>, args: DropoutArgs) -> Variable<T> {
+    if args.training == false {return input.clone()}
+    Dropout2d::new(&args)
+        .f(&mut vec![input.clone()])[0]
+        .clone()
 }
 
 pub fn conv2d<T:Default>(input: &mut Variable<T>, weight: &mut Variable<T>, args: &mut Conv2dFArgs<T>) -> Variable<T> {
@@ -60,14 +38,25 @@ pub fn conv2d<T:Default>(input: &mut Variable<T>, weight: &mut Variable<T>, args
         Some(ref mut bias) => vec![input.clone(), weight.clone(), bias.clone()],
         None => vec![input.clone(), weight.clone()],
     };
-    let mut convf = ConvNd::new(&ConvNdArgs::from(args));
-    convf.f(&mut v)[0].clone()
+    ConvNd::new(&ConvNdArgs::from(args))
+        .f(&mut v)[0]
+        .clone()
 }
 
-pub fn relu<T>(input: &Variable<T>, inplace: bool) -> Variable<T> {
-    input.clone()
+pub fn relu<T>(input: &mut Variable<T>) -> Variable<T> {
+    Threshold::new(0., 0., false)
+        .f(&mut vec![input.clone()])[0]
+        .clone()
+}
+
+pub fn relu_<T>(input: &Variable<T>) -> Variable<T> {
+    Threshold::new(0., 0., true)
+        .f(&mut vec![input.clone()])[0]
+        .clone()
 }
 
 pub fn log_softmax<T>(input: &Variable<T>) -> Variable<T> {
-    input.clone()
+    LogSoftmax::new()
+        .f(&mut vec![input.clone()])[0]
+        .clone()
 }
