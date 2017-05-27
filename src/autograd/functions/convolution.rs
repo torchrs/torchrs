@@ -13,12 +13,12 @@ pub struct ConvNdArgs {
     #[builder(default="false")]
     benchmark: bool,
     #[builder(default="false")]
-    cudnn_enabled: bool
+    cudnn_enabled: bool,
 }
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv1dFArgs<T:Default> {
+pub struct Conv1dFArgs<T: Default> {
     #[builder(default="None")]
     bias: Option<Variable<T>>,
     #[builder(default="vec![1]")]
@@ -31,7 +31,7 @@ pub struct Conv1dFArgs<T:Default> {
     groups: u32,
 }
 
-impl<T:Default> Default for Conv1dFArgs<T> {
+impl<T: Default> Default for Conv1dFArgs<T> {
     fn default() -> Self {
         Conv1dFArgsBuilder::default().build().unwrap()
     }
@@ -39,7 +39,7 @@ impl<T:Default> Default for Conv1dFArgs<T> {
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv2dFArgs<T:Default> {
+pub struct Conv2dFArgs<T: Default> {
     #[builder(default="None")]
     pub bias: Option<Variable<T>>,
     #[builder(default="vec![1, 1]")]
@@ -52,7 +52,7 @@ pub struct Conv2dFArgs<T:Default> {
     pub groups: u32,
 }
 
-impl<T:Default + Copy> Default for Conv2dFArgs<T> {
+impl<T: Default + Copy> Default for Conv2dFArgs<T> {
     fn default() -> Self {
         Conv2dFArgsBuilder::default().build().unwrap()
     }
@@ -60,7 +60,7 @@ impl<T:Default + Copy> Default for Conv2dFArgs<T> {
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv3dFArgs<T:Default> {
+pub struct Conv3dFArgs<T: Default> {
     #[builder(default="None")]
     bias: Option<Variable<T>>,
     #[builder(default="vec![1, 1, 1]")]
@@ -73,46 +73,49 @@ pub struct Conv3dFArgs<T:Default> {
     groups: u32,
 }
 
-impl<T:Default> Default for Conv3dFArgs<T> {
+impl<T: Default> Default for Conv3dFArgs<T> {
     fn default() -> Self {
         Conv3dFArgsBuilder::default().build().unwrap()
     }
 }
 
-impl<'a, T:Default> From<&'a mut Conv2dFArgs<T>> for ConvNdArgs {
+impl<'a, T: Default> From<&'a mut Conv2dFArgs<T>> for ConvNdArgs {
     fn from(input: &'a mut Conv2dFArgs<T>) -> Self {
-    	ConvNdArgsBuilder::default()
-    		.stride(input.stride.clone())
-    		.padding(input.padding.clone())
-    		.dilation(input.dilation.clone())
-    		.groups(input.groups)
-    		.output_padding(vec![0, 0])
-    		.build().unwrap()
+        ConvNdArgsBuilder::default()
+            .stride(input.stride.clone())
+            .padding(input.padding.clone())
+            .dilation(input.dilation.clone())
+            .groups(input.groups)
+            .output_padding(vec![0, 0])
+            .build()
+            .unwrap()
     }
 }
 
 pub struct ConvNd<T> {
-	delegate: Function<T>,
-	args: ConvNdArgs,
+    delegate: Function<T>,
+    args: ConvNdArgs,
 }
 
 impl<T> ConvNd<T> {
-	pub fn new(args: &ConvNdArgs) -> Self {
-		ConvNd {delegate: Function::new(), args: args.clone()}
-	}
+    pub fn new(args: &ConvNdArgs) -> Self {
+        ConvNd {
+            delegate: Function::new(),
+            args: args.clone(),
+        }
+    }
 }
 
 impl<T> FuncIntf<T> for ConvNd<T> {
-	fn delegate(&mut self) -> &mut Function<T> {
-		&mut self.delegate
-	}
-	fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-		// run native code here
-		input.clone()
-	}
-	fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-		// run native code here
-		input.clone()
-	}
+    fn delegate(&mut self) -> &mut Function<T> {
+        &mut self.delegate
+    }
+    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+        // run native code here
+        input.clone()
+    }
+    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+        // run native code here
+        input.clone()
+    }
 }
-
