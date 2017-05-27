@@ -62,4 +62,17 @@ impl ModIntf<f32> for Net {
     }
 }
 
-fn main() {}
+fn train(model: &mut Net, epoch: u32) {
+    model.train()
+}
+
+fn test(model: &mut Net, epoch: u32) {
+    model.eval()
+}
+
+
+fn main() {
+    let mut model = Net::new();
+    train(&mut model, 10);
+    test(&mut model, 10)
+}
