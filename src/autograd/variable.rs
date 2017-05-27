@@ -4,7 +4,6 @@ use ::*;
 
 pub type VarList<T> = Vec<Variable<T>>;
 
-
 pub struct VariableImpl<T> {
     data: Option<Tensor<T>>,
     grad_fn: OptRcMut<Function<T>>,
@@ -36,6 +35,10 @@ impl<T> Variable<T> {
             callback(&mut *t);
         }
     }
+    pub fn view(&self, dims: &[i32]) -> Self {
+        self.clone()
+    }
+
 }
 
 impl<T> Default for Variable<T> {
