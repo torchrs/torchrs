@@ -1,9 +1,10 @@
 //use torchrs::nn::functional::{max_pool2d, relu, conv2d, dropout, dropout2d, linear, log_softmax};
 
 use autograd::variable::Variable;
-use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, MaxPool2dArgs, MaxPoolFArgs, MaxPool2d,
-               DropoutArgs, Dropout1d, Dropout2d, Threshold, LogSoftmax};
+use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, MaxPool2d, Dropout1d, Dropout2d,
+               Threshold, LogSoftmax};
 
+pub use autograd::{MaxPool2dArgs, DropoutArgs};
 
 
 pub fn max_pool2d<T>(input: &Variable<T>,
