@@ -2,16 +2,18 @@ extern crate torchrs;
 #[macro_use]
 extern crate modparse_derive;
 
-use torchrs::nn::{Module, Conv2d, Linear};
-use torchrs::nn::modules::module::*;
 use torchrs::autograd::{Variable, BackwardArgs};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
 
+use torchrs::nn;
+use torchrs::nn::{ModuleStruct, ModIntf};
 use torchrs::nn::functional::{dropout2d, MaxPool2dArgs, DropoutArgs};
 use torchrs::nn::functional as F;
 use std::vec;
 use std::slice;
+
+
 
 type Batch<dT, tT> = (Tensor<dT>, Tensor<tT>);
 type Dataset<dT, tT> = Vec<Batch<dT, tT>>;
@@ -42,21 +44,21 @@ struct NetArgs {
 
 #[derive(ModParse)]
 struct Net {
-    delegate: Module<f32>,
-    conv1: Conv2d<f32>,
-    conv2: Conv2d<f32>,
-    fc1: Linear<f32>,
-    fc2: Linear<f32>,
+    delegate: nn::Module<f32>,
+    conv1: nn::Conv2d<f32>,
+    conv2: nn::Conv2d<f32>,
+    fc1: nn::Linear<f32>,
+    fc2: nn::Linear<f32>,
 }
 
 impl Net {
     pub fn new() -> Net {
         let mut t = Net {
-            delegate: Module::new(),
-            conv1: Conv2d::build(1, 10, 5).done(),
-            conv2: Conv2d::build(10, 20, 5).done(),
-            fc1: Linear::build(320, 50).done(),
-            fc2: Linear::build(50, 10).done(),
+            delegate: nn::Module::new(),
+            conv1: nn::Conv2d::build(1, 10, 5).done(),
+            conv2: nn::Conv2d::build(10, 20, 5).done(),
+            fc1: nn::Linear::build(320, 50).done(),
+            fc2: nn::Linear::build(50, 10).done(),
         };
         t.init_module();
         t
@@ -87,7 +89,7 @@ impl ModIntf<f32> for Net {
         panic!("not valid")
     }
 
-    fn delegate(&mut self) -> &mut Module<f32> {
+    fn delegate(&mut self) -> &mut nn::Module<f32> {
         &mut self.delegate
     }
 }
