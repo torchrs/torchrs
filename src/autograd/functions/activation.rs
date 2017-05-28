@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 
 pub struct Threshold<T> {
     delegate: Function<T>,
@@ -17,11 +17,9 @@ impl<T> Threshold<T> {
         }
     }
 }
+impl_func_delegate!(Threshold);
 
 impl<T> FuncIntf<T> for Threshold<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
-        &mut self.delegate
-    }
     fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }

@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -81,11 +81,9 @@ impl<T> MaxPool2d<T> {
         input.clone()
     }
 }
+impl_func_delegate!(MaxPool2d);
 
 impl<T> FuncIntf<T> for MaxPool2d<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
-        &mut self.delegate
-    }
     fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         self.forward_apply(&mut input)
     }

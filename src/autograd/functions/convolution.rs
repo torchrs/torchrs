@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -105,11 +105,9 @@ impl<T> ConvNd<T> {
         }
     }
 }
+impl_func_delegate!(ConvNd);
 
 impl<T> FuncIntf<T> for ConvNd<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
-        &mut self.delegate
-    }
     fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         // run native code here
         input.clone()

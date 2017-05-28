@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 
 pub struct Dropout1d<T> {
     delegate: Function<T>,
@@ -35,6 +35,8 @@ impl<T> Dropout1d<T> {
         }
     }
 }
+impl_func_delegate!(Dropout1d);
+
 impl<T> Dropout2d<T> {
     pub fn new(args: &DropoutArgs) -> Self {
         Dropout2d {
@@ -43,11 +45,9 @@ impl<T> Dropout2d<T> {
         }
     }
 }
+impl_func_delegate!(Dropout2d);
 
 impl<T> FuncIntf<T> for Dropout1d<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
-        &mut self.delegate
-    }
     fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
@@ -57,9 +57,6 @@ impl<T> FuncIntf<T> for Dropout1d<T> {
 }
 
 impl<T> FuncIntf<T> for Dropout2d<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
-        &mut self.delegate
-    }
     fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
