@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-use std::collections::hash_map;
-use tensor::*;
-use autograd::variable::Variable;
-use nn::Parameter;
-
+use std::collections::{HashMap, hash_map};
+use tensor::Tensor;
+use autograd::Variable;
+use nn;
 
 // placeholder
 struct TorchBackend {}
@@ -20,7 +18,7 @@ pub struct Module<T> {
     _buffers: HashMap<String, Tensor<T>>,
     //	_backward_hooks:
     //	_forward_hooks:
-    _params: HashMap<String, *mut Parameter<T>>,
+    _params: HashMap<String, *mut nn::Parameter<T>>,
     _modules: HashMap<String, *mut Module<T>>,
 }
 pub struct PtrIterMut<'a, T: 'a> {
@@ -74,7 +72,7 @@ impl<T> Module<T> {
         self._modules.insert(m._name.clone(), m.as_mut_ptr());
 
     }
-    pub fn add_param(&mut self, name: &str, param: &mut Parameter<T>) {
+    pub fn add_param(&mut self, name: &str, param: &mut nn::Parameter<T>) {
         let s = String::from(name);
         self._params.insert(s, param.as_mut_ptr());
 
@@ -85,7 +83,7 @@ impl<T> Module<T> {
     pub fn modules_iter(&mut self) -> PtrIter<Module<T>> {
         PtrIter { mod_iter: self._modules.iter() }
     }
-    pub fn params_iter_mut(&mut self) -> PtrIterMut<Parameter<T>> {
+    pub fn params_iter_mut(&mut self) -> PtrIterMut<nn::Parameter<T>> {
         PtrIterMut { mod_iter: self._params.iter_mut() }
     }
     pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {

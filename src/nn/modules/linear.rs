@@ -1,7 +1,7 @@
-use nn::modules::module::*;
-use nn::parameter::Parameter;
-use autograd::variable::Variable;
+use nn::{Module, ModuleStruct, ModIntf, Parameter};
+use autograd::Variable;
 use std::marker::PhantomData;
+
 
 #[derive(ModParse)]
 pub struct Linear<T> {
