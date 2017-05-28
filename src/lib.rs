@@ -12,6 +12,7 @@ extern crate derive_builder;
 pub mod nn;
 pub mod autograd;
 pub mod optim;
+pub mod utils;
 pub mod tensor;
 pub mod storage;
 use std::rc::Rc;
