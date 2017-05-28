@@ -1,6 +1,9 @@
 extern crate torchrs;
+extern crate getopts;
 #[macro_use]
 extern crate modparse_derive;
+#[macro_use]
+extern crate derive_builder;
 
 use torchrs::autograd::{Variable, BackwardArgs};
 use torchrs::tensor::Tensor;
@@ -8,10 +11,12 @@ use torchrs::optim;
 
 use torchrs::nn;
 use torchrs::nn::{ModuleStruct, ModIntf};
-use torchrs::nn::functional::{dropout2d, MaxPool2dArgs, DropoutArgs};
 use torchrs::nn::functional as F;
 use std::vec;
 use std::slice;
+
+use getopts::Options;
+use std::env;
 
 
 
@@ -34,12 +39,6 @@ impl<dT, tT> DataLoader<dT, tT> {
     pub fn len(&self) -> usize {
         self.dataset.len()
     }
-}
-
-#[derive(Default)]
-struct NetArgs {
-    log_interval: usize,
-    cuda: bool,
 }
 
 #[derive(ModParse)]
@@ -73,10 +72,10 @@ impl Net {
 impl ModIntf<f32> for Net {
     fn forward(&mut self, args: &mut Variable<f32>) -> Variable<f32> {
         let training = self.delegate.training;
-        let pool_val = MaxPool2dArgs::default();
-        let dropout_val = DropoutArgs::default();
+        let pool_val = F::MaxPool2dArgs::default();
+        let dropout_val = F::DropoutArgs::default();
         let mut x = F::relu(&F::max_pool2d(&self.conv1.f(args), (2, 2), &pool_val));
-        let mut x = F::relu(&F::max_pool2d(&dropout2d(&self.conv2.f(&mut x), &dropout_val),
+        let mut x = F::relu(&F::max_pool2d(&F::dropout2d(&self.conv2.f(&mut x), &dropout_val),
                                            (2, 2),
                                            &pool_val));
         let mut x = x.view(&[-1, 320]);
@@ -146,17 +145,51 @@ fn test(model: &mut Net, args: &NetArgs, test_loader: &DataLoader<f32, i64>, epo
 
 }
 
+#[derive(Clone, Builder)]
+struct NetArgs {
+    #[builder(default="64")]
+    batch_size: usize,
+    #[builder(default="1000")]
+    test_batch_size: usize,
+    #[builder(default="10")]
+    epochs: u32,
+    #[builder(default="0.01")]
+    lr: f32,
+    #[builder(default="0.5")]
+    momentum: f32,
+    #[builder(default="true")]
+    cuda: bool,
+    #[builder(default="1")]
+    seed: usize,
+    #[builder(default="10")]
+    log_interval: usize,
+}
+
+impl Default for NetArgs {
+    fn default() -> Self {
+        NetArgsBuilder::default().build().unwrap()
+    }
+}
+
+fn parse_args() -> NetArgs {
+    let cmd_args: Vec<String> = env::args().collect();
+    let mut args = NetArgs::default();
+    let mut opts = Options::new();
+    /*
+    	* XXX do parsey stuff
+    	*/
+    args
+}
 
 fn main() {
-    let epochs = 10;
     // no data loaders yet so demonstrate with Vec placeholder
     let train_loader: DataLoader<f32, i64> = DataLoader::new();
     let test_loader: DataLoader<f32, i64> = DataLoader::new();
-    let args = NetArgs::default();
+    let args = parse_args();
     let mut optimizer = optim::SGD::new();
 
     let mut model = Net::new();
-    for epoch in 1..epochs + 1 {
+    for epoch in 1..args.epochs + 1 {
         train(&mut model, &args, &train_loader, epoch, &mut optimizer);
         test(&mut model, &args, &test_loader, epoch);
     }
