@@ -122,8 +122,28 @@ fn train(model: &mut Net,
     }
 }
 
-fn test(model: &mut Net, args: &NetArgs, data: &DataLoader<f32, i64>, epoch: u32) {
-    model.eval()
+fn test(model: &mut Net, args: &NetArgs, test_loader: &DataLoader<f32, i64>, epoch: u32) {
+    model.eval();
+    let mut test_loss = 0.;
+    let mut correct = 0;
+    for &(ref data, ref target) in test_loader.iter() {
+        let (mut data, mut target) = if args.cuda {
+            (Variable::new_volatile(data.cuda().clone()), Variable::new(target.cuda().clone()))
+        } else {
+            (Variable::new(data.clone()), Variable::new(target.clone()))
+        };
+        let mut output = model.f(&mut data);
+        test_loss += F::nll_loss(&output, &target, &F::NLLLossArgs::default());
+        let pred = output.data().reduce_max(1).1;
+        correct += pred.tensor_eq(target.data()).cpu().sum();
+    }
+    test_loss /= test_loader.len() as f32;
+    println!("\nTest set: Average loss: {:.4}, Accuracy: {}/{} ({:.0}%)\n",
+             test_loss,
+             correct,
+             test_loader.dataset.len(),
+             100. * (correct as f32) / (test_loader.dataset.len() as f32))
+
 }
 
 
