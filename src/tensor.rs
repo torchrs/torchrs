@@ -18,7 +18,27 @@ impl<T> Tensor<T> {
         panic!("implement")
     }
     pub fn cuda(&self) -> Self {
+        panic!("implement");
         self.clone()
+    }
+    pub fn cpu(&self) -> Self {
+        panic!("implement");
+        self.clone()
+    }
+    pub fn reduce_max(&self, axis: usize) -> (Self, Tensor<i64>) {
+        panic!("implement");
+    }
+    pub fn tensor_eq(&self, rhs: Self) -> Tensor<i64> {
+        panic!("implement")
+
+    }
+    pub fn sum(&self) -> u32 {
+        panic!("implement");
+        0
+    }
+    pub fn s(&self, dim: usize) -> Self {
+        panic!("implement");
+
     }
 }
 
@@ -28,7 +48,7 @@ impl<T> Clone for Tensor<T> {
     }
 }
 
-impl<T:Copy> Index<isize> for Tensor<T> {
+impl<T: Copy> Index<isize> for Tensor<T> {
     type Output = T;
 
     fn index(&self, idx: isize) -> &Self::Output {

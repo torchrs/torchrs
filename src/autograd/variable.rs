@@ -1,5 +1,6 @@
-use autograd::function::*;
+use autograd::Function;
 use tensor::Tensor;
+use std::ops::{AddAssign, Index};
 use ::*;
 
 pub type VarList<T> = Vec<Variable<T>>;
@@ -45,6 +46,9 @@ impl<T> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable { value: RcMutNew(VariableImpl::new(data)) }
     }
+    pub fn new_volatile(data: Tensor<T>) -> Self {
+        Variable { value: RcMutNew(VariableImpl::new(data)) }
+    }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         let mut v = self.value.borrow_mut();
         callback(&mut v.data);
@@ -74,5 +78,19 @@ impl<T> Default for Variable<T> {
             grad: None,
         };
         Variable { value: RcMutNew(v) }
+    }
+}
+
+impl<T: Copy> Index<isize> for Variable<T> {
+    type Output = T;
+
+    fn index(&self, idx: isize) -> &Self::Output {
+        panic!("implement")
+    }
+}
+
+impl AddAssign<Variable<f32>> for f32 {
+    fn add_assign(&mut self, rhs: Variable<f32>) {
+        *self = *self + rhs[0]
     }
 }
