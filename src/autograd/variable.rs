@@ -5,10 +5,20 @@ use ::*;
 pub type VarList<T> = Vec<Variable<T>>;
 
 pub struct VariableImpl<T> {
-    data: Option<Tensor<T>>,
+    data: Tensor<T>,
     grad_fn: OptRcMut<Function<T>>,
     grad: OptRcMut<Variable<T>>,
 	// version_counter etc ...
+}
+
+impl<T> VariableImpl<T> {
+    fn new(data: Tensor<T>) -> Self {
+        VariableImpl {
+            data: data,
+            grad_fn: None,
+            grad: None,
+        }
+    }
 }
 
 pub struct Variable<T> {
@@ -28,14 +38,20 @@ pub struct SavedVariable<T> {
 	// version_counter etc ...
 }
 
+#[derive(Default, Clone)]
 pub struct BackwardArgs {}
 
 impl<T> Variable<T> {
+    pub fn new(data: Tensor<T>) -> Self {
+        Variable { value: RcMutNew(VariableImpl::new(data)) }
+    }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         let mut v = self.value.borrow_mut();
-        if let Some(ref mut t) = v.data {
-            callback(&mut *t);
-        }
+        callback(&mut v.data);
+    }
+    // XXX FIXME
+    pub fn data(&mut self) -> Tensor<T> {
+        self.value.borrow_mut().data.clone()
     }
     pub fn view(&self, dims: &[i32]) -> Self {
         self.clone()
@@ -53,7 +69,7 @@ impl<T> Variable<T> {
 impl<T> Default for Variable<T> {
     fn default() -> Self {
         let v = VariableImpl {
-            data: None,
+            data: Tensor::new(),
             grad_fn: None,
             grad: None,
         };
