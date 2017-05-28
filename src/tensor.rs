@@ -10,18 +10,31 @@ use {Ixs, RcMut};
 pub struct Tensor<T> {
     value: RcMut<TensorImpl<T, Output = T>>,
 }
+impl<T> Tensor<T> {
+    pub fn new() -> Self {
+        panic!("implement")
+    }
+    pub fn len(&self) -> usize {
+        panic!("implement")
+    }
+    pub fn cuda(&self) -> Self {
+        self.clone()
+    }
+}
 
-impl<'a, T> Clone for Tensor<T> {
+impl<T> Clone for Tensor<T> {
     fn clone(&self) -> Self {
         Tensor { value: self.value.clone() }
     }
 }
-/*
-impl<'a> Tensor<'a> {
-    fn view<'a>(&self, dims: &[i32]) -> Tensor<'a> {
+
+impl<T:Copy> Index<isize> for Tensor<T> {
+    type Output = T;
+
+    fn index(&self, idx: isize) -> &Self::Output {
+        panic!("implement")
     }
 }
-*/
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
 }
