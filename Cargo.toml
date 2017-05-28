@@ -9,3 +9,4 @@ modparse_derive = { path = "modparse_derive"}
 num = "^0.1.37"
 rand = "^0.3"
 derive_builder = "^0.4.7"
+getopts = "0.2"
