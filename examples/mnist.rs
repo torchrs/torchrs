@@ -13,8 +13,6 @@ use torchrs::nn;
 use torchrs::nn::{ModuleStruct, ModIntf};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
-use std::vec;
-use std::slice;
 
 use getopts::Options;
 use std::env;
