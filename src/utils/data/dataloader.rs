@@ -3,6 +3,8 @@ use std::slice;
 use tensor::Tensor;
 
 pub type Batch<dT, tT> = (Tensor<dT>, Tensor<tT>);
+pub type BatchLoader<dT, tT> = DataLoader<Batch<dT, tT>>;
+
 
 pub struct DataLoader<T: Clone> {
     pub dataset: Dataset<T>,
@@ -32,6 +34,11 @@ pub struct DataLoaderArgs<T> {
     pub sampler: Option<Sampler<T>>,
 }
 
+impl<T: Default + Clone> Default for DataLoaderArgs<T> {
+    fn default() -> Self {
+        DataLoaderArgsBuilder::default().build().unwrap()
+    }
+}
 
 fn default_collate<T>(batch: T) -> T
     where T: Clone
@@ -61,9 +68,10 @@ impl<T: Clone + 'static> DataLoader<T> {
             sampler: sampler,
         }
     }
-}
-
-pub trait DataLoaderIntf<T> {
-    fn iter<'a>(&self) -> slice::Iter<'a, T>;
-    fn len(&self) -> usize;
+    pub fn iter(&self) -> Box<Iterator<Item = T>> {
+        self.dataset.iter()
+    }
+    pub fn len(&self) -> usize {
+        self.dataset.len()
+    }
 }

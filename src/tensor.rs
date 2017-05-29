@@ -42,6 +42,12 @@ impl<T> Tensor<T> {
     }
 }
 
+impl<T> Default for Tensor<T> {
+    fn default() -> Self {
+        panic!("")
+    }
+}
+
 impl<T> Clone for Tensor<T> {
     fn clone(&self) -> Self {
         Tensor { value: self.value.clone() }
