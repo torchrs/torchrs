@@ -12,33 +12,15 @@ use torchrs::optim;
 use torchrs::nn;
 use torchrs::nn::{ModuleStruct, ModIntf};
 use torchrs::nn::functional as F;
+use torchrs::utils::data as D;
 use std::vec;
 use std::slice;
 
 use getopts::Options;
 use std::env;
 
-
-
-type Batch<dT, tT> = (Tensor<dT>, Tensor<tT>);
-type Dataset<dT, tT> = Vec<Batch<dT, tT>>;
-struct DataLoader<dT, tT> {
-    dataset: Dataset<dT, tT>,
-}
-
-impl<dT, tT> DataLoader<dT, tT> {
-    pub fn new() -> Self {
-        DataLoader { dataset: Vec::new() }
-    }
-    pub fn iter(&self) -> slice::Iter<Batch<dT, tT>> {
-        self.dataset.as_slice().iter()
-    }
-    pub fn iter_mut(&mut self) -> slice::IterMut<Batch<dT, tT>> {
-        self.dataset.as_mut_slice().iter_mut()
-    }
-    pub fn len(&self) -> usize {
-        self.dataset.len()
-    }
+fn MNIST() -> D::Dataset<D::Batch<f32, i64>> {
+    panic!("just a stub")
 }
 
 #[derive(ModParse)]
@@ -95,11 +77,11 @@ impl ModIntf<f32> for Net {
 
 fn train(model: &mut Net,
          args: &NetArgs,
-         train_loader: &DataLoader<f32, i64>,
+         train_loader: &D::BatchLoader<f32, i64>,
          epoch: u32,
          optimizer: &mut optim::OptIntf) {
     model.train();
-    for (batch_idx, &(ref data, ref target)) in train_loader.iter().enumerate() {
+    for (batch_idx, (ref data, ref target)) in train_loader.iter().enumerate() {
         let (mut data, target) = if args.cuda {
             (Variable::new(data.cuda().clone()), Variable::new(target.cuda().clone()))
         } else {
@@ -121,11 +103,11 @@ fn train(model: &mut Net,
     }
 }
 
-fn test(model: &mut Net, args: &NetArgs, test_loader: &DataLoader<f32, i64>, epoch: u32) {
+fn test(model: &mut Net, args: &NetArgs, test_loader: &D::BatchLoader<f32, i64>, epoch: u32) {
     model.eval();
     let mut test_loss = 0.;
     let mut correct = 0;
-    for &(ref data, ref target) in test_loader.iter() {
+    for (ref data, ref target) in test_loader.iter() {
         let (mut data, mut target) = if args.cuda {
             (Variable::new_volatile(data.cuda().clone()), Variable::new(target.cuda().clone()))
         } else {
@@ -183,8 +165,10 @@ fn parse_args() -> NetArgs {
 
 fn main() {
     // no data loaders yet so demonstrate with Vec placeholder
-    let train_loader: DataLoader<f32, i64> = DataLoader::new();
-    let test_loader: DataLoader<f32, i64> = DataLoader::new();
+    let train_loader: D::BatchLoader<f32, i64> = D::DataLoader::new(MNIST(),
+                                                                    D::DataLoaderArgs::default());
+    let test_loader: D::BatchLoader<f32, i64> = D::DataLoader::new(MNIST(),
+                                                                   D::DataLoaderArgs::default());
     let args = parse_args();
     let mut optimizer = optim::SGD::new();
 
