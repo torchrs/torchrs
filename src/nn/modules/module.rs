@@ -131,10 +131,12 @@ impl<T> Module<T> {
     }
 }
 
-pub trait ModIntf<T> {
+pub trait ModDelegate<T> {
     fn delegate(&mut self) -> &mut Module<T>;
+}
+
+pub trait ModIntf<T>: ModDelegate<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
-    fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
     fn f(&mut self, input: &mut Variable<T>) -> Variable<T> {
         {
             let mut m = self.delegate();
@@ -147,6 +149,16 @@ pub trait ModIntf<T> {
         }
         output
     }
+    fn train(&mut self) {
+        self.delegate().train(true)
+    }
+    fn eval(&mut self) {
+        self.delegate().train(false)
+    }
+}
+
+pub trait ModIntfV<T>: ModDelegate<T> {
+    fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
     fn fv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
         {
             let mut m = self.delegate();
@@ -158,11 +170,5 @@ pub trait ModIntf<T> {
             // do post-forward hooks
         }
         output
-    }
-    fn train(&mut self) {
-        self.delegate().train(true)
-    }
-    fn eval(&mut self) {
-        self.delegate().train(false)
     }
 }

@@ -1,27 +1,6 @@
-use nn::{Module, ModuleStruct, ModIntf, Parameter};
+use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
 use autograd::Variable;
 use std::marker::PhantomData;
-
-#[derive(ModParse)]
-pub struct Conv2d<T: Default> {
-    delegate: Module<T>,
-    weight: Parameter<T>,
-}
-
-impl<T: Default> Conv2d<T> {
-    pub fn build(in_channels: u32, out_channels: u32, kernel_size: u32) -> Conv2dArgsBuilder<T> {
-        Conv2dArgsBuilder::default()
-            .in_channels(in_channels)
-            .out_channels(out_channels)
-            .kernel_size(kernel_size)
-    }
-    pub fn new(args: Conv2dArgs<T>) -> Conv2d<T> {
-        Conv2d {
-            delegate: Module::new(),
-            weight: Parameter::default(),
-        }
-    }
-}
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
@@ -49,14 +28,30 @@ impl<T: Default> Conv2dArgsBuilder<T> {
     }
 }
 
-impl<T: Default> ModIntf<T> for Conv2d<T> {
-    fn delegate(&mut self) -> &mut Module<T> {
-        &mut self.delegate
+#[derive(ModParse)]
+pub struct Conv2d<T: Default> {
+    delegate: Module<T>,
+    weight: Parameter<T>,
+}
+
+impl<T: Default> Conv2d<T> {
+    pub fn build(in_channels: u32, out_channels: u32, kernel_size: u32) -> Conv2dArgsBuilder<T> {
+        Conv2dArgsBuilder::default()
+            .in_channels(in_channels)
+            .out_channels(out_channels)
+            .kernel_size(kernel_size)
     }
+    pub fn new(args: Conv2dArgs<T>) -> Conv2d<T> {
+        Conv2d {
+            delegate: Module::new(),
+            weight: Parameter::default(),
+        }
+    }
+}
+impl_mod_delegate!(Conv2d);
+
+impl<T: Default> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         input.clone()
-    }
-    fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
-        panic!("not valid");
     }
 }
