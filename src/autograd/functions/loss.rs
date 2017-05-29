@@ -1,4 +1,5 @@
 use autograd::{Function, FuncIntf, FuncIntfX, FuncDelegate, Variable, VarList};
+use macros::*;
 
 pub struct LogSoftmax<T> {
     delegate: Function<T>,

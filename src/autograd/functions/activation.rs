@@ -1,4 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
+use macros::*;
 
 pub struct Threshold<T> {
     delegate: Function<T>,
