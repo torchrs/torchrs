@@ -1,6 +1,7 @@
-use autograd::Function;
+use autograd::{Function, ExecutionEngine};
 use tensor::Tensor;
 use std::ops::{AddAssign, Index};
+use tensor::*;
 use ::*;
 
 pub type VarList<T> = Vec<Variable<T>>;
@@ -21,27 +22,17 @@ impl Clone for VarKind {
 }
 
 pub struct VariableImpl<T> {
-    data: Tensor<T>,
     // AKA Creator
     grad_fn: OptRcMut<Function>,
     grad: OptRcMut<Variable<T>>,
     // version_counter etc ...
+    dirty: bool,
     volatile: bool,
     requires_grad: bool,
 }
 
 impl<T> VariableImpl<T> {
-    fn new(data: Tensor<T>) -> Self {
-        VariableImpl {
-            data: data,
-            grad_fn: None,
-            grad: None,
-            // XXX
-            volatile: false,
-            requires_grad: false,
-        }
-    }
-    fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
+    fn new(args: VariableArgs) -> Self {
 
         let grad_fn = match args.creator {
             Some(creator) => Some(RcMutNew(creator)),
@@ -49,9 +40,9 @@ impl<T> VariableImpl<T> {
         };
 
         VariableImpl {
-            data: data,
             grad_fn: grad_fn,
             grad: None,
+            dirty: false,
             volatile: args.volatile,
             requires_grad: args.requires_grad,
         }
@@ -59,12 +50,16 @@ impl<T> VariableImpl<T> {
 }
 
 pub struct Variable<T> {
+    pub data: Tensor<T>,
     value: RcMut<VariableImpl<T>>,
 }
 
 impl<T> Clone for Variable<T> {
     fn clone(&self) -> Self {
-        Variable { value: self.value.clone() }
+        Variable {
+            data: self.data.clone(),
+            value: self.value.clone(),
+        }
     }
 }
 
@@ -99,23 +94,47 @@ impl<T> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, VariableArgs::default())
     }
+    fn inner(&mut self) -> RefMut<VariableImpl<T>> {
+        self.value.borrow_mut()
+    }
+    pub fn is_volatile(&self) -> bool {
+        self.inner().volatile
+    }
     pub fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
-        Variable { value: RcMutNew(VariableImpl::new(data)) }
+        Variable {
+            data: data,
+            value: RcMutNew(VariableImpl::new(args)),
+        }
     }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
-        let mut v = self.value.borrow_mut();
-        callback(&mut v.data);
+        callback(&mut self.data);
     }
-    // XXX FIXME
-    pub fn data(&mut self) -> RefMut<Tensor<T>> {
-        RefMut::map(self.value.borrow_mut(), |v| &mut v.data)
+    pub fn mark_dirty(&mut self) {
+        self.value.borrow_mut().dirty = true;
     }
     pub fn view(&self, dims: &[i32]) -> Self {
         unimplemented!()
     }
     // Computes the gradient of current variable w.r.t. graph leaves
-    pub fn backward(&mut self, args: &BackwardArgs) {
-        unimplemented!()
+    pub fn backward_args(&mut self, gradient_: Option<&mut Tensor<T>>, retain_variables: bool) {
+        let mut store;
+        if self.inner().volatile {
+            panic!("calling backward on a volatile variable")
+        }
+        if !self.inner().requires_grad {
+            panic!("calling backward on a variable that doesn't require a gradient")
+        }
+        let mut gradient = match gradient_ {
+            Some(gradient) => gradient,
+            None => {
+                store = self.data.new_(1);
+                &mut store
+            }
+        };
+        ExecutionEngine::run_backward(self, &mut gradient, retain_variables)
+    }
+    pub fn backward(&mut self) {
+        self.backward_args(None, false)
     }
     // Detach from graph
     pub fn detach_(&mut self) {
@@ -129,15 +148,7 @@ impl<T> Variable<T> {
 
 impl<T> Default for Variable<T> {
     fn default() -> Self {
-        let v = VariableImpl {
-            data: Tensor::new(),
-            grad_fn: None,
-            grad: None,
-            // XXX
-            volatile: false,
-            requires_grad: false,
-        };
-        Variable { value: RcMutNew(v) }
+        unimplemented!()
     }
 }
 
