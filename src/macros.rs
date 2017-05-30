@@ -2,8 +2,8 @@
 #[macro_export]
 macro_rules! impl_func_delegate {
 	($name:ident) => (
-		impl<T> FuncDelegate<T> for $name<T> {
-		    fn delegate(&mut self) -> &mut Function<T> {
+		impl FuncDelegate for $name {
+		    fn delegate(&mut self) -> &mut Function {
     		    &mut self.delegate
     		}
 		}

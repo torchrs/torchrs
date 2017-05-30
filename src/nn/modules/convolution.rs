@@ -22,6 +22,7 @@ pub struct Conv2dArgs<T: Default> {
     #[builder(default="PhantomData")]
     phantom: PhantomData<T>,
 }
+
 impl<T: Default> Conv2dArgsBuilder<T> {
     pub fn done(self) -> Conv2d<T> {
         let args = self.build().unwrap();

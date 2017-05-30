@@ -93,12 +93,12 @@ impl<'a> From<&'a mut Conv2dFArgs> for ConvNdArgs {
     }
 }
 
-pub struct ConvNd<T> {
-    delegate: Function<T>,
+pub struct ConvNd {
+    delegate: Function,
     args: ConvNdArgs,
 }
 
-impl<T> ConvNd<T> {
+impl ConvNd {
     pub fn new(args: &ConvNdArgs) -> Self {
         ConvNd {
             delegate: Function::new(),
@@ -108,12 +108,12 @@ impl<T> ConvNd<T> {
 }
 impl_func_delegate!(ConvNd);
 
-impl<T> FuncIntf<T> for ConvNd<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for ConvNd {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         // run native code here
         input.clone()
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         // run native code here
         input.clone()
     }

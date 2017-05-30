@@ -5,11 +5,11 @@ use std::vec::Vec;
 use autograd::variable::*;
 use RcMut;
 
-pub struct Function<T> {
-    saved_variables: Vec<SavedVariable<T>>,
-    next_functions: Vec<(RcMut<Function<T>>, usize)>,
+pub struct Function {
+    saved_variables: Vec<SavedVarKind>,
+    next_functions: Vec<(RcMut<Function>, usize)>,
 }
-impl<T> Function<T> {
+impl Function {
     pub fn new() -> Self {
         Function {
             saved_variables: Vec::new(),
@@ -18,14 +18,14 @@ impl<T> Function<T> {
     }
 }
 
-pub trait FuncDelegate<T> {
-    fn delegate(&mut self) -> &mut Function<T>;
+pub trait FuncDelegate {
+    fn delegate(&mut self) -> &mut Function;
 }
 
-pub trait FuncIntf<T>: FuncDelegate<T> {
-    fn forward(&mut self, input: &mut VarList<T>) -> VarList<T>;
-    fn backward(&mut self, input: &mut VarList<T>) -> VarList<T>;
-    fn f(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+pub trait FuncIntf: FuncDelegate {
+    fn forward<T>(&mut self, input: &mut VarList<T>) -> VarList<T>;
+    fn backward<T>(&mut self, input: &mut VarList<T>) -> VarList<T>;
+    fn f<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         {
             // do start graph stuff with f
             let f = self.delegate();
@@ -36,10 +36,10 @@ pub trait FuncIntf<T>: FuncDelegate<T> {
     }
 }
 
-pub trait FuncIntfX<T>: FuncDelegate<T> {
-    fn forwardx(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T>;
-    fn backwardx(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T>;
-    fn fx(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
+pub trait FuncIntfX: FuncDelegate {
+    fn forwardx<T>(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T>;
+    fn backwardx<T>(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T>;
+    fn fx<T>(&mut self, input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
         {
             // do start graph stuff with f
             let f = self.delegate();

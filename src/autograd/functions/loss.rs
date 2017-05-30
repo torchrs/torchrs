@@ -1,48 +1,48 @@
-use autograd::{Function, FuncIntf, FuncIntfX, FuncDelegate, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncIntfX, FuncDelegate, Variable, VarList, VarKind};
 use macros::*;
 
-pub struct LogSoftmax<T> {
-    delegate: Function<T>,
+pub struct LogSoftmax {
+    delegate: Function,
 }
 
-impl<T> LogSoftmax<T> {
+impl LogSoftmax {
     pub fn new() -> Self {
         LogSoftmax { delegate: Function::new() }
     }
 }
 impl_func_delegate!(LogSoftmax);
 
-impl<T> FuncIntf<T> for LogSoftmax<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for LogSoftmax {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
 }
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
-pub struct NLLLossArgs<T: Default + Copy> {
-    #[builder(default="None")]
-    pub weight: Option<Variable<T>>,
+pub struct NLLLossArgs {
     #[builder(default="false")]
     pub size_average: bool,
+    #[builder(default="None")]
+    pub weight: Option<VarKind>,
 }
 
-impl<T: Default + Copy> Default for NLLLossArgs<T> {
+impl Default for NLLLossArgs {
     fn default() -> Self {
         NLLLossArgsBuilder::default().build().unwrap()
     }
 }
 
-pub struct NLLLoss<T: Default + Copy> {
-    delegate: Function<T>,
-    args: NLLLossArgs<T>,
+pub struct NLLLoss {
+    delegate: Function,
+    args: NLLLossArgs,
 }
 
-impl<T: Default + Copy> NLLLoss<T> {
-    pub fn new(args: &NLLLossArgs<T>) -> Self {
+impl NLLLoss {
+    pub fn new(args: &NLLLossArgs) -> Self {
         NLLLoss {
             delegate: Function::new(),
             args: args.clone(),
@@ -50,17 +50,17 @@ impl<T: Default + Copy> NLLLoss<T> {
     }
 }
 
-impl<T: Default + Copy> FuncDelegate<T> for NLLLoss<T> {
-    fn delegate(&mut self) -> &mut Function<T> {
+impl FuncDelegate for NLLLoss {
+    fn delegate(&mut self) -> &mut Function {
         &mut self.delegate
     }
 }
 
-impl<T: Default + Copy> FuncIntfX<T> for NLLLoss<T> {
-    fn forwardx(&mut self, mut input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
+impl FuncIntfX for NLLLoss {
+    fn forwardx<T>(&mut self, mut input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
         input.clone()
     }
-    fn backwardx(&mut self, mut input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
+    fn backwardx<T>(&mut self, mut input: &VarList<T>, target: &VarList<i64>) -> VarList<T> {
         input.clone()
     }
 }

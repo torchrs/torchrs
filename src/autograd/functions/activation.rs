@@ -1,14 +1,14 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 use macros::*;
 
-pub struct Threshold<T> {
-    delegate: Function<T>,
+pub struct Threshold {
+    delegate: Function,
     threshold: f32,
     value: f32,
     inplace: bool,
 }
 
-impl<T> Threshold<T> {
+impl Threshold {
     pub fn new(threshold: f32, value: f32, inplace: bool) -> Self {
         Threshold {
             delegate: Function::new(),
@@ -20,11 +20,11 @@ impl<T> Threshold<T> {
 }
 impl_func_delegate!(Threshold);
 
-impl<T> FuncIntf<T> for Threshold<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for Threshold {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
 }

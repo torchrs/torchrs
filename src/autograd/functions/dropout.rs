@@ -1,12 +1,12 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
 
-pub struct Dropout1d<T> {
-    delegate: Function<T>,
+pub struct Dropout1d {
+    delegate: Function,
     args: DropoutArgs,
 }
 
-pub struct Dropout2d<T> {
-    delegate: Function<T>,
+pub struct Dropout2d {
+    delegate: Function,
     args: DropoutArgs,
 }
 
@@ -27,7 +27,7 @@ impl Default for DropoutArgs {
     }
 }
 
-impl<T> Dropout1d<T> {
+impl Dropout1d {
     pub fn new(args: &DropoutArgs) -> Self {
         Dropout1d {
             delegate: Function::new(),
@@ -37,7 +37,7 @@ impl<T> Dropout1d<T> {
 }
 impl_func_delegate!(Dropout1d);
 
-impl<T> Dropout2d<T> {
+impl Dropout2d {
     pub fn new(args: &DropoutArgs) -> Self {
         Dropout2d {
             delegate: Function::new(),
@@ -47,20 +47,20 @@ impl<T> Dropout2d<T> {
 }
 impl_func_delegate!(Dropout2d);
 
-impl<T> FuncIntf<T> for Dropout1d<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for Dropout1d {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
 }
 
-impl<T> FuncIntf<T> for Dropout2d<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for Dropout2d {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
 }

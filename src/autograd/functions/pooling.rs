@@ -62,32 +62,32 @@ impl Default for MaxPool3dArgs {
 }
 
 
-pub struct MaxPool2d<T> {
-    delegate: Function<T>,
+pub struct MaxPool2d {
+    delegate: Function,
     args: MaxPoolFArgs,
 }
 
-impl<T> MaxPool2d<T> {
+impl MaxPool2d {
     pub fn new(args: &MaxPoolFArgs) -> Self {
         MaxPool2d {
             delegate: Function::new(),
             args: args.clone(),
         }
     }
-    fn forward_apply(&mut self, input: &mut VarList<T>) -> VarList<T> {
+    fn forward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
-    fn backward_apply(&mut self, input: &mut VarList<T>) -> VarList<T> {
+    fn backward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
         input.clone()
     }
 }
 impl_func_delegate!(MaxPool2d);
 
-impl<T> FuncIntf<T> for MaxPool2d<T> {
-    fn forward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+impl FuncIntf for MaxPool2d {
+    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         self.forward_apply(&mut input)
     }
-    fn backward(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         self.backward_apply(&mut input)
     }
 }

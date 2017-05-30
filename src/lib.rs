@@ -8,6 +8,7 @@ extern crate rutorch;
 extern crate modparse_derive;
 #[macro_use]
 extern crate derive_builder;
+
 #[macro_use]
 pub mod macros;
 
