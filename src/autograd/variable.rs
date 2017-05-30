@@ -98,7 +98,7 @@ impl<T> Variable<T> {
         self.value.borrow_mut()
     }
     pub fn is_volatile(&self) -> bool {
-        self.inner().volatile
+        self.value.borrow().volatile
     }
     pub fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
         Variable {
