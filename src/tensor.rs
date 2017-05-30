@@ -28,7 +28,7 @@ impl<T> Tensor<T> {
     pub fn reduce_max(&self, axis: usize) -> (Self, Tensor<i64>) {
         panic!("implement");
     }
-    pub fn tensor_eq(&self, rhs: Self) -> Tensor<i64> {
+    pub fn tensor_eq(&self, rhs: &Self) -> Tensor<i64> {
         panic!("implement")
 
     }
