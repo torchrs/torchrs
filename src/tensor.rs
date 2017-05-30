@@ -10,10 +10,22 @@ use {Ixs, RcMut};
 pub struct Tensor<T> {
     value: RcMut<TensorImpl<T, Output = T>>,
 }
-impl<T> Tensor<T> {
-    pub fn new() -> Self {
+
+pub trait New<D, T> {
+    fn new(args: D) -> T;
+    fn new_(&self, args: D) -> T;
+}
+
+impl<T> New<usize, Tensor<T>> for Tensor<T> {
+    fn new(args: usize) -> Self {
         unimplemented!()
     }
+    fn new_(&self, args: usize) -> Self {
+        unimplemented!()
+    }
+}
+
+impl<T> Tensor<T> {
     pub fn len(&self) -> usize {
         unimplemented!()
     }
