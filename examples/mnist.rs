@@ -8,7 +8,7 @@ extern crate derive_builder;
 extern crate torchrs;
 
 
-use torchrs::autograd::{Variable, BackwardArgs};
+use torchrs::autograd::{Variable, VariableArgs, BackwardArgs};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
 
@@ -140,15 +140,19 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
     let mut test_loss = 0.;
     let mut correct = 0;
     for (ref data, ref target) in test_loader.iter() {
+        let varargs = VariableArgs {
+            volatile: true,
+            ..Default::default()
+        };
         let (mut data, mut target) = if args.cuda {
-            (Variable::new_volatile(data.cuda().clone()), Variable::new(target.cuda().clone()))
+            (Variable::new_args(data.cuda().clone(), varargs), Variable::new(target.cuda().clone()))
         } else {
-            (Variable::new(data.clone()), Variable::new(target.clone()))
+            (Variable::new_args(data.clone(), varargs), Variable::new(target.clone()))
         };
         let mut output = model.f(&mut data);
         test_loss += F::nll_loss(&output, &target, &F::NLLLossArgs::default());
         let pred = output.data().reduce_max(1).1;
-        correct += pred.tensor_eq(target.data()).cpu().sum();
+        correct += pred.tensor_eq(&*target.data()).cpu().sum();
     }
     test_loss /= test_loader.len() as f32;
     println!("\nTest set: Average loss: {:.4}, Accuracy: {}/{} ({:.0}%)\n",
