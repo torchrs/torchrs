@@ -2,7 +2,7 @@
 
 use autograd::variable::Variable;
 use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, FuncIntfX, MaxPool2d, Dropout1d,
-               Dropout2d, Threshold, LogSoftmax, NLLLoss};
+               Dropout2d, Threshold, LogSoftmax, NLLLoss, LinearF};
 
 pub use autograd::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
@@ -52,6 +52,15 @@ pub fn conv2d<T: Default>(input: &mut Variable<T>,
         None => vec![input.clone(), weight.clone()],
     };
     ConvNd::new(&ConvNdArgs::from(args)).f(&mut v)[0].clone()
+}
+
+pub fn linear<T>(input: &Variable<T>, weight: &mut Variable<T>, bias_: Option<&mut Variable<T>>) -> Variable<T>{
+    let mut v = if let Some(bias) = bias_ {
+        vec![input.clone(), weight.clone(), bias.clone()]
+    } else {
+        vec![input.clone(), weight.clone()]
+    };
+    LinearF::new().f(&mut v)[0].clone()
 }
 
 pub fn relu<T>(input: &Variable<T>) -> Variable<T> {
