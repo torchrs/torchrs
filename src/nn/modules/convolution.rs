@@ -1,19 +1,19 @@
 use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
-use autograd::Variable;
+use autograd::{Variable, Conv2dFArgs};
 use std::marker::PhantomData;
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
 pub struct Conv2dArgs<T: Default> {
-    in_channels: u32,
-    out_channels: u32,
-    kernel_size: u32,
-    #[builder(default="1")]
-    stride: u32,
-    #[builder(default="0")]
-    padding: u32,
-    #[builder(default="1")]
-    dilation: u32,
+    in_features: usize,
+    out_features: usize,
+    kernel_size: (usize, usize),
+    #[builder(default="vec![1, 1]")]
+    pub stride: Vec<u32>,
+    #[builder(default="vec![0, 0]")]
+    pub padding: Vec<u32>,
+    #[builder(default="vec![1, 1]")]
+    pub dilation: Vec<u32>,
     #[builder(default="1")]
     groups: u32,
     #[builder(default="true")]
@@ -32,20 +32,41 @@ impl<T: Default> Conv2dArgsBuilder<T> {
 pub struct Conv2d<T: Default> {
     delegate: Module<T>,
     weight: Parameter<T>,
+    bias: Option<Parameter<T>>,
+    #[ignore]
+    args: Conv2dFArgs,
 }
 
 impl<T: Default> Conv2d<T> {
-    pub fn build(in_channels: u32, out_channels: u32, kernel_size: u32) -> Conv2dArgsBuilder<T> {
+    pub fn build(in_features: usize,
+                 out_features: usize,
+                 kernel_size: (usize, usize))
+                 -> Conv2dArgsBuilder<T> {
         Conv2dArgsBuilder::default()
-            .in_channels(in_channels)
-            .out_channels(out_channels)
+            .in_features(in_features)
+            .out_features(out_features)
             .kernel_size(kernel_size)
     }
     pub fn new(args: Conv2dArgs<T>) -> Conv2d<T> {
+        let bias = if args.bias {
+            Some(Parameter::new(vec![args.out_features]))
+        } else {
+            None
+        };
+        let fargs = Conv2dFArgs {
+            kernel_size: vec![args.kernel_size.0, args.kernel_size.1],
+            stride: args.stride.clone(),
+            padding: args.padding.clone(),
+            dilation: args.dilation.clone(),
+            groups: args.groups,
+        };
         Conv2d {
-            delegate: Module::new(),
-            weight: Parameter::default(),
-        }
+                delegate: Module::new(),
+                weight: Parameter::new(vec![args.out_features, args.in_features]),
+                bias: bias,
+                args: fargs,
+            }
+            .init_module()
     }
 }
 impl_mod_delegate!(Conv2d);

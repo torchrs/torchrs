@@ -5,6 +5,9 @@ pub struct Parameter<T> {
     pub v: Variable<T>,
 }
 impl<T> Parameter<T> {
+    pub fn new(dims: Vec<usize>) -> Self {
+        panic!("implement")
+    }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         self.v.apply(callback)
     }

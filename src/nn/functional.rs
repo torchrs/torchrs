@@ -45,16 +45,20 @@ pub fn dropout2d_<T>(input: &mut Variable<T>, args: &DropoutArgs) -> Variable<T>
 
 pub fn conv2d<T: Default>(input: &mut Variable<T>,
                           weight: &mut Variable<T>,
-                          args: &mut Conv2dFArgs<T>)
+                          mut bias_: Option<&mut Variable<T>>,
+                          args: &mut Conv2dFArgs)
                           -> Variable<T> {
-    let mut v = match args.bias {
+    let mut v = match bias_ {
         Some(ref mut bias) => vec![input.clone(), weight.clone(), bias.clone()],
         None => vec![input.clone(), weight.clone()],
     };
     ConvNd::new(&ConvNdArgs::from(args)).f(&mut v)[0].clone()
 }
 
-pub fn linear<T>(input: &Variable<T>, weight: &mut Variable<T>, bias_: Option<&mut Variable<T>>) -> Variable<T>{
+pub fn linear<T>(input: &Variable<T>,
+                 weight: &mut Variable<T>,
+                 bias_: Option<&mut Variable<T>>)
+                 -> Variable<T> {
     let mut v = if let Some(bias) = bias_ {
         vec![input.clone(), weight.clone(), bias.clone()]
     } else {

@@ -107,10 +107,11 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         });
     let foo = quote! {
         impl #impl_generics ModuleStruct for #name  #ty_generics  #where_clause {
-            fn init_module(&mut self) {
+            fn init_module(mut self) -> Self {
             	self.delegate._name = String::from(stringify!(#name));
 				#(#atmatch);* 
 				;
+                self
             }
         }
     };

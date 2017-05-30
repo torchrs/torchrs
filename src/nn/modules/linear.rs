@@ -38,15 +38,14 @@ impl<T: Default> Linear<T> {
             .out_features(out_features)
     }
     pub fn new(args: LinearArgs<T>) -> Linear<T> {
-        let mut t = Linear {
-            delegate: Module::new(),
-            in_features: args.in_features,
-            out_features: args.out_features,
-            weight: Parameter::default(),
-            bias: None,
-        };
-        t.init_module();
-        t
+        Linear {
+                delegate: Module::new(),
+                in_features: args.in_features,
+                out_features: args.out_features,
+                weight: Parameter::default(),
+                bias: None,
+            }
+            .init_module()
     }
 }
 impl_mod_delegate!(Linear);

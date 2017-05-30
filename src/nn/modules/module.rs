@@ -7,7 +7,7 @@ use nn;
 struct TorchBackend {}
 
 pub trait ModuleStruct {
-    fn init_module(&mut self);
+    fn init_module(self) -> Self;
 }
 
 pub struct Module<T> {

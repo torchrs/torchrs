@@ -6,6 +6,7 @@ pub struct ConvNdArgs {
     stride: Vec<u32>,
     padding: Vec<u32>,
     dilation: Vec<u32>,
+    kernel_size: Vec<usize>,
     #[builder(default="false")]
     transposed: bool,
     output_padding: Vec<u32>,
@@ -18,9 +19,9 @@ pub struct ConvNdArgs {
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv1dFArgs<T: Default> {
-    #[builder(default="None")]
-    bias: Option<Variable<T>>,
+pub struct Conv1dFArgs {
+    #[builder(default="vec![1]")]
+    pub kernel_size: Vec<usize>,
     #[builder(default="vec![1]")]
     stride: Vec<u32>,
     #[builder(default="vec![0]")]
@@ -31,7 +32,7 @@ pub struct Conv1dFArgs<T: Default> {
     groups: u32,
 }
 
-impl<T: Default> Default for Conv1dFArgs<T> {
+impl Default for Conv1dFArgs {
     fn default() -> Self {
         Conv1dFArgsBuilder::default().build().unwrap()
     }
@@ -39,9 +40,9 @@ impl<T: Default> Default for Conv1dFArgs<T> {
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv2dFArgs<T: Default> {
-    #[builder(default="None")]
-    pub bias: Option<Variable<T>>,
+pub struct Conv2dFArgs {
+    #[builder(default="vec![1, 1]")]
+    pub kernel_size: Vec<usize>,
     #[builder(default="vec![1, 1]")]
     pub stride: Vec<u32>,
     #[builder(default="vec![0, 0]")]
@@ -52,7 +53,7 @@ pub struct Conv2dFArgs<T: Default> {
     pub groups: u32,
 }
 
-impl<T: Default + Copy> Default for Conv2dFArgs<T> {
+impl Default for Conv2dFArgs {
     fn default() -> Self {
         Conv2dFArgsBuilder::default().build().unwrap()
     }
@@ -60,9 +61,9 @@ impl<T: Default + Copy> Default for Conv2dFArgs<T> {
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv3dFArgs<T: Default> {
-    #[builder(default="None")]
-    bias: Option<Variable<T>>,
+pub struct Conv3dFArgs {
+    #[builder(default="vec![1, 1, 1]")]
+    pub kernel_size: Vec<usize>,
     #[builder(default="vec![1, 1, 1]")]
     stride: Vec<u32>,
     #[builder(default="vec![0, 0, 0]")]
@@ -73,14 +74,14 @@ pub struct Conv3dFArgs<T: Default> {
     groups: u32,
 }
 
-impl<T: Default> Default for Conv3dFArgs<T> {
+impl Default for Conv3dFArgs {
     fn default() -> Self {
         Conv3dFArgsBuilder::default().build().unwrap()
     }
 }
 
-impl<'a, T: Default> From<&'a mut Conv2dFArgs<T>> for ConvNdArgs {
-    fn from(input: &'a mut Conv2dFArgs<T>) -> Self {
+impl<'a> From<&'a mut Conv2dFArgs> for ConvNdArgs {
+    fn from(input: &'a mut Conv2dFArgs) -> Self {
         ConvNdArgsBuilder::default()
             .stride(input.stride.clone())
             .padding(input.padding.clone())
