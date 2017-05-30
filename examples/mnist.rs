@@ -72,15 +72,14 @@ struct Net<T: Default> {
 
 impl<T: Default> Net<T> {
     pub fn new() -> Net<T> {
-        let mut t = Net {
-            delegate: nn::Module::new(),
-            conv1: nn::Conv2d::build(1, 10, 5).done(),
-            conv2: nn::Conv2d::build(10, 20, 5).done(),
-            fc1: nn::Linear::build(320, 50).done(),
-            fc2: nn::Linear::build(50, 10).done(),
-        };
-        t.init_module();
-        t
+        Net {
+                delegate: nn::Module::new(),
+                conv1: nn::Conv2d::build(1, 10, (5, 5)).done(),
+                conv2: nn::Conv2d::build(10, 20, (5, 5)).done(),
+                fc1: nn::Linear::build(320, 50).done(),
+                fc2: nn::Linear::build(50, 10).done(),
+            }
+            .init_module()
     }
 }
 impl_mod_delegate!(Net);
