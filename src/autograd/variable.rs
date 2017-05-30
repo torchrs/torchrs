@@ -41,6 +41,21 @@ impl<T> VariableImpl<T> {
             requires_grad: false,
         }
     }
+    fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
+
+        let grad_fn = match args.creator {
+            Some(creator) => Some(RcMutNew(creator)),
+            _ => None,
+        };
+
+        VariableImpl {
+            data: data,
+            grad_fn: grad_fn,
+            grad: None,
+            volatile: args.volatile,
+            requires_grad: args.requires_grad,
+        }
+    }
 }
 
 pub struct Variable<T> {
@@ -63,13 +78,29 @@ pub struct SavedVariable<T> {
 #[derive(Default, Clone)]
 pub struct BackwardArgs {}
 
-pub struct VariableArgs {}
+
+pub struct VariableArgs {
+    pub creator: Option<Function>,
+    pub volatile: bool,
+    pub requires_grad: bool,
+}
+
+impl Default for VariableArgs {
+    fn default() -> Self {
+        VariableArgs {
+            creator: None,
+            volatile: false,
+            requires_grad: true,
+        }
+    }
+}
 
 impl<T> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
-        Variable { value: RcMutNew(VariableImpl::new(data)) }
+        Variable::new_args(data, VariableArgs::default())
     }
-    pub fn new_volatile(data: Tensor<T>) -> Self {
+    pub fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
+
         Variable { value: RcMutNew(VariableImpl::new(data)) }
     }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
@@ -77,8 +108,8 @@ impl<T> Variable<T> {
         callback(&mut v.data);
     }
     // XXX FIXME
-    pub fn data(&mut self) -> Tensor<T> {
-        self.value.borrow_mut().data.clone()
+    pub fn data(&mut self) -> RefMut<Tensor<T>> {
+        RefMut::map(self.value.borrow_mut(), |v| &mut v.data)
     }
     pub fn view(&self, dims: &[i32]) -> Self {
         self.clone()
