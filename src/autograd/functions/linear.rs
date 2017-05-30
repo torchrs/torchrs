@@ -14,11 +14,9 @@ impl_func_delegate!(LinearF);
 
 impl FuncIntf for LinearF {
     fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        panic!("implement");
-        input.clone()
+        unimplemented!()
     }
     fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        panic!("implement");
-        input.clone()
+        unimplemented!()
     }
 }

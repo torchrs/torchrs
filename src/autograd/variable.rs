@@ -16,7 +16,7 @@ pub enum VarKind {
 
 impl Clone for VarKind {
     fn clone(&self) -> Self {
-        panic!("match and clone!")
+        unimplemented!()
     }
 }
 
@@ -100,7 +100,6 @@ impl<T> Variable<T> {
         Variable::new_args(data, VariableArgs::default())
     }
     pub fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
-
         Variable { value: RcMutNew(VariableImpl::new(data)) }
     }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
@@ -112,15 +111,19 @@ impl<T> Variable<T> {
         RefMut::map(self.value.borrow_mut(), |v| &mut v.data)
     }
     pub fn view(&self, dims: &[i32]) -> Self {
-        self.clone()
+        unimplemented!()
     }
     // Computes the gradient of current variable w.r.t. graph leaves
-    pub fn backward(&mut self, args: &BackwardArgs) {}
+    pub fn backward(&mut self, args: &BackwardArgs) {
+        unimplemented!()
+    }
     // Detach from graph
-    pub fn detach_(&mut self) {}
+    pub fn detach_(&mut self) {
+        unimplemented!()
+    }
     // return a new variable detached from graph
     pub fn detach(&self) -> Variable<T> {
-        self.clone()
+        unimplemented!()
     }
 }
 
@@ -142,7 +145,7 @@ impl<T: Copy> Index<isize> for Variable<T> {
     type Output = T;
 
     fn index(&self, idx: isize) -> &Self::Output {
-        panic!("implement")
+        unimplemented!()
     }
 }
 

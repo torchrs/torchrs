@@ -22,7 +22,7 @@ use getopts::Options;
 use std::env;
 
 fn MNIST() -> D::Dataset<D::Batch<f32, i64>> {
-    panic!("just a stub")
+    unimplemented!()
 }
 
 #[derive(Clone, Builder)]
@@ -55,6 +55,7 @@ fn parse_args() -> NetArgs {
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let mut opts = Options::new();
+    unimplemented!()
     /*
     	* XXX do parsey stuff
     	*/

@@ -32,11 +32,11 @@ impl<T: Clone + 'static> SequentialSampler<T> {
 
 impl<T: Clone> SamplerIntf<T> for SequentialSampler<T> {
     fn iter<'a>(&self) -> slice::Iter<'a, T> {
-        panic!("implement")
+        unimplemented!()
     }
 
     fn len(&self) -> usize {
-        panic!("implement")
+        unimplemented!()
     }
 }
 
@@ -46,11 +46,11 @@ pub struct RandomSampler<T: Clone> {
 
 impl<T: Clone> SamplerIntf<T> for RandomSampler<T> {
     fn iter<'a>(&self) -> slice::Iter<'a, T> {
-        panic!("implement")
+        unimplemented!()
     }
 
     fn len(&self) -> usize {
-        panic!("implement")
+        unimplemented!()
     }
 }
 

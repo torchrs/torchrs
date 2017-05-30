@@ -75,10 +75,10 @@ impl MaxPool2d {
         }
     }
     fn forward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
     fn backward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
 }
 impl_func_delegate!(MaxPool2d);

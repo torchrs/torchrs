@@ -111,10 +111,10 @@ impl_func_delegate!(ConvNd);
 impl FuncIntf for ConvNd {
     fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         // run native code here
-        input.clone()
+        unimplemented!()
     }
     fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         // run native code here
-        input.clone()
+        unimplemented!()
     }
 }

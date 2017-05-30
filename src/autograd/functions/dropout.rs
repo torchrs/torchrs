@@ -49,18 +49,18 @@ impl_func_delegate!(Dropout2d);
 
 impl FuncIntf for Dropout1d {
     fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
     fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
 }
 
 impl FuncIntf for Dropout2d {
     fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
     fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
 }

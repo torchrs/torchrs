@@ -22,9 +22,9 @@ impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {
     fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
     fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        input.clone()
+        unimplemented!()
     }
 }

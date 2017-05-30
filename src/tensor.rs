@@ -12,39 +12,34 @@ pub struct Tensor<T> {
 }
 impl<T> Tensor<T> {
     pub fn new() -> Self {
-        panic!("implement")
+        unimplemented!()
     }
     pub fn len(&self) -> usize {
-        panic!("implement")
+        unimplemented!()
     }
     pub fn cuda(&self) -> Self {
-        panic!("implement");
-        self.clone()
+        unimplemented!()
     }
     pub fn cpu(&self) -> Self {
-        panic!("implement");
-        self.clone()
+        unimplemented!()
     }
     pub fn reduce_max(&self, axis: usize) -> (Self, Tensor<i64>) {
-        panic!("implement");
+        unimplemented!()
     }
     pub fn tensor_eq(&self, rhs: &Self) -> Tensor<i64> {
-        panic!("implement")
-
+        unimplemented!()
     }
     pub fn sum(&self) -> u32 {
-        panic!("implement");
-        0
+        unimplemented!()
     }
     pub fn s(&self, dim: usize) -> Self {
-        panic!("implement");
-
+        unimplemented!()
     }
 }
 
 impl<T> Default for Tensor<T> {
     fn default() -> Self {
-        panic!("")
+        unimplemented!()
     }
 }
 
@@ -58,7 +53,7 @@ impl<T: Copy> Index<isize> for Tensor<T> {
     type Output = T;
 
     fn index(&self, idx: isize) -> &Self::Output {
-        panic!("implement")
+        unimplemented!()
     }
 }
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
