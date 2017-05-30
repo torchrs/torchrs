@@ -1,4 +1,5 @@
 use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
+use nn::functional as F;
 use autograd::Variable;
 use std::marker::PhantomData;
 
@@ -52,7 +53,10 @@ impl_mod_delegate!(Linear);
 
 impl<T: Default> ModIntf<T> for Linear<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
-        panic!("implement");
-        input.clone()
+        if let Some(ref mut bias) = self.bias {
+            F::linear(&input, &mut self.weight.v, Some(&mut bias.v))
+        } else {
+            F::linear(&input, &mut self.weight.v, None)
+        }
     }
 }
