@@ -1,6 +1,7 @@
 use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
 use autograd::{Variable, Conv2dFArgs};
 use std::marker::PhantomData;
+use nn::functional as F;
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
@@ -73,6 +74,11 @@ impl_mod_delegate!(Conv2d);
 
 impl<T: Default> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
-        input.clone()
+        let mut bias = if let Some(ref mut biasp) = self.bias {
+            Some(&mut biasp.v)
+        } else {
+            None
+        };
+        F::conv2d(input, &mut self.weight.v, bias, &mut self.args)
     }
 }
