@@ -20,7 +20,7 @@ pub mod utils;
 pub mod tensor;
 pub mod storage;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 
 
 // Mutable reference counted T
