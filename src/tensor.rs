@@ -7,7 +7,12 @@ use storage::*;
 use rand;
 use {Ixs, RcMut};
 
+pub type TensorList<T> = Vec<Tensor<T>>;
+pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
+pub type TensorId = i32;
+
 pub struct Tensor<T> {
+    pub id: i32,
     value: RcMut<TensorImpl<T, Output = T>>,
 }
 
@@ -57,7 +62,10 @@ impl<T> Default for Tensor<T> {
 
 impl<T> Clone for Tensor<T> {
     fn clone(&self) -> Self {
-        Tensor { value: self.value.clone() }
+        Tensor {
+            id: self.id,
+            value: self.value.clone(),
+        }
     }
 }
 
