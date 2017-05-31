@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, FuncIntfX, FuncDelegate, Variable, VarList, VarKind};
+use autograd::{Function, FuncIntf, FuncIntfX, FuncDelegate, Variable, VarList, VarId};
 use macros::*;
 
 pub struct LogSoftmax {
@@ -27,7 +27,7 @@ pub struct NLLLossArgs {
     #[builder(default="false")]
     pub size_average: bool,
     #[builder(default="None")]
-    pub weight: Option<VarKind>,
+    pub weight: Option<VarId>,
 }
 
 impl Default for NLLLossArgs {
