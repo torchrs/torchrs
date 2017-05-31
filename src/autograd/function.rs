@@ -21,6 +21,12 @@ pub struct FuncImpl {
     requires_grad: bool,
 }
 
+impl FuncImpl {
+    fn _call_hooks<T>(&self, input: &TensorList<T>, output: &RefTensorList<T>) {
+        unimplemented!();
+    }
+}
+
 #[derive(Clone)]
 pub struct Function {
     id: FuncId,
@@ -123,6 +129,13 @@ pub trait FuncIntf: FuncDelegate {
                     specify retain_variables=True when calling backward for \
                     the first time.");
         }
+        let grad_input = self.backward(grad_output);
+        let fi = self.delegate().access();
+        fi._call_hooks(&grad_input, grad_output);
+        if !retain_variables {
+            fi.saved_variables.clear();
+        }
+
     }
 }
 
