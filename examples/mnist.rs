@@ -8,7 +8,7 @@ extern crate derive_builder;
 extern crate torchrs;
 
 
-use torchrs::autograd::{Variable, VariableArgs, BackwardArgs};
+use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
 
