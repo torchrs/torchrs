@@ -1,5 +1,6 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable};
 use macros::*;
+use tensor::{RefTensorList, TensorList};
 
 pub struct Threshold {
     delegate: Function,
@@ -21,10 +22,10 @@ impl Threshold {
 impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {
-    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
 }

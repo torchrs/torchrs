@@ -80,5 +80,5 @@ pub fn log_softmax<T>(input: &Variable<T>) -> Variable<T> {
 }
 
 pub fn nll_loss<T>(input: &Variable<T>, target: &Variable<i64>, args: &NLLLossArgs) -> Variable<T> {
-    NLLLoss::new(args).fx(&vec![input.clone()], &vec![target.clone()])[0].clone()
+    NLLLoss::new(args).fx(&mut vec![input.clone()], &mut vec![target.clone()])[0].clone()
 }

@@ -1,4 +1,5 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use tensor::{RefTensorList, TensorList};
 
 pub struct Dropout1d {
     delegate: Function,
@@ -48,19 +49,19 @@ impl Dropout2d {
 impl_func_delegate!(Dropout2d);
 
 impl FuncIntf for Dropout1d {
-    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
 }
 
 impl FuncIntf for Dropout2d {
-    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
 }

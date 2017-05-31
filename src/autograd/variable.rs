@@ -4,6 +4,7 @@ use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use tensor::*;
+use num::Integer;
 use ::*;
 
 thread_local! {
@@ -17,14 +18,14 @@ pub type VarId = i32;
 
 pub trait VarAccess<T> {
     fn access(&self) -> &mut VariableImpl<T>;
-    fn new_args(data: Tensor<T>, args: VariableArgs) -> Self;
+    fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self;
 }
 
 impl<T> VarAccess<T> for Variable<T> {
     default fn access(&self) -> &mut VariableImpl<T> {
         panic!("unsupported Tensor type")
     }
-    default fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
+    default fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self {
         panic!("unsupported Tensor type")
     }
 }
@@ -35,7 +36,7 @@ impl VarAccess<f32> for Variable<f32> {
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
     }
-    fn new_args(data: Tensor<f32>, args: VariableArgs) -> Self {
+    fn new_args(data: Tensor<f32>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
         let value = VariableImpl::new(data, args);
 
@@ -57,7 +58,7 @@ impl VarAccess<i64> for Variable<i64> {
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
     }
-    fn new_args(data: Tensor<i64>, args: VariableArgs) -> Self {
+    fn new_args(data: Tensor<i64>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
         let value = VariableImpl::new(data, args);
 
@@ -84,12 +85,15 @@ pub struct VariableImpl<T> {
     requires_grad: bool,
 }
 
-
 impl<T> VariableImpl<T> {
-    fn new(data_: Tensor<T>, args: VariableArgs) -> Self {
+    fn new(data_: Tensor<T>, args: &VariableArgs) -> Self {
+        let creator = match args.creator {
+            Some(ref f) => Some(f.clone()),
+            None => None,
+        };
         VariableImpl {
             data: data_,
-            grad_fn: args.creator,
+            grad_fn: creator,
             grad: None,
             dirty: false,
             volatile: args.volatile,
@@ -111,7 +115,6 @@ impl<T> Default for Variable<T> {
         }
     }
 }
-
 impl<T> Clone for Variable<T> {
     fn clone(&self) -> Self {
         Variable {
@@ -120,10 +123,38 @@ impl<T> Clone for Variable<T> {
         }
     }
 }
+impl<T> From<u32> for Variable<T> {
+    fn from(id: u32) -> Self {
+        Variable {
+            id: id as i32,
+            phantom: PhantomData,
+        }
+    }
+}
+impl<T> From<i32> for Variable<T> {
+    fn from(id: i32) -> Self {
+        Variable {
+            id: id,
+            phantom: PhantomData,
+        }
+    }
+}
+impl<T> From<usize> for Variable<T> {
+    fn from(id: usize) -> Self {
+        Variable {
+            id: id as i32,
+            phantom: PhantomData,
+        }
+    }
+}
+
+
 
 #[derive(Default, Clone)]
 pub struct BackwardArgs {}
 
+#[derive(Builder)]
+#[builder(pattern="owned")]
 pub struct VariableArgs {
     pub creator: Option<Function>,
     pub volatile: bool,
@@ -139,10 +170,21 @@ impl Default for VariableArgs {
         }
     }
 }
+impl VariableArgs {
+    pub fn build() -> VariableArgsBuilder {
+        VariableArgsBuilder::default()
+    }
+}
+impl VariableArgsBuilder {
+    pub fn done(self) -> VariableArgs {
+        self.build().unwrap()
+    }
+}
+
 
 impl<T> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
-        Variable::new_args(data, VariableArgs::default())
+        Variable::new_args(data, &VariableArgs::default())
     }
     pub fn is_volatile(&self) -> bool {
         self.access().volatile
@@ -158,6 +200,9 @@ impl<T> Variable<T> {
     }
     pub fn mark_dirty(&mut self) {
         self.access().dirty = true;
+    }
+    pub fn requires_nograd(&mut self) {
+        self.access().requires_grad = false;
     }
     pub fn view(&self, dims: &[i32]) -> Self {
         unimplemented!()

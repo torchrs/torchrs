@@ -1,4 +1,5 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use tensor::{RefTensorList, TensorList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -74,20 +75,20 @@ impl MaxPool2d {
             args: args.clone(),
         }
     }
-    fn forward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
+    fn forward_apply<T>(&mut self, input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
-    fn backward_apply<T>(&mut self, input: &mut VarList<T>) -> VarList<T> {
+    fn backward_apply<T>(&mut self, input: &RefTensorList<T>) -> TensorList<T> {
         unimplemented!()
     }
 }
 impl_func_delegate!(MaxPool2d);
 
 impl FuncIntf for MaxPool2d {
-    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        self.forward_apply(&mut input)
+    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+        self.forward_apply(input)
     }
-    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
-        self.backward_apply(&mut input)
+    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+        self.backward_apply(input)
     }
 }

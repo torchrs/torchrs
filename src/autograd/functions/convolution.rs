@@ -1,4 +1,5 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarList};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use tensor::{RefTensorList, TensorList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -109,11 +110,11 @@ impl ConvNd {
 impl_func_delegate!(ConvNd);
 
 impl FuncIntf for ConvNd {
-    fn forward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         // run native code here
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
         // run native code here
         unimplemented!()
     }

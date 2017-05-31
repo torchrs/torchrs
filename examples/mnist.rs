@@ -146,9 +146,9 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             ..Default::default()
         };
         let (mut data, mut target) = if args.cuda {
-            (Variable::new_args(data.cuda().clone(), varargs), Variable::new(target.cuda().clone()))
+            (Variable::new_args(data.cuda().clone(), &varargs), Variable::new(target.cuda().clone()))
         } else {
-            (Variable::new_args(data.clone(), varargs), Variable::new(target.clone()))
+            (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
         let mut output = model.f(&mut data);
         test_loss += F::nll_loss(&output, &target, &F::NLLLossArgs::default());
