@@ -15,12 +15,16 @@ pub type VarList<T> = Vec<Variable<T>>;
 pub type VarId = i32;
 
 
-trait VarAccess<T> {
+pub trait VarAccess<T> {
     fn access(&self) -> &mut VariableImpl<T>;
+    fn new_args(data: Tensor<T>, args: VariableArgs) -> Self;
 }
 
 impl<T> VarAccess<T> for Variable<T> {
     default fn access(&self) -> &mut VariableImpl<T> {
+        panic!("unsupported Tensor type")
+    }
+    default fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
         panic!("unsupported Tensor type")
     }
 }
@@ -31,6 +35,20 @@ impl VarAccess<f32> for Variable<f32> {
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
     }
+    fn new_args(data: Tensor<f32>, args: VariableArgs) -> Self {
+        let mut id = ::std::usize::MAX;
+        let value = VariableImpl::new(data, args);
+
+        VAR_TABLE_F32.with(|f| {
+                               let mut table = f.borrow_mut();
+                               id = table.len();
+                               table.push_back(value);
+                           });
+        Variable {
+            id: id as i32,
+            phantom: PhantomData,
+        }
+    }
 }
 
 impl VarAccess<i64> for Variable<i64> {
@@ -38,6 +56,20 @@ impl VarAccess<i64> for Variable<i64> {
         let vecp = VAR_TABLE_I64.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
+    }
+    fn new_args(data: Tensor<i64>, args: VariableArgs) -> Self {
+        let mut id = ::std::usize::MAX;
+        let value = VariableImpl::new(data, args);
+
+        VAR_TABLE_I64.with(|f| {
+                               let mut table = f.borrow_mut();
+                               id = table.len();
+                               table.push_back(value);
+                           });
+        Variable {
+            id: id as i32,
+            phantom: PhantomData,
+        }
     }
 }
 
@@ -117,20 +149,6 @@ impl<T> Variable<T> {
     }
     pub fn requires_grad(&self) -> bool {
         self.access().requires_grad
-    }
-    pub fn new_args(data: Tensor<T>, args: VariableArgs) -> Self {
-        /*
-        let mut id;
-        let value = VariableImpl::new(data, args);
-
-        VAR_TABLE.with(|f| {
-            let mut table = f.borrow_mut();
-            id = table.len();
-            table.push_back(value);
-        });
-        Variable {id: id as i32, phantom: PhantomData}
-        */
-        unimplemented!()
     }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
