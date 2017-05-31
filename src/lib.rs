@@ -1,3 +1,4 @@
+#![feature(specialization)]
 #![feature(trace_macros)]
 #![feature(log_syntax)]
 
