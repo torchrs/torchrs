@@ -55,7 +55,7 @@ fn parse_args() -> NetArgs {
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let mut opts = Options::new();
-    unimplemented!()
+    unimplemented!();
     /*
     	* XXX do parsey stuff
     	*/
@@ -123,7 +123,7 @@ fn train(model: &mut Net<f32>,
         optimizer.zero_grad();
         let output = model.f(&mut data);
         let mut loss = F::nll_loss(&output, &target, &F::NLLLossArgs::default());
-        loss.backward(&BackwardArgs::default());
+        loss.backward();
         optimizer.step();
         if batch_idx % args.log_interval == 0 {
             println!("Train Epoch: {} [{}/{} ({:.0}%)]\tLoss: {:.6}",
