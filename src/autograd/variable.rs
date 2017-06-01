@@ -192,6 +192,12 @@ impl<T> Variable<T> {
     pub fn requires_grad(&self) -> bool {
         self.access().requires_grad
     }
+    pub fn grad_fn(&self) -> Option<Function> {
+        match self.access().grad_fn {
+            Some(ref func) => Some(func.clone()),
+            None => None,
+        }
+    }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
     }

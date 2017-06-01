@@ -73,17 +73,16 @@ pub trait FuncIntf: FuncDelegate {
             // do start graph stuff with f
             let mut f = self.delegate().access();
             if !is_volatile {
+                f.previous_functions = input.iter().filter_map(|v| v.grad_fn()).collect();
                 f.needs_input_grad = input
                     .iter()
                     .filter_map(|v| if v.requires_grad() { Some(v.id) } else { None })
                     .collect();
                 f.requires_grad = f.needs_input_grad.len() != 0;
-                // XXX - set prev
-                //f.previous_functions = input.iter().filter_map(|v| { let grad_fn if Some(v.value.borrow()))
             }
         }
-        let inputTs = input.iter_mut().map(|v| v.data()).collect();
-        let v = self.forward(&inputTs);
+        let input_tensors = input.iter_mut().map(|v| v.data()).collect();
+        let v = self.forward(&input_tensors);
         let f = self.delegate();
         let mut fi = f.access();
         let output = if is_volatile {
@@ -122,20 +121,23 @@ pub trait FuncIntf: FuncDelegate {
         };
         output
     }
-    fn _do_backward<'a, T>(&mut self, grad_output: &RefTensorList<'a, T>, retain_variables: bool) {
+    fn _do_backward<'a, T>(&mut self,
+                           grad_output: &RefTensorList<'a, T>,
+                           retain_variables: bool)
+                           -> TensorList<T> {
         if self.delegate().access().saved_variables.is_empty() {
             panic!("Trying to backward through the graph second \
                     time, but the buffers have already been freed. Please \
                     specify retain_variables=True when calling backward for \
                     the first time.");
-        }
+        };
         let grad_input = self.backward(grad_output);
         let fi = self.delegate().access();
         fi._call_hooks(&grad_input, grad_output);
         if !retain_variables {
             fi.saved_variables.clear();
-        }
-
+        };
+        grad_input
     }
 }
 
