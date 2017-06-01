@@ -4,7 +4,6 @@ use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use tensor::*;
-use num::Integer;
 use ::*;
 
 thread_local! {
