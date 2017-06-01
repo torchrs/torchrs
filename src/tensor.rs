@@ -23,6 +23,24 @@ pub struct Tensor<T> {
     value: RcMut<TensorImpl<T, Output = T>>,
 }
 
+impl<T: Copy> Index<usize> for Tensor<T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &Self::Output {
+
+        //        self.value.borrow_mut().index(idx as isize)
+        unimplemented!()
+    }
+}
+
+impl<'a, T: Copy> Index<usize> for &'a Tensor<T> {
+    type Output = T;
+    fn index(&self, idx: usize) -> &Self::Output {
+
+        //        self.value.borrow_mut().index(idx as isize)
+        unimplemented!()
+    }
+}
+
 pub trait New<D, T> {
     fn new(args: D) -> T;
     fn new_(&self, args: D) -> T;
@@ -36,9 +54,26 @@ impl<T> New<usize, Tensor<T>> for Tensor<T> {
         unimplemented!()
     }
 }
+impl<T> New<Vec<usize>, Tensor<T>> for Tensor<T> {
+    fn new(args: Vec<usize>) -> Self {
+        unimplemented!()
+    }
+    fn new_(&self, args: Vec<usize>) -> Self {
+        unimplemented!()
+    }
+}
 
 impl<T> Tensor<T> {
     pub fn len(&self) -> usize {
+        unimplemented!()
+    }
+    pub fn size(&self) -> Vec<usize> {
+        unimplemented!()
+    }
+    pub fn zero_(&mut self) -> Self {
+        unimplemented!()
+    }
+    pub fn add_(&mut self, rhs: T) {
         unimplemented!()
     }
     pub fn cuda(&self) -> Self {

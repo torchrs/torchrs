@@ -66,7 +66,7 @@ pub trait FuncDelegate {
 pub trait FuncIntf: FuncDelegate {
     fn forward<'a, T>(&mut self, input: &RefTensorList<'a, T>) -> TensorList<T>;
     fn backward<'a, T>(&mut self, input: &RefTensorList<'a, T>) -> TensorList<T>;
-    fn f<T>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
+    fn f<T: Copy>(&mut self, mut input: &mut VarList<T>) -> VarList<T> {
         let is_volatile = input.iter().any(|v| v.is_volatile());
         {
             // do start graph stuff with f
@@ -126,7 +126,7 @@ pub trait FuncIntf: FuncDelegate {
         };
         output
     }
-    fn saved_tensors<'a, T: 'a>(&mut self) -> TensorList<T> {
+    fn saved_tensors<'a, T: 'a + Copy>(&mut self) -> TensorList<T> {
         // XXX see if we can't avoid the clone
         self.delegate()
             .access()

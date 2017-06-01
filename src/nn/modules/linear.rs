@@ -13,7 +13,7 @@ pub struct LinearArgs<T: Default> {
     #[builder(default="PhantomData")]
     phantom: PhantomData<T>,
 }
-impl<T: Default> LinearArgsBuilder<T> {
+impl<T: Default + Copy> LinearArgsBuilder<T> {
     pub fn done(self) -> Linear<T> {
         let args = self.build().unwrap();
         Linear::new(args)
@@ -21,7 +21,7 @@ impl<T: Default> LinearArgsBuilder<T> {
 }
 
 #[derive(ModParse)]
-pub struct Linear<T> {
+pub struct Linear<T: Copy> {
     delegate: Module<T>,
     #[ignore]
     in_features: u32,
@@ -31,7 +31,7 @@ pub struct Linear<T> {
     bias: Option<Parameter<T>>,
 }
 
-impl<T: Default> Linear<T> {
+impl<T: Default + Copy> Linear<T> {
     pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder<T> {
         LinearArgsBuilder::default()
             .in_features(in_features)
@@ -50,7 +50,7 @@ impl<T: Default> Linear<T> {
 }
 impl_mod_delegate!(Linear);
 
-impl<T: Default> ModIntf<T> for Linear<T> {
+impl<T: Default + Copy> ModIntf<T> for Linear<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         if let Some(ref mut bias) = self.bias {
             F::linear(&input, &mut self.weight.v, Some(&mut bias.v))

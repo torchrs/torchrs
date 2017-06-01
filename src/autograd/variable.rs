@@ -25,7 +25,6 @@ impl<T> From<Variable<T>> for VariableKind {
         panic!("bad cast")
     }
 }
-
 impl From<Variable<f32>> for VariableKind {
     fn from(input: Variable<f32>) -> Self {
         VariableKind::FloatVariable(input)
@@ -150,7 +149,7 @@ pub struct VariableImpl<T> {
     pub data: Tensor<T>,
     // AKA Creator Id
     grad_fn: Option<Function>,
-    grad: Option<VarId>,
+    grad: Option<Tensor<T>>,
     // version_counter etc ...
     dirty: bool,
     volatile: bool,
@@ -172,7 +171,23 @@ impl<T> VariableImpl<T> {
             requires_grad: args.requires_grad,
         }
     }
+    fn grad(&mut self) -> &mut Tensor<T> {
+        let mut output;
+        // XXX assert requires_grad
+        match self.grad {
+            Some(ref mut t) => t,
+            None => {
+                output = Tensor::new(self.data.size()).zero_();
+                self.grad = Some(output);
+                self.grad()
+            }
+        }
+    }
+    fn _call_hooks(&self, grad_output: T) {
+        unimplemented!()
+    }
 }
+
 
 pub struct Variable<T> {
     pub id: VarId,
@@ -262,7 +277,7 @@ impl VariableArgsBuilder {
 }
 
 
-impl<T> Variable<T> {
+impl<T: Copy> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
     }
@@ -317,6 +332,11 @@ impl<T> Variable<T> {
             };
         }
         ExecutionEngine::run_backward(self, &mut gradient, retain_variables)
+    }
+    pub fn _do_backward(&mut self, grad_output: &Tensor<T>) {
+        let inner = self.access();
+        inner._call_hooks(grad_output[0]);
+        inner.grad().add_(grad_output[0]);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)

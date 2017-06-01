@@ -5,7 +5,7 @@ use nn::functional as F;
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv2dArgs<T: Default> {
+pub struct Conv2dArgs<T: Default + Copy> {
     in_features: usize,
     out_features: usize,
     kernel_size: (usize, usize),
@@ -23,7 +23,7 @@ pub struct Conv2dArgs<T: Default> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Default> Conv2dArgsBuilder<T> {
+impl<T: Default + Copy> Conv2dArgsBuilder<T> {
     pub fn done(self) -> Conv2d<T> {
         let args = self.build().unwrap();
         Conv2d::new(args)
@@ -31,7 +31,7 @@ impl<T: Default> Conv2dArgsBuilder<T> {
 }
 
 #[derive(ModParse)]
-pub struct Conv2d<T: Default> {
+pub struct Conv2d<T: Default + Copy> {
     delegate: Module<T>,
     weight: Parameter<T>,
     bias: Option<Parameter<T>>,
@@ -39,7 +39,7 @@ pub struct Conv2d<T: Default> {
     args: Conv2dFArgs,
 }
 
-impl<T: Default> Conv2d<T> {
+impl<T: Default + Copy> Conv2d<T> {
     pub fn build(in_features: usize,
                  out_features: usize,
                  kernel_size: (usize, usize))
@@ -73,7 +73,7 @@ impl<T: Default> Conv2d<T> {
 }
 impl_mod_delegate!(Conv2d);
 
-impl<T: Default> ModIntf<T> for Conv2d<T> {
+impl<T: Default + Copy> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         let mut bias = if let Some(ref mut biasp) = self.bias {
             Some(&mut biasp.v)

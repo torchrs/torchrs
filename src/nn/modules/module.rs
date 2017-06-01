@@ -10,7 +10,7 @@ pub trait ModuleStruct {
     fn init_module(self) -> Self;
 }
 
-pub struct Module<T> {
+pub struct Module<T: Copy> {
     pub _name: String,
     pub training: bool,
     _backend: TorchBackend,
@@ -52,7 +52,7 @@ impl<'a, T> Iterator for PtrIter<'a, T> {
     }
 }
 
-impl<T> Module<T> {
+impl<T: Copy> Module<T> {
     pub fn new() -> Module<T> {
         Module {
             _name: String::from(""),
@@ -131,11 +131,11 @@ impl<T> Module<T> {
     }
 }
 
-pub trait ModDelegate<T> {
+pub trait ModDelegate<T: Copy> {
     fn delegate(&mut self) -> &mut Module<T>;
 }
 
-pub trait ModIntf<T>: ModDelegate<T> {
+pub trait ModIntf<T: Copy>: ModDelegate<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
     fn f(&mut self, input: &mut Variable<T>) -> Variable<T> {
         {
@@ -157,7 +157,7 @@ pub trait ModIntf<T>: ModDelegate<T> {
     }
 }
 
-pub trait ModIntfV<T>: ModDelegate<T> {
+pub trait ModIntfV<T: Copy>: ModDelegate<T> {
     fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
     fn fv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
         {
