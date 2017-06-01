@@ -121,6 +121,15 @@ pub trait FuncIntf: FuncDelegate {
         };
         output
     }
+    fn saved_tensors<'a, T: 'a>(&mut self) -> TensorList<T> {
+        // XXX see if we can't avoid the clone
+        self.delegate()
+            .access()
+            .saved_variables
+            .iter()
+            .map(|v| Variable::<T>::from(v.clone()).data().clone())
+            .collect()
+    }
     fn _do_backward<'a, T>(&mut self,
                            grad_output: &RefTensorList<'a, T>,
                            retain_variables: bool)
