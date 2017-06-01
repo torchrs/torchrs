@@ -139,6 +139,14 @@ impl<T> From<i32> for Variable<T> {
         }
     }
 }
+impl<'a, T: 'a> From<&'a i32> for Variable<T> {
+    fn from(id: &'a i32) -> Self {
+        Variable {
+            id: *id,
+            phantom: PhantomData,
+        }
+    }
+}
 impl<T> From<usize> for Variable<T> {
     fn from(id: usize) -> Self {
         Variable {

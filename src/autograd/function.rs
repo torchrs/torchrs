@@ -127,7 +127,7 @@ pub trait FuncIntf: FuncDelegate {
             .access()
             .saved_variables
             .iter()
-            .map(|v| Variable::<T>::from(v.clone()).data().clone())
+            .map(|v| Variable::<T>::from(v).data().clone())
             .collect()
     }
     fn _do_backward<'a, T>(&mut self,
