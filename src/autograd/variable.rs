@@ -18,11 +18,15 @@ pub type VarId = i32;
 
 pub trait VarAccess<T> {
     fn access(&self) -> &mut VariableImpl<T>;
+    fn borrow(&self) -> &VariableImpl<T>;
     fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self;
 }
 
 impl<T> VarAccess<T> for Variable<T> {
     default fn access(&self) -> &mut VariableImpl<T> {
+        panic!("unsupported Tensor type")
+    }
+    default fn borrow(&self) -> &VariableImpl<T> {
         panic!("unsupported Tensor type")
     }
     default fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self {
@@ -35,6 +39,11 @@ impl VarAccess<f32> for Variable<f32> {
         let vecp = VAR_TABLE_F32.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
+    }
+    fn borrow(&self) -> &VariableImpl<f32> {
+        let vecp = VAR_TABLE_F32.with(|f| f.as_ptr());
+        let vec = unsafe { &mut *vecp };
+        &vec[self.id as usize]
     }
     fn new_args(data: Tensor<f32>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
@@ -57,6 +66,11 @@ impl VarAccess<i64> for Variable<i64> {
         let vecp = VAR_TABLE_I64.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
         &mut vec[self.id as usize]
+    }
+    fn borrow(&self) -> &VariableImpl<i64> {
+        let vecp = VAR_TABLE_I64.with(|f| f.as_ptr());
+        let vec = unsafe { &mut *vecp };
+        &vec[self.id as usize]
     }
     fn new_args(data: Tensor<i64>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
@@ -208,6 +222,9 @@ impl<T> Variable<T> {
     }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
+    }
+    pub fn data_borrow(&self) -> &Tensor<T> {
+        &self.borrow().data
     }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         callback(&mut self.access().data);

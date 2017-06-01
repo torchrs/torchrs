@@ -1,10 +1,8 @@
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::vec::Vec;
 use autograd::variable::*;
 use tensor::*;
-use RcMut;
 
 thread_local! {
     pub static FUNC_TABLE: RefCell<VecDeque<FuncImpl>> = RefCell::new(VecDeque::new());
@@ -18,6 +16,7 @@ pub struct FuncImpl {
     saved_variables: Vec<VarId>,
     needs_input_grad: Vec<VarId>,
     non_differentiable: Vec<TensorId>,
+    to_save: Vec<TensorId>,
     requires_grad: bool,
 }
 
@@ -81,8 +80,11 @@ pub trait FuncIntf: FuncDelegate {
                 f.requires_grad = f.needs_input_grad.len() != 0;
             }
         }
-        let input_tensors = input.iter_mut().map(|v| v.data()).collect();
-        let v = self.forward(&input_tensors);
+        let v;
+        {
+            let input_tensors = input.iter_mut().map(|v| v.data()).collect();
+            v = self.forward(&input_tensors);
+        }
         let f = self.delegate();
         let mut fi = f.access();
         let output = if is_volatile {
@@ -98,16 +100,19 @@ pub trait FuncIntf: FuncDelegate {
             let mut output: VarList<T> = v.into_iter()
                 .map(|t| Variable::new_args(t, &args))
                 .collect();
-            if !fi.saved_variables.is_empty() {
+            if !fi.to_save.is_empty() {
                 /* if a tensor was modified in place replace the old variable with the new one */
-                for ref mut var in &mut output {
-                    let tid = var.data().id;
-                    for varid in fi.saved_variables.iter_mut() {
-                        if Variable::<T>::from(*varid).data().id == tid {
-                            *varid = var.id;
-                        }
-                    }
+                let mut t2v = HashMap::new();
+                for ref var in input.iter() {
+                    t2v.insert(var.data_borrow().id, var.id);
                 }
+                for ref mut var in &mut output.iter() {
+                    t2v.insert(var.data_borrow().id, var.id);
+                }
+                for t in fi.to_save.iter() {
+                    fi.saved_variables.push(t2v[t]);
+                }
+                fi.to_save.clear();
             };
             if !fi.non_differentiable.is_empty() {
                 for ref mut var in &mut output {
@@ -129,6 +134,9 @@ pub trait FuncIntf: FuncDelegate {
             .iter()
             .map(|v| Variable::<T>::from(v).data().clone())
             .collect()
+    }
+    fn save_for_backward<T>(&mut self, input: &RefTensorList<T>) {
+        self.delegate().access().to_save = input.iter().map(|t| t.id).collect();
     }
     fn _do_backward<'a, T>(&mut self,
                            grad_output: &RefTensorList<'a, T>,
