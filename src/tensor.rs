@@ -1,5 +1,5 @@
 use rutorch::*;
-use std::ops::{Index, IndexMut, Deref, DerefMut};
+use std::ops::{Index, IndexMut};
 //use std::convert::From;
 use std::cmp::max;
 
@@ -7,8 +7,15 @@ use storage::*;
 use rand;
 use {Ixs, RcMut};
 
+pub enum TensorKind {
+    FloatTensor(Tensor<f32>),
+    LongTensor(Tensor<i64>),
+}
+
 pub type TensorList<T> = Vec<Tensor<T>>;
+pub type TensorKindList = Vec<TensorKind>;
 pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
+pub type RefTensorKindList<'a> = Vec<&'a mut TensorKind>;
 pub type TensorId = i32;
 
 pub struct Tensor<T> {

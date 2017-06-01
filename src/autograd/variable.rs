@@ -13,8 +13,67 @@ thread_local! {
 }
 
 pub type VarList<T> = Vec<Variable<T>>;
+pub type VarKindList = Vec<VariableKind>;
+pub type RefVarKindList<'a> = Vec<&'a VariableKind>;
 pub type VarId = i32;
+pub enum VariableKind {
+    FloatVariable(Variable<f32>),
+    LongVariable(Variable<i64>),
+}
 
+impl<T> From<Variable<T>> for VariableKind {
+    default fn from(input: Variable<T>) -> Self {
+        panic!("bad cast")
+    }
+}
+
+impl From<Variable<f32>> for VariableKind {
+    fn from(input: Variable<f32>) -> Self {
+        VariableKind::FloatVariable(input)
+    }
+}
+impl From<Variable<i64>> for VariableKind {
+    fn from(input: Variable<i64>) -> Self {
+        VariableKind::LongVariable(input)
+    }
+}
+
+impl<T> From<VariableKind> for Variable<T> {
+    default fn from(input: VariableKind) -> Self {
+        panic!("bad cast");
+    }
+}
+
+impl From<VariableKind> for Variable<f32> {
+    fn from(input: VariableKind) -> Self {
+        if let VariableKind::FloatVariable(v) = input {
+            v
+        } else {
+            panic!("bad cast")
+        }
+    }
+}
+
+impl From<VariableKind> for Variable<i64> {
+    fn from(input: VariableKind) -> Self {
+        if let VariableKind::LongVariable(v) = input {
+            v
+        } else {
+            panic!("bad cast")
+        }
+    }
+}
+
+impl Clone for VariableKind {
+    fn clone(&self) -> Self {
+        use self::VariableKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => FloatVariable(v.clone()),
+            LongVariable(ref v) => LongVariable(v.clone()),
+            _ => unimplemented!(),
+        }
+    }
+}
 
 pub trait VarAccess<T> {
     fn access(&self) -> &mut VariableImpl<T>;

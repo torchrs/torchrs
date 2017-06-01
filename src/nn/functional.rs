@@ -1,8 +1,7 @@
 //use torchrs::nn::functional::{max_pool2d, relu, conv2d, dropout, dropout2d, linear, log_softmax};
 
-use autograd::variable::Variable;
-use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, FuncIntfX, MaxPool2d, Dropout1d,
-               Dropout2d, Threshold, LogSoftmax, NLLLoss, LinearF};
+use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, FuncIntfKind, MaxPool2d, Dropout1d,
+               Dropout2d, Threshold, LogSoftmax, NLLLoss, LinearF, Variable, VariableKind};
 
 pub use autograd::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
@@ -80,5 +79,8 @@ pub fn log_softmax<T>(input: &Variable<T>) -> Variable<T> {
 }
 
 pub fn nll_loss<T>(input: &Variable<T>, target: &Variable<i64>, args: &NLLLossArgs) -> Variable<T> {
-    NLLLoss::new(args).fx(&mut vec![input.clone()], &mut vec![target.clone()])[0].clone()
+    let mut kind_input = vec![VariableKind::from(input.clone()),
+                              VariableKind::from(target.clone())];
+    NLLLoss::new(args).fx(&mut kind_input).remove(0).into()
+
 }

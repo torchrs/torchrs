@@ -158,16 +158,13 @@ pub trait FuncIntf: FuncDelegate {
     }
 }
 
-pub trait FuncIntfX: FuncDelegate {
-    fn forwardx<'a, T>(&mut self,
-                       input: &RefTensorList<'a, T>,
-                       target: &RefTensorList<i64>)
-                       -> TensorList<T>;
-    fn backwardx<'a, T>(&mut self,
-                        input: &RefTensorList<'a, T>,
-                        target: &RefTensorList<i64>)
-                        -> TensorList<T>;
-    fn fx<T>(&mut self, input: &mut VarList<T>, target: &mut VarList<i64>) -> VarList<T> {
+pub trait FuncIntfKind: FuncDelegate {
+    fn forwardx<'a>(&mut self, input: &RefTensorKindList<'a>) -> TensorKindList;
+    fn backwardx<'a>(&mut self, input: &RefTensorKindList<'a>) -> TensorKindList;
+    fn fx(&mut self, input: &mut VarKindList) -> VarKindList {
+        unimplemented!();
+
+        /*
         {
             // do start graph stuff with f
             let f = self.delegate();
@@ -186,6 +183,6 @@ pub trait FuncIntfX: FuncDelegate {
             .map(|t| Variable::new_args(t, &args))
             .collect();
         output
-
+*/
     }
 }
