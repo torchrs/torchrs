@@ -300,19 +300,23 @@ impl<T> Variable<T> {
     // Computes the gradient of current variable w.r.t. graph leaves
     pub fn backward_args(&mut self, gradient_: Option<&mut Tensor<T>>, retain_variables: bool) {
         let mut store;
-        if self.access().volatile {
-            panic!("calling backward on a volatile variable")
-        }
-        if !self.access().requires_grad {
-            panic!("calling backward on a variable that doesn't require a gradient")
-        }
-        let mut gradient = match gradient_ {
-            Some(gradient) => gradient,
-            None => {
-                store = self.access().data.new_(1);
-                &mut store
+        let mut gradient;
+        {
+            let parent = self.access();
+            if parent.volatile {
+                panic!("calling backward on a volatile variable")
             }
-        };
+            if !parent.requires_grad {
+                panic!("calling backward on a variable that doesn't require a gradient")
+            }
+            gradient = match gradient_ {
+                Some(gradient) => gradient,
+                None => {
+                    store = parent.data.new_(1);
+                    &mut store
+                }
+            };
+        }
         ExecutionEngine::run_backward(self, &mut gradient, retain_variables)
     }
     pub fn backward(&mut self) {
