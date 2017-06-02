@@ -1,5 +1,6 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
 use tensor::TensorKindList;
+use ::*;
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -69,11 +70,11 @@ pub struct MaxPool2d {
 }
 
 impl MaxPool2d {
-    pub fn new(args: &MaxPoolFArgs) -> Self {
-        MaxPool2d {
-            delegate: Function::new(),
-            args: args.clone(),
-        }
+    pub fn new(args: &MaxPoolFArgs) -> FIWrap<Self> {
+        FIWrap::new(MaxPool2d {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
     }
     fn forward_apply(&mut self, input: &TensorKindList) -> TensorKindList {
         unimplemented!()

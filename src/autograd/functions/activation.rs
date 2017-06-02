@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarKindList, FIWrap};
 use macros::*;
 use tensor::TensorKindList;
 use ::*;
@@ -11,18 +11,16 @@ pub struct Threshold {
 }
 
 impl Threshold {
-    pub fn new(threshold: f32, value: f32, inplace: bool) -> RcMut<Self> {
-        let t = RcMutNew(Threshold {
-                             delegate: Function::new(),
-                             threshold: threshold,
-                             value: value,
-                             inplace: inplace,
-                         });
-        t.borrow_mut().delegate().init(t.clone());
-        t
+    pub fn new(threshold: f32, value: f32, inplace: bool) -> FIWrap<Self> {
+        FIWrap::new(Threshold {
+                        delegate: Function::new(),
+                        threshold: threshold,
+                        value: value,
+                        inplace: inplace,
+                    })
     }
 }
-type RcMutThresh = RcMut<Threshold>;
+
 impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {

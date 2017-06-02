@@ -1,6 +1,7 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarId};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarId, FIWrap};
 use macros::*;
 use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList};
+use ::*;
 
 #[derive(Clone)]
 pub struct LogSoftmax {
@@ -8,8 +9,8 @@ pub struct LogSoftmax {
 }
 
 impl LogSoftmax {
-    pub fn new() -> Self {
-        LogSoftmax { delegate: Function::new() }
+    pub fn new() -> FIWrap<Self> {
+        FIWrap::new(LogSoftmax { delegate: Function::new() })
     }
 }
 impl_func_delegate!(LogSoftmax);
@@ -45,11 +46,11 @@ pub struct NLLLoss {
 }
 
 impl NLLLoss {
-    pub fn new(args: &NLLLossArgs) -> Self {
-        NLLLoss {
-            delegate: Function::new(),
-            args: args.clone(),
-        }
+    pub fn new(args: &NLLLossArgs) -> FIWrap<Self> {
+        FIWrap::new(NLLLoss {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
     }
 }
 

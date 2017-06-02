@@ -1,6 +1,7 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
 use macros::*;
 use tensor::TensorKindList;
+use ::*;
 
 #[derive(Clone)]
 pub struct LinearF {
@@ -8,8 +9,8 @@ pub struct LinearF {
 }
 
 impl LinearF {
-    pub fn new() -> Self {
-        LinearF { delegate: Function::new() }
+    pub fn new() -> FIWrap<Self> {
+        FIWrap::new(LinearF { delegate: Function::new() })
     }
 }
 impl_func_delegate!(LinearF);

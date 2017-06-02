@@ -1,5 +1,6 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
 use tensor::TensorKindList;
+use ::*;
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -101,11 +102,11 @@ pub struct ConvNd {
 }
 
 impl ConvNd {
-    pub fn new(args: &ConvNdArgs) -> Self {
-        ConvNd {
-            delegate: Function::new(),
-            args: args.clone(),
-        }
+    pub fn new(args: &ConvNdArgs) -> FIWrap<Self> {
+        FIWrap::new(ConvNd {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
     }
 }
 impl_func_delegate!(ConvNd);

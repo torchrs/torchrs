@@ -85,13 +85,12 @@ pub fn linear<T: Copy>(input: &Variable<T>,
     } else {
         vec![input.clone(), weight.clone()]
     };
-    let v = v.into_iter().map(|v| v.kind()).collect();
+    let mut v = v.into_iter().map(|v| v.kind()).collect();
     LinearF::new().f(&mut v).remove(0).into()
 }
 
 pub fn relu<T: Copy>(input: &Variable<T>) -> Variable<T> {
     Threshold::new(0., 0., false)
-        .borrow_mut()
         .f(&mut vec![input.clone().kind()])
         .remove(0)
         .into()
@@ -99,7 +98,6 @@ pub fn relu<T: Copy>(input: &Variable<T>) -> Variable<T> {
 
 pub fn relu_<T: Copy>(input: &mut Variable<T>) -> Variable<T> {
     Threshold::new(0., 0., true)
-        .borrow_mut()
         .f(&mut vec![input.clone().kind()])
         .remove(0)
         .into()

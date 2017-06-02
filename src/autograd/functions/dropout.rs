@@ -1,5 +1,6 @@
-use autograd::{Function, FuncIntf, FuncDelegate, Variable};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
 use tensor::{RefTensorList, TensorKindList};
+use ::*;
 
 #[derive(Clone)]
 pub struct Dropout1d {
@@ -31,21 +32,21 @@ impl Default for DropoutArgs {
 }
 
 impl Dropout1d {
-    pub fn new(args: &DropoutArgs) -> Self {
-        Dropout1d {
-            delegate: Function::new(),
-            args: args.clone(),
-        }
+    pub fn new(args: &DropoutArgs) -> FIWrap<Self> {
+        FIWrap::new(Dropout1d {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
     }
 }
 impl_func_delegate!(Dropout1d);
 
 impl Dropout2d {
-    pub fn new(args: &DropoutArgs) -> Self {
-        Dropout2d {
-            delegate: Function::new(),
-            args: args.clone(),
-        }
+    pub fn new(args: &DropoutArgs) -> FIWrap<Self> {
+        FIWrap::new(Dropout2d {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
     }
 }
 impl_func_delegate!(Dropout2d);
