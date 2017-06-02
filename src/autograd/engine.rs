@@ -5,19 +5,17 @@
 #![allow(unused_assignments)]
 #![allow(unused_imports)]
 
-use autograd::{Variable, Function, FuncId, FuncIntf, RootKind};
-use tensor::{Tensor, TensorKind, TensorKindList};
-use std::collections::{HashSet, HashMap, VecDeque};
-use itertools;
 
-pub struct ExecutionEngine {}
+#[allow(non_snake_case)]
+pub mod ExecutionEngine {
 
+    type FnRefs = HashMap<FuncId, u32>;
+    type FnDependencies = HashMap<FuncId, FnRefs>;
+    use autograd::{Variable, Function, FuncId, FuncIntf, RootKind};
+    use tensor::{Tensor, TensorKind, TensorKindList};
+    use std::collections::{HashSet, HashMap, VecDeque};
+    use itertools;
 
-
-type FnRefs = HashMap<FuncId, u32>;
-type FnDependencies = HashMap<FuncId, FnRefs>;
-
-impl ExecutionEngine {
     fn _compute_dependencies(function: &Function) -> FnDependencies {
         unimplemented!()
     }
@@ -57,7 +55,7 @@ impl ExecutionEngine {
         let mut need_copy: HashSet<TensorKind> = HashSet::new();
         let mut not_ready: HashMap<FuncId, Vec<Option<TensorKind>>> = HashMap::new();
 
-        let dependencies = Self::_compute_dependencies(&grad_fn);
+        let dependencies = _compute_dependencies(&grad_fn);
         while !ready.is_empty() {
             let (mut func, grad) = ready.pop_front().unwrap();
             let grad_input = func._do_backward(&grad, retain_variables);
@@ -73,13 +71,12 @@ impl ExecutionEngine {
                     }
                     &RootKind::RootFunc(ref f) => f,
                 };
-                let output_nr =
-                    Self::_free_backward_dependency(&dependencies, prev_func, &func, *arg_id);
-                let is_ready = Self::_is_ready_for_backward(&dependencies, prev_func);
+                let output_nr = _free_backward_dependency(&dependencies, prev_func, &func, *arg_id);
+                let is_ready = _is_ready_for_backward(&dependencies, prev_func);
                 if is_ready {
                     let prev_grad = if not_ready.contains_key(&prev_func.id) {
                         let prev_grad = not_ready[&prev_func.id].clone();
-                        Self::_add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
+                        _add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
                         prev_grad
                             .iter()
                             .map(|sv| if let &Some(ref v) = sv {
@@ -98,7 +95,7 @@ impl ExecutionEngine {
                     } else {
                         prev_func.output_ids().iter().map(|_| None).collect()
                     };
-                    Self::_add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
+                    _add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
                     not_ready.insert(prev_func.id, prev_grad.clone());
                 }
             }
