@@ -14,8 +14,8 @@ pub struct ExecutionEngine {}
 
 
 
-type FnRefs = HashMap<Function, u32>;
-type FnDependencies = HashMap<Function, FnRefs>;
+type FnRefs = HashMap<FuncId, u32>;
+type FnDependencies = HashMap<FuncId, FnRefs>;
 
 impl ExecutionEngine {
     fn _compute_dependencies(function: &Function) -> FnDependencies {
@@ -29,7 +29,12 @@ impl ExecutionEngine {
         unimplemented!();
     }
     fn _is_ready_for_backward(dependencies: &FnDependencies, function: &Function) -> bool {
-        unimplemented!()
+        for ref deps in dependencies[&function.id].iter() {
+            if deps.1 > &0 {
+                return false;
+            }
+        }
+        return true;
     }
     fn _add_grad(need_copy: &mut HashSet<TensorKind>,
                  prev_grad: &Vec<Option<TensorKind>>,
