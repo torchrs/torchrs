@@ -1,6 +1,6 @@
 use rutorch::*;
 use std::ops::{Index, IndexMut};
-//use std::convert::From;
+use std::convert::From;
 use std::cmp::max;
 
 use storage::*;
@@ -18,6 +18,48 @@ pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a mut TensorKind>;
 pub type TensorId = i32;
 
+
+impl<T> From<Tensor<T>> for TensorKind {
+    default fn from(input: Tensor<T>) -> Self {
+        unreachable!()
+    }
+}
+
+impl From<Tensor<f32>> for TensorKind {
+    fn from(input: Tensor<f32>) -> TensorKind {
+        TensorKind::FloatTensor(input)
+    }
+}
+
+impl From<Tensor<i64>> for TensorKind {
+    fn from(input: Tensor<i64>) -> TensorKind {
+        TensorKind::LongTensor(input)
+    }
+}
+
+impl<T> From<TensorKind> for Tensor<T> {
+    default fn from(input: TensorKind) -> Tensor<T> {
+        panic!("bad cast")
+    }
+}
+impl From<TensorKind> for Tensor<f32> {
+    fn from(input: TensorKind) -> Self {
+        match input {
+            TensorKind::FloatTensor(v) => v,
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl From<TensorKind> for Tensor<i64> {
+    fn from(input: TensorKind) -> Self {
+        match input {
+            TensorKind::LongTensor(v) => v,
+            _ => unimplemented!(),
+        }
+    }
+}
+
 pub struct Tensor<T> {
     pub id: i32,
     value: RcMut<TensorImpl<T, Output = T>>,
@@ -32,14 +74,15 @@ impl<T: Copy> Index<usize> for Tensor<T> {
     }
 }
 
-impl<'a, T: Copy> Index<usize> for &'a Tensor<T> {
+impl<T: Copy> Index<i32> for Tensor<T> {
     type Output = T;
-    fn index(&self, idx: usize) -> &Self::Output {
+    fn index(&self, idx: i32) -> &Self::Output {
 
         //        self.value.borrow_mut().index(idx as isize)
         unimplemented!()
     }
 }
+
 
 pub trait New<D, T> {
     fn new(args: D) -> T;
