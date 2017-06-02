@@ -16,8 +16,8 @@ pub enum RootKind {
 impl RootKind {
     pub fn requires_grad(&self) -> bool {
         match *self {
-            RootKind::RootVar(v) => v.requires_grad(),
-            RootKind::RootFunc(f) => f.requires_grad(),
+            RootKind::RootVar(ref v) => v.requires_grad(),
+            RootKind::RootFunc(ref f) => f.requires_grad(),
         }
     }
 }
