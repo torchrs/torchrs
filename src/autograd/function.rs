@@ -7,9 +7,20 @@ use ::*;
 
 thread_local! {
     pub static FUNC_TABLE: RefCell<VecDeque<FuncImpl>> = RefCell::new(VecDeque::new());
-//    pub static FUNC_INTF_TABLE: RefCell<HashMap<FuncId, &'static FuncIntf>> = RefCell::new(HashMap::new());
 }
 pub type FuncId = i32;
+pub enum RootKind {
+    RootVar(VarKind),
+    RootFunc(Function),
+}
+impl RootKind {
+    pub fn requires_grad(&self) -> bool {
+        match *self {
+            RootKind::RootVar(v) => v.requires_grad(),
+            RootKind::RootFunc(f) => f.requires_grad(),
+        }
+    }
+}
 
 
 struct FuncStub {
@@ -31,10 +42,11 @@ impl FuncStub {
 }
 
 pub struct FuncImpl {
-    previous_functions: Vec<Function>,
+    previous_functions: Vec<(RootKind, i32)>,
     saved_variables: Vec<VarId>,
     needs_input_grad: Vec<VarId>,
     non_differentiable: Vec<TensorId>,
+    output_ids: HashMap<VarId, usize>,
     to_save: Vec<TensorId>,
     requires_grad: bool,
     owner: RcMut<FuncIntf>,
@@ -46,6 +58,7 @@ impl Default for FuncImpl {
             saved_variables: Vec::new(),
             needs_input_grad: Vec::new(),
             non_differentiable: Vec::new(),
+            output_ids: HashMap::new(),
             to_save: Vec::new(),
             requires_grad: false,
             owner: RcMutNew(FuncStub::new()),
@@ -103,6 +116,12 @@ impl Function {
         //FUNC_INTF_TABLE.with(|m| m.borrow_mut().insert(self.id, intf));
         self.access().init(intf)
     }
+    pub fn previous_functions(&self) -> &Vec<(RootKind, i32)> {
+        &self.access().previous_functions
+    }
+    pub fn requires_grad(&self) -> bool {
+        self.access().requires_grad
+    }
     fn access(&self) -> &mut FuncImpl {
         let vecp = FUNC_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
@@ -153,10 +172,18 @@ pub trait FuncIntf: FuncDelegate {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
         {
             // do start graph stuff with f
-            let mut f = self.delegate();
+            let f = self.delegate();
             let mut inner = f.access();
             if !is_volatile {
-                inner.previous_functions = input_.iter().filter_map(|v| v.grad_fn()).collect();
+                inner.previous_functions = input_
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| if let Some(grad_fn) = v.grad_fn() {
+                             (RootKind::RootFunc(grad_fn), v.varid())
+                         } else {
+                             (RootKind::RootVar(v.clone()), v.varid())
+                         })
+                    .collect();
                 inner.needs_input_grad = input_
                     .iter()
                     .filter_map(|v| if v.requires_grad() {
@@ -174,18 +201,21 @@ pub trait FuncIntf: FuncDelegate {
             v = self.forward(&input_tensors);
         }
         let f = self.delegate();
-        let mut fi = f.access();
+        let mut inner = f.access();
         let output = if is_volatile {
             let args = VariableArgs::build().volatile(true).done();
             v.into_iter().map(|t| VarKind::new_args(t, &args)).collect()
         } else {
             let args = VariableArgs::build()
                 .creator(Some(f.clone()))
-                .requires_grad(fi.requires_grad)
+                .requires_grad(inner.requires_grad)
                 .done();
             let mut output: VarKindList =
                 v.into_iter().map(|t| VarKind::new_args(t, &args)).collect();
-            if !fi.to_save.is_empty() {
+            for (i, v) in output.iter().enumerate() {
+                inner.output_ids.insert(v.varid(), i);
+            }
+            if !inner.to_save.is_empty() {
                 /* if a tensor was modified in place replace the old variable with the new one */
                 let mut t2v = HashMap::new();
                 for ref mut var in input_.iter_mut() {
@@ -194,18 +224,18 @@ pub trait FuncIntf: FuncDelegate {
                 for ref mut var in &mut output.iter_mut() {
                     t2v.insert(var.tid(), var.varid());
                 }
-                for t in fi.to_save.iter() {
-                    fi.saved_variables.push(t2v[t]);
+                for t in inner.to_save.iter() {
+                    inner.saved_variables.push(t2v[t]);
                 }
-                fi.to_save.clear();
+                inner.to_save.clear();
             };
-            if !fi.non_differentiable.is_empty() {
+            if !inner.non_differentiable.is_empty() {
                 for ref mut var in &mut output {
-                    if fi.non_differentiable.contains(&var.tid()) {
+                    if inner.non_differentiable.contains(&var.tid()) {
                         var.requires_nograd()
                     }
                 }
-                fi.non_differentiable.clear();
+                inner.non_differentiable.clear();
             };
             output
         };

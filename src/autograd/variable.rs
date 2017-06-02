@@ -172,7 +172,7 @@ impl VarAccess<f32> for Variable<f32> {
         let vec = unsafe { &mut *vecp };
         match vec[self.id as usize] {
             VarKindImpl::FloatVariable(ref mut t) => t,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
     fn borrow(&self) -> &VariableImpl<f32> {
@@ -180,7 +180,7 @@ impl VarAccess<f32> for Variable<f32> {
         let vec = unsafe { &mut *vecp };
         match vec[self.id as usize] {
             VarKindImpl::FloatVariable(ref t) => t,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
     fn new_args(data: Tensor<f32>, args: &VariableArgs) -> Self {
@@ -188,10 +188,10 @@ impl VarAccess<f32> for Variable<f32> {
         let value = VariableImpl::new(data, args);
 
         VAR_TABLE.with(|f| {
-                               let mut table = f.borrow_mut();
-                               id = table.len();
-                               table.push_back(value.into());
-                           });
+                           let mut table = f.borrow_mut();
+                           id = table.len();
+                           table.push_back(value.into());
+                       });
         Variable {
             id: id as i32,
             phantom: PhantomData,
@@ -205,7 +205,7 @@ impl VarAccess<i64> for Variable<i64> {
         let vec = unsafe { &mut *vecp };
         match vec[self.id as usize] {
             VarKindImpl::LongVariable(ref mut t) => t,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
 
     }
@@ -214,7 +214,7 @@ impl VarAccess<i64> for Variable<i64> {
         let vec = unsafe { &mut *vecp };
         match vec[self.id as usize] {
             VarKindImpl::LongVariable(ref t) => t,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
 
     }
@@ -223,10 +223,10 @@ impl VarAccess<i64> for Variable<i64> {
         let value = VariableImpl::new(data, args);
 
         VAR_TABLE.with(|f| {
-                               let mut table = f.borrow_mut();
-                               id = table.len();
-                               table.push_back(value.into());
-                           });
+                           let mut table = f.borrow_mut();
+                           id = table.len();
+                           table.push_back(value.into());
+                       });
         Variable {
             id: id as i32,
             phantom: PhantomData,
@@ -266,13 +266,13 @@ impl<T> VariableImpl<T> {
         match self.grad {
             Some(ref mut t) => t,
             None => {
-                output = Tensor::new(self.data.size()).zero_(); 
+                output = Tensor::new(self.data.size()).zero_();
                 self.grad = Some(output);
                 self.grad()
             }
         }
     }
-    fn _call_hooks(&self, grad_output: T) {
+    fn _call_hooks(&self, grad_output: &Tensor<T>) {
         unimplemented!()
     }
 }
@@ -432,9 +432,10 @@ impl VarKind {
     pub fn typed<T>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
+    pub fn _do_backward(&mut self, grad_output: &TensorKind) {}
 }
 
-impl<T:Copy> Variable<T> {
+impl<T: Copy> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
     }
@@ -493,7 +494,7 @@ impl<T:Copy> Variable<T> {
         }
         ExecutionEngine::run_backward(self, gradient.clone().into(), retain_variables)
     }
-    pub fn _do_backward(&mut self, grad_output: T) {
+    pub fn _do_backward(&mut self, grad_output: &Tensor<T>) {
         let inner = self.access();
         assert_eq!(inner.dirty, false);
         inner._call_hooks(grad_output);

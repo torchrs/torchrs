@@ -4,9 +4,10 @@
 #![allow(dead_code)]
 #![allow(unused_assignments)]
 
-use autograd::{Variable, Function, FuncId, FuncIntf};
+use autograd::{Variable, Function, FuncId, FuncIntf, RootKind};
 use tensor::{Tensor, TensorKind};
 use std::collections::{HashSet, HashMap, VecDeque};
+use itertools;
 
 pub struct ExecutionEngine {}
 
@@ -41,18 +42,31 @@ impl ExecutionEngine {
             Some(v) => grad_fn = v,
             None => {
                 let grad_tensor = Tensor::<T>::from(grad);
-                var._do_backward(grad_tensor[0]);
+                var._do_backward(&grad_tensor);
                 return;
             }
         }
         let mut ready = VecDeque::new();
         ready.push_back((grad_fn.clone(), vec![grad]));
-        //let mut need_copy = HashSet::new();
+        let mut need_copy: HashSet<TensorKind> = HashSet::new();
 
         let dependencies = Self::_compute_dependencies(&grad_fn);
         while !ready.is_empty() {
             let (func, grad) = ready.pop_front().unwrap();
             let grad_input = func.clone()._do_backward(&grad, retain_variables);
+            for (&(ref prev_fn_, ref arg_id), ref d_prev_fn) in
+                itertools::zip(func.previous_functions(), grad_input) {
+                if !prev_fn_.requires_grad() {
+                    continue;
+                }
+                let prev_fn = match prev_fn_ {
+                    &RootKind::RootVar(ref v) => {
+                        v.clone()._do_backward(d_prev_fn);
+                        return;
+                    }
+                    &RootKind::RootFunc(ref f) => f,
+                };
+            }
         }
     }
 }
