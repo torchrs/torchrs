@@ -2,11 +2,13 @@ use rutorch::*;
 use std::ops::{Index, IndexMut};
 use std::convert::From;
 use std::cmp::max;
+use std::hash::{Hash, Hasher};
 
 use storage::*;
 use rand;
 use {Ixs, RcMut};
 
+#[derive(Hash)]
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),
     LongTensor(Tensor<i64>),
@@ -18,6 +20,18 @@ pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a mut TensorKind>;
 pub type TensorId = i32;
 
+
+impl PartialEq for TensorKind {
+    fn eq(&self, other: &TensorKind) -> bool {
+        use self::TensorKind::{FloatTensor, LongTensor};
+        match (self, other) {
+            (&FloatTensor(ref t1), &FloatTensor(ref t2)) => t1.id == t2.id,
+            (&LongTensor(ref t1), &LongTensor(ref t2)) => t1.id == t2.id,
+            _ => false,
+        }
+    }
+}
+impl Eq for TensorKind {}
 
 impl<T> From<Tensor<T>> for TensorKind {
     default fn from(input: Tensor<T>) -> Self {
@@ -63,6 +77,11 @@ impl From<TensorKind> for Tensor<i64> {
 pub struct Tensor<T> {
     pub id: i32,
     value: RcMut<TensorImpl<T, Output = T>>,
+}
+impl<T> Hash for Tensor<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state)
+    }
 }
 
 impl<T: Copy> Index<usize> for Tensor<T> {
@@ -116,7 +135,7 @@ impl<T> Tensor<T> {
     pub fn zero_(&mut self) -> Self {
         unimplemented!()
     }
-    pub fn add_(&mut self, rhs: T) {
+    pub fn add_(&mut self, rhs: &Tensor<T>) {
         unimplemented!()
     }
     pub fn cuda(&self) -> Self {
