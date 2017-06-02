@@ -63,7 +63,7 @@ fn parse_args() -> NetArgs {
 }
 
 #[derive(ModParse)]
-struct Net<T: Default+Copy> {
+struct Net<T: Default + Copy> {
     delegate: nn::Module<T>,
     conv1: nn::Conv2d<T>,
     conv2: nn::Conv2d<T>,
@@ -71,7 +71,7 @@ struct Net<T: Default+Copy> {
     fc2: nn::Linear<T>,
 }
 
-impl<T: Default+Copy> Net<T> {
+impl<T: Default + Copy> Net<T> {
     pub fn new() -> Net<T> {
         Net {
                 delegate: nn::Module::new(),
@@ -146,7 +146,8 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             ..Default::default()
         };
         let (mut data, mut target) = if args.cuda {
-            (Variable::new_args(data.cuda().clone(), &varargs), Variable::new(target.cuda().clone()))
+            (Variable::new_args(data.cuda().clone(), &varargs),
+             Variable::new(target.cuda().clone()))
         } else {
             (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
