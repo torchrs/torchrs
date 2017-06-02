@@ -77,7 +77,7 @@ impl FuncImpl {
 
 #[derive(Clone)]
 pub struct Function {
-    id: FuncId,
+    pub id: FuncId,
 }
 
 impl Default for Function {
@@ -118,6 +118,9 @@ impl Function {
     }
     pub fn previous_functions(&self) -> &Vec<(RootKind, i32)> {
         &self.access().previous_functions
+    }
+    pub fn output_ids(&self) -> &HashMap<VarId, usize> {
+        &self.access().output_ids
     }
     pub fn requires_grad(&self) -> bool {
         self.access().requires_grad
