@@ -20,6 +20,15 @@ pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = i32;
 
+impl TensorKind {
+    pub fn add_(&mut self, rhs: &TensorKind) {
+        unimplemented!()
+    }
+    // perform deep copy
+    pub fn copy(&self) -> Self {
+        unimplemented!()
+    }
+}
 
 impl PartialEq for TensorKind {
     fn eq(&self, other: &TensorKind) -> bool {
