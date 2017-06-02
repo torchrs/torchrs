@@ -1,4 +1,4 @@
-use autograd::{Function, ExecutionEngine, FuncId};
+use autograd::{Function, FuncId, ExecutionEngine};
 use tensor::Tensor;
 use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
@@ -9,7 +9,6 @@ use ::*;
 thread_local! {
     pub static VAR_TABLE: RefCell<VecDeque<VarKindImpl>> = RefCell::new(VecDeque::new());
 }
-
 pub type VarList<T> = Vec<Variable<T>>;
 pub type VarKindList = Vec<VarKind>;
 pub type RefVarKindList<'a> = Vec<&'a VarKind>;
@@ -369,7 +368,6 @@ impl VarKind {
         match data {
             FloatTensor(t) => Variable::<f32>::new_args(t, args).into(),
             LongTensor(t) => Variable::<i64>::new_args(t, args).into(),
-            _ => unimplemented!(),
         }
     }
 
@@ -378,7 +376,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref v) => v.is_volatile(),
             LongVariable(ref v) => v.is_volatile(),
-            _ => unimplemented!(),
         }
     }
     pub fn varid(&self) -> VarId {
@@ -386,7 +383,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref v) => v.id,
             LongVariable(ref v) => v.id,
-            _ => unimplemented!(),
         }
     }
     pub fn requires_grad(&self) -> bool {
@@ -394,7 +390,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref v) => v.requires_grad(),
             LongVariable(ref v) => v.requires_grad(),
-            _ => unimplemented!(),
         }
     }
     pub fn grad_fn(&self) -> Option<Function> {
@@ -402,7 +397,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref v) => v.grad_fn(),
             LongVariable(ref v) => v.grad_fn(),
-            _ => unimplemented!(),
         }
     }
     pub fn data(&mut self) -> TensorKind {
@@ -410,7 +404,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref mut v) => v.data().clone().into(),
             LongVariable(ref mut v) => v.data().clone().into(),
-            _ => unimplemented!(),
         }
     }
     pub fn tid(&mut self) -> TensorId {
@@ -418,7 +411,6 @@ impl VarKind {
         match *self {
             FloatVariable(ref mut v) => v.data().id,
             LongVariable(ref mut v) => v.data().id,
-            _ => unimplemented!(),
         }
     }
     pub fn requires_nograd(&mut self) {
@@ -426,13 +418,18 @@ impl VarKind {
         match *self {
             FloatVariable(ref mut v) => v.requires_nograd(),
             LongVariable(ref mut v) => v.requires_nograd(),
-            _ => unimplemented!(),
         }
     }
     pub fn typed<T>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
-    pub fn _do_backward(&mut self, grad_output: &TensorKind) {}
+    pub fn _do_backward(&mut self, grad_output: &TensorKind) {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref mut v) => v._do_backward(grad_output.into()),
+            LongVariable(ref mut v) => v._do_backward(grad_output.into()),
+        }
+    }
 }
 
 impl<T: Copy> Variable<T> {
