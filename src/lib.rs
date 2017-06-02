@@ -10,6 +10,8 @@ extern crate modparse_derive;
 #[macro_use]
 extern crate derive_builder;
 
+extern crate itertools;
+
 #[macro_use]
 pub mod macros;
 
@@ -21,14 +23,13 @@ pub mod utils;
 pub mod tensor;
 pub mod storage;
 use std::rc::Rc;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 
 
 // Mutable reference counted T
 pub type RcMut<T> = Rc<RefCell<T>>;
 // Nullable mutable reference counted T
 pub type OptRcMut<T> = Option<RcMut<T>>;
-/// Array index type
 pub type Ix = usize;
 /// Array index type (signed)
 pub type Ixs = isize;
@@ -38,6 +39,7 @@ pub type Ixs = isize;
 pub fn RcMutNew<T>(arg: T) -> RcMut<T> {
     Rc::new(RefCell::new(arg))
 }
+
 
 #[cfg(test)]
 mod tests {
