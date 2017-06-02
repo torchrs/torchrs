@@ -43,6 +43,7 @@ impl Clone for TensorKind {
 }
 
 impl<T> From<Tensor<T>> for TensorKind {
+    #[allow(unused_variables)]
     default fn from(input: Tensor<T>) -> Self {
         unreachable!()
     }
@@ -61,10 +62,37 @@ impl From<Tensor<i64>> for TensorKind {
 }
 
 impl<T> From<TensorKind> for Tensor<T> {
+    #[allow(unused_variables)]
     default fn from(input: TensorKind) -> Tensor<T> {
         panic!("bad cast")
     }
 }
+
+impl<'a, T> From<&'a TensorKind> for &'a Tensor<T> {
+    #[allow(unused_variables)]
+    default fn from(input: &'a TensorKind) -> &'a Tensor<T> {
+        panic!("bad cast")
+    }
+}
+
+impl<'a> From<&'a TensorKind> for &'a Tensor<f32> {
+    fn from(input: &'a TensorKind) -> Self {
+        match *input {
+            TensorKind::FloatTensor(ref t) => t,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> From<&'a TensorKind> for &'a Tensor<i64> {
+    fn from(input: &'a TensorKind) -> Self {
+        match *input {
+            TensorKind::LongTensor(ref t) => t,
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl From<TensorKind> for Tensor<f32> {
     fn from(input: TensorKind) -> Self {
         match input {
@@ -82,7 +110,6 @@ impl From<TensorKind> for Tensor<i64> {
         }
     }
 }
-
 pub struct Tensor<T> {
     pub id: i32,
     value: RcMut<TensorImpl<T, Output = T>>,
