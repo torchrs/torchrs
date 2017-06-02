@@ -35,10 +35,40 @@ pub mod ExecutionEngine {
         return true;
     }
     fn _add_grad(need_copy: &mut HashSet<TensorKind>,
-                 prev_grad: &Vec<Option<TensorKind>>,
+                 prev_grad: &mut Vec<Option<TensorKind>>,
                  output_nr: usize,
-                 d_prev_grad: &TensorKind) {
-        unimplemented!()
+                 d_prev_func: &TensorKind) {
+        // We can't match and operate on the vector at
+        // the same time because that would be performing
+        // a mutable borrow in the middle of an immutable
+        // borrow so we use a boolean
+        // d_prev_func is just used as a placeholder so that
+        // both arms match
+        let (mut grad_tensor, matched) = match prev_grad[output_nr] {
+            Some(ref t) => (t.clone(), true),
+            None => (d_prev_func.clone(), false),
+        };
+        if matched {
+            if need_copy.contains(&grad_tensor) {
+                need_copy.remove(&grad_tensor);
+                grad_tensor = grad_tensor.copy();
+                // we perform the add before the assignment
+                // in order to avoid an extra clone since
+                // creation of the Option and subsequent
+                // assignment moves the grad_tensor
+                grad_tensor.add_(d_prev_func);
+                prev_grad[output_nr] = Some(grad_tensor);
+            } else {
+                grad_tensor.add_(d_prev_func);
+            }
+        } else {
+            // We need to clone twice here as the compiler
+            // can't determine the lifetime dependency
+            // between the two
+            need_copy.insert(d_prev_func.clone());
+            prev_grad[output_nr] = Some(d_prev_func.clone());
+        }
+
     }
     pub fn run_backward<T: Copy>(var: &mut Variable<T>, grad: TensorKind, retain_variables: bool) {
         let grad_fn;
@@ -75,8 +105,8 @@ pub mod ExecutionEngine {
                 let is_ready = _is_ready_for_backward(&dependencies, prev_func);
                 if is_ready {
                     let prev_grad = if not_ready.contains_key(&prev_func.id) {
-                        let prev_grad = not_ready[&prev_func.id].clone();
-                        _add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
+                        let mut prev_grad = not_ready[&prev_func.id].clone();
+                        _add_grad(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
                         prev_grad
                             .iter()
                             .map(|sv| if let &Some(ref v) = sv {
@@ -90,12 +120,12 @@ pub mod ExecutionEngine {
                     };
                     ready.push_front((prev_func.clone(), prev_grad))
                 } else {
-                    let prev_grad = if not_ready.contains_key(&prev_func.id) {
+                    let mut prev_grad = if not_ready.contains_key(&prev_func.id) {
                         not_ready[&prev_func.id].clone()
                     } else {
                         prev_func.output_ids().iter().map(|_| None).collect()
                     };
-                    _add_grad(&mut need_copy, &prev_grad, output_nr, &d_prev_func);
+                    _add_grad(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
                     not_ready.insert(prev_func.id, prev_grad.clone());
                 }
             }
