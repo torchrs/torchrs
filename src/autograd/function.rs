@@ -57,7 +57,7 @@ impl FuncImpl {
     fn _call_hooks(&self, input: &TensorKindList, output: &TensorKindList) {
         unimplemented!();
     }
-    fn init(&self, intf: RcMut<FuncIntf>) {
+    fn init(&mut self, intf: RcMut<FuncIntf>) {
         self.owner = intf;
     }
 }
@@ -73,6 +73,21 @@ impl Default for Function {
     }
 }
 
+pub struct FIWrap<T> {
+    value: RcMut<T>,
+}
+impl<T: 'static + FuncIntf> FIWrap<T> {
+    pub fn new(arg: T) -> Self {
+        let t = FIWrap { value: RcMutNew(arg) };
+        t.value.borrow_mut().delegate().init(t.value.clone());
+        t
+    }
+    pub fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
+        self.value.borrow_mut().f(input_)
+    }
+}
+
+
 impl Function {
     pub fn new() -> Self {
         use std::usize;
@@ -87,14 +102,6 @@ impl Function {
     pub fn init(&self, intf: RcMut<FuncIntf>) {
         //FUNC_INTF_TABLE.with(|m| m.borrow_mut().insert(self.id, intf));
         self.access().init(intf)
-    }
-    fn owner(&self) -> &FuncIntf {
-        /*
-        let owner_tablep = FUNC_INTF_TABLE.with(|m| m.as_ptr());
-        let owner_table = unsafe {&mut *owner_tablep};
-        owner_table[&self.id] 
-        */
-        unimplemented!()
     }
     fn access(&self) -> &mut FuncImpl {
         let vecp = FUNC_TABLE.with(|f| f.as_ptr());
@@ -126,8 +133,7 @@ impl Function {
                     specify retain_variables=True when calling backward for \
                     the first time.");
         };
-        let owner = self.owner();
-        let grad_input = owner.backward(grad_output);
+        let grad_input = inner.owner.borrow_mut().backward(grad_output);
         inner._call_hooks(&grad_input, grad_output);
         if !retain_variables {
             inner.saved_variables.clear();
@@ -182,10 +188,10 @@ pub trait FuncIntf: FuncDelegate {
             if !fi.to_save.is_empty() {
                 /* if a tensor was modified in place replace the old variable with the new one */
                 let mut t2v = HashMap::new();
-                for ref var in input_.iter() {
+                for ref mut var in input_.iter_mut() {
                     t2v.insert(var.tid(), var.varid());
                 }
-                for ref mut var in &mut output.iter() {
+                for ref mut var in &mut output.iter_mut() {
                     t2v.insert(var.tid(), var.varid());
                 }
                 for t in fi.to_save.iter() {
