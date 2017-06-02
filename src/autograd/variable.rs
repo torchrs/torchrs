@@ -7,44 +7,129 @@ use tensor::*;
 use ::*;
 
 thread_local! {
-    pub static VAR_TABLE_F32: RefCell<VecDeque<VariableImpl<f32>>> = RefCell::new(VecDeque::new());
-    pub static VAR_TABLE_I64: RefCell<VecDeque<VariableImpl<i64>>> = RefCell::new(VecDeque::new());
+    pub static VAR_TABLE: RefCell<VecDeque<VarKindImpl>> = RefCell::new(VecDeque::new());
 }
 
 pub type VarList<T> = Vec<Variable<T>>;
-pub type VarKindList = Vec<VariableKind>;
-pub type RefVarKindList<'a> = Vec<&'a VariableKind>;
+pub type VarKindList = Vec<VarKind>;
+pub type RefVarKindList<'a> = Vec<&'a VarKind>;
 pub type VarId = i32;
-pub enum VariableKind {
+pub enum VarKind {
     FloatVariable(Variable<f32>),
     LongVariable(Variable<i64>),
 }
+pub enum VarKindImpl {
+    FloatVariable(VariableImpl<f32>),
+    LongVariable(VariableImpl<i64>),
+}
 
-impl<T> From<Variable<T>> for VariableKind {
+impl<T> From<VarKindImpl> for VariableImpl<T> {
+    default fn from(input: VarKindImpl) -> Self {
+        unreachable!()
+    }
+}
+impl From<VarKindImpl> for VariableImpl<f32> {
+    fn from(input: VarKindImpl) -> Self {
+        if let VarKindImpl::FloatVariable(v) = input {
+            v
+        } else {
+            unreachable!()
+        }
+    }
+}
+impl From<VarKindImpl> for VariableImpl<i64> {
+    fn from(input: VarKindImpl) -> Self {
+        if let VarKindImpl::LongVariable(v) = input {
+            v
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+impl<T> From<VariableImpl<T>> for VarKindImpl {
+    default fn from(input: VariableImpl<T>) -> Self {
+        unreachable!()
+    }
+}
+impl From<VariableImpl<f32>> for VarKindImpl {
+    fn from(input: VariableImpl<f32>) -> Self {
+        VarKindImpl::FloatVariable(input)
+    }
+}
+impl From<VariableImpl<i64>> for VarKindImpl {
+    fn from(input: VariableImpl<i64>) -> Self {
+        VarKindImpl::LongVariable(input)
+    }
+}
+
+impl<T> From<Variable<T>> for VarKind {
     default fn from(input: Variable<T>) -> Self {
         panic!("bad cast")
     }
 }
-impl From<Variable<f32>> for VariableKind {
+impl From<Variable<f32>> for VarKind {
     fn from(input: Variable<f32>) -> Self {
-        VariableKind::FloatVariable(input)
+        VarKind::FloatVariable(input)
     }
 }
-impl From<Variable<i64>> for VariableKind {
+impl From<Variable<i64>> for VarKind {
     fn from(input: Variable<i64>) -> Self {
-        VariableKind::LongVariable(input)
+        VarKind::LongVariable(input)
     }
 }
 
-impl<T> From<VariableKind> for Variable<T> {
-    default fn from(input: VariableKind) -> Self {
+impl From<VarId> for VarKind {
+    fn from(id: VarId) -> VarKind {
+        let vecp = VAR_TABLE.with(|f| f.as_ptr());
+        let vec = unsafe { &mut *vecp };
+        match vec[id as usize] {
+            VarKindImpl::FloatVariable(_) => Variable::<f32>::from(id).into(),
+            VarKindImpl::LongVariable(_) => Variable::<i64>::from(id).into(),
+        }
+    }
+}
+
+impl<T> From<VarKind> for Variable<T> {
+    default fn from(input: VarKind) -> Self {
         panic!("bad cast");
     }
 }
-
-impl From<VariableKind> for Variable<f32> {
-    fn from(input: VariableKind) -> Self {
-        if let VariableKind::FloatVariable(v) = input {
+impl From<VarKind> for Variable<f32> {
+    fn from(input: VarKind) -> Self {
+        if let VarKind::FloatVariable(v) = input {
+            v
+        } else {
+            panic!("bad cast")
+        }
+    }
+}
+impl From<VarKind> for Variable<i64> {
+    fn from(input: VarKind) -> Self {
+        if let VarKind::LongVariable(v) = input {
+            v
+        } else {
+            panic!("bad cast")
+        }
+    }
+}
+impl<'a, T: 'a> From<&'a VarKind> for &'a Variable<T> {
+    default fn from(input: &'a VarKind) -> Self {
+        panic!("bad cast");
+    }
+}
+impl<'a> From<&'a VarKind> for &'a Variable<f32> {
+    fn from(input: &'a VarKind) -> Self {
+        if let &VarKind::FloatVariable(ref v) = input {
+            v
+        } else {
+            panic!("bad cast")
+        }
+    }
+}
+impl<'a> From<&'a VarKind> for &'a Variable<i64> {
+    fn from(input: &'a VarKind) -> Self {
+        if let &VarKind::LongVariable(ref v) = input {
             v
         } else {
             panic!("bad cast")
@@ -52,19 +137,9 @@ impl From<VariableKind> for Variable<f32> {
     }
 }
 
-impl From<VariableKind> for Variable<i64> {
-    fn from(input: VariableKind) -> Self {
-        if let VariableKind::LongVariable(v) = input {
-            v
-        } else {
-            panic!("bad cast")
-        }
-    }
-}
-
-impl Clone for VariableKind {
+impl Clone for VarKind {
     fn clone(&self) -> Self {
-        use self::VariableKind::{FloatVariable, LongVariable};
+        use self::VarKind::{FloatVariable, LongVariable};
         match *self {
             FloatVariable(ref v) => FloatVariable(v.clone()),
             LongVariable(ref v) => LongVariable(v.clone()),
@@ -93,24 +168,24 @@ impl<T> VarAccess<T> for Variable<T> {
 
 impl VarAccess<f32> for Variable<f32> {
     fn access(&self) -> &mut VariableImpl<f32> {
-        let vecp = VAR_TABLE_F32.with(|f| f.as_ptr());
+        let vecp = VAR_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
-        &mut vec[self.id as usize]
+        &mut vec[self.id as usize].into()
     }
     fn borrow(&self) -> &VariableImpl<f32> {
-        let vecp = VAR_TABLE_F32.with(|f| f.as_ptr());
+        let vecp = VAR_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
-        &vec[self.id as usize]
+        &vec[self.id as usize].into()
     }
     fn new_args(data: Tensor<f32>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
         let value = VariableImpl::new(data, args);
 
-        VAR_TABLE_F32.with(|f| {
-                               let mut table = f.borrow_mut();
-                               id = table.len();
-                               table.push_back(value);
-                           });
+        VAR_TABLE.with(|f| {
+                           let mut table = f.borrow_mut();
+                           id = table.len();
+                           table.push_back(value.into());
+                       });
         Variable {
             id: id as i32,
             phantom: PhantomData,
@@ -120,24 +195,24 @@ impl VarAccess<f32> for Variable<f32> {
 
 impl VarAccess<i64> for Variable<i64> {
     fn access(&self) -> &mut VariableImpl<i64> {
-        let vecp = VAR_TABLE_I64.with(|f| f.as_ptr());
+        let vecp = VAR_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
-        &mut vec[self.id as usize]
+        &mut vec[self.id as usize].into()
     }
     fn borrow(&self) -> &VariableImpl<i64> {
-        let vecp = VAR_TABLE_I64.with(|f| f.as_ptr());
+        let vecp = VAR_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
-        &vec[self.id as usize]
+        &vec[self.id as usize].into()
     }
     fn new_args(data: Tensor<i64>, args: &VariableArgs) -> Self {
         let mut id = ::std::usize::MAX;
         let value = VariableImpl::new(data, args);
 
-        VAR_TABLE_I64.with(|f| {
-                               let mut table = f.borrow_mut();
-                               id = table.len();
-                               table.push_back(value);
-                           });
+        VAR_TABLE.with(|f| {
+                           let mut table = f.borrow_mut();
+                           id = table.len();
+                           table.push_back(value.into());
+                       });
         Variable {
             id: id as i32,
             phantom: PhantomData,
@@ -243,8 +318,6 @@ impl<T> From<usize> for Variable<T> {
     }
 }
 
-
-
 #[derive(Default, Clone)]
 pub struct BackwardArgs {}
 
@@ -276,6 +349,76 @@ impl VariableArgsBuilder {
     }
 }
 
+impl VarKind {
+    pub fn new_args(data: TensorKind, args: &VariableArgs) -> Self {
+        use self::TensorKind::{FloatTensor, LongTensor};
+        match data {
+            FloatTensor(t) => Variable::<f32>::new_args(t, args).into(),
+            LongTensor(t) => Variable::<i64>::new_args(t, args).into(),
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn is_volatile(&self) -> bool {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.is_volatile(),
+            LongVariable(ref v) => v.is_volatile(),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn varid(&self) -> VarId {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.id,
+            LongVariable(ref v) => v.id,
+            _ => unimplemented!(),
+        }
+    }
+    pub fn requires_grad(&self) -> bool {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.requires_grad(),
+            LongVariable(ref v) => v.requires_grad(),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn grad_fn(&self) -> Option<Function> {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.grad_fn(),
+            LongVariable(ref v) => v.grad_fn(),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn data(&mut self) -> TensorKind {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.data().clone().into(),
+            LongVariable(ref v) => v.data().clone().into(),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn tid(&mut self) -> TensorId {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.data().id,
+            LongVariable(ref v) => v.data().id,
+            _ => unimplemented!(),
+        }
+    }
+    pub fn requires_nograd(&mut self) {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match *self {
+            FloatVariable(ref v) => v.requires_nograd(),
+            LongVariable(ref v) => v.requires_nograd(),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn typed<T>(self) -> Variable<T> {
+        Variable::<T>::from(self)
+    }
+}
 
 impl<T: Copy> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
@@ -292,6 +435,9 @@ impl<T: Copy> Variable<T> {
             Some(ref func) => Some(func.clone()),
             None => None,
         }
+    }
+    pub fn kind(self) -> VarKind {
+        VarKind::from(self)
     }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
@@ -331,12 +477,13 @@ impl<T: Copy> Variable<T> {
                 }
             };
         }
-        ExecutionEngine::run_backward(self, &mut gradient, retain_variables)
+        ExecutionEngine::run_backward(self, gradient.clone().into(), retain_variables)
     }
-    pub fn _do_backward(&mut self, grad_output: &Tensor<T>) {
+    pub fn _do_backward(&mut self, grad_output: T) {
         let inner = self.access();
-        inner._call_hooks(grad_output[0]);
-        inner.grad().add_(grad_output[0]);
+        assert_eq!(inner.dirty, false);
+        inner._call_hooks(grad_output);
+        inner.grad().add_(grad_output);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)
