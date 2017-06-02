@@ -17,7 +17,7 @@ pub enum TensorKind {
 pub type TensorList<T> = Vec<Tensor<T>>;
 pub type TensorKindList = Vec<TensorKind>;
 pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
-pub type RefTensorKindList<'a> = Vec<&'a mut TensorKind>;
+pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = i32;
 
 
@@ -32,6 +32,15 @@ impl PartialEq for TensorKind {
     }
 }
 impl Eq for TensorKind {}
+impl Clone for TensorKind {
+    fn clone(&self) -> Self {
+        use self::TensorKind::{FloatTensor, LongTensor};
+        match *self {
+            FloatTensor(ref t) => FloatTensor(t.clone()),
+            LongTensor(ref t) => LongTensor(t.clone()),
+        }
+    }
+}
 
 impl<T> From<Tensor<T>> for TensorKind {
     default fn from(input: Tensor<T>) -> Self {
