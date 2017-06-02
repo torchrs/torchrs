@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable};
-use tensor::{RefTensorList, TensorList};
+use tensor::TensorKindList;
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -94,6 +94,7 @@ impl<'a> From<&'a mut Conv2dFArgs> for ConvNdArgs {
     }
 }
 
+#[derive(Clone)]
 pub struct ConvNd {
     delegate: Function,
     args: ConvNdArgs,
@@ -110,11 +111,11 @@ impl ConvNd {
 impl_func_delegate!(ConvNd);
 
 impl FuncIntf for ConvNd {
-    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         // run native code here
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         // run native code here
         unimplemented!()
     }

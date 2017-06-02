@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable};
-use tensor::{RefTensorList, TensorList};
+use tensor::TensorKindList;
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -62,7 +62,7 @@ impl Default for MaxPool3dArgs {
     }
 }
 
-
+#[derive(Clone)]
 pub struct MaxPool2d {
     delegate: Function,
     args: MaxPoolFArgs,
@@ -75,20 +75,20 @@ impl MaxPool2d {
             args: args.clone(),
         }
     }
-    fn forward_apply<T>(&mut self, input: &RefTensorList<T>) -> TensorList<T> {
+    fn forward_apply(&mut self, input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward_apply<T>(&mut self, input: &RefTensorList<T>) -> TensorList<T> {
+    fn backward_apply(&mut self, input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }
 impl_func_delegate!(MaxPool2d);
 
 impl FuncIntf for MaxPool2d {
-    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         self.forward_apply(input)
     }
-    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         self.backward_apply(input)
     }
 }

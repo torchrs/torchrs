@@ -1,7 +1,8 @@
-use autograd::{Function, FuncIntf, FuncIntfKind, FuncDelegate, Variable, VarId};
+use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarId};
 use macros::*;
 use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList};
 
+#[derive(Clone)]
 pub struct LogSoftmax {
     delegate: Function,
 }
@@ -14,10 +15,10 @@ impl LogSoftmax {
 impl_func_delegate!(LogSoftmax);
 
 impl FuncIntf for LogSoftmax {
-    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }
@@ -37,6 +38,7 @@ impl Default for NLLLossArgs {
     }
 }
 
+#[derive(Clone)]
 pub struct NLLLoss {
     delegate: Function,
     args: NLLLossArgs,
@@ -57,11 +59,11 @@ impl FuncDelegate for NLLLoss {
     }
 }
 
-impl FuncIntfKind for NLLLoss {
-    fn forwardx<'a>(&mut self, input: &RefTensorKindList<'a>) -> TensorKindList {
+impl FuncIntf for NLLLoss {
+    fn forward(&mut self, input: &TensorKindList) -> TensorKindList {
         unimplemented!();
     }
-    fn backwardx<'a>(&mut self, input: &RefTensorKindList<'a>) -> TensorKindList {
+    fn backward(&mut self, input: &TensorKindList) -> TensorKindList {
         unimplemented!();
     }
 }

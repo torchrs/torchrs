@@ -1,7 +1,8 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable};
 use macros::*;
-use tensor::{RefTensorList, TensorList};
+use tensor::TensorKindList;
 
+#[derive(Clone)]
 pub struct LinearF {
     delegate: Function,
 }
@@ -14,10 +15,10 @@ impl LinearF {
 impl_func_delegate!(LinearF);
 
 impl FuncIntf for LinearF {
-    fn forward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward<T>(&mut self, mut input: &RefTensorList<T>) -> TensorList<T> {
+    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }
