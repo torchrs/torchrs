@@ -63,7 +63,7 @@ fn parse_args() -> NetArgs {
 }
 
 #[derive(ModParse)]
-struct Net<T: Default> {
+struct Net<T: Default+Copy> {
     delegate: nn::Module<T>,
     conv1: nn::Conv2d<T>,
     conv2: nn::Conv2d<T>,
@@ -71,7 +71,7 @@ struct Net<T: Default> {
     fc2: nn::Linear<T>,
 }
 
-impl<T: Default> Net<T> {
+impl<T: Default+Copy> Net<T> {
     pub fn new() -> Net<T> {
         Net {
                 delegate: nn::Module::new(),
