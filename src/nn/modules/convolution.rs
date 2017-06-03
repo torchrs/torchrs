@@ -76,7 +76,7 @@ impl_mod_delegate!(Conv2d);
 
 impl<T: Default + Copy> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
-        let mut bias = if let Some(ref mut biasp) = self.bias {
+        let bias = if let Some(ref mut biasp) = self.bias {
             Some(&mut biasp.v)
         } else {
             None
