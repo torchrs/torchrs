@@ -1,13 +1,6 @@
-
-// silence warnings while still a WIP
-#![allow(unused_variables)]
-#![allow(dead_code)]
-#![allow(unused_assignments)]
-#![allow(unused_imports)]
-
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-use std::cell::{Cell, RefCell};
+use std::hash::Hash;
+use std::cell::Cell;
 use std::ops::{Index, IndexMut};
 
 // Pythonesque Counter implementation
@@ -57,8 +50,8 @@ impl<T: Hash + Eq + Clone> IndexMut<T> for Counter<T> {
 
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
-    use autograd::{Variable, Function, FuncId, FuncIntf, RootKind, VarId};
-    use tensor::{Tensor, TensorKind, TensorKindList};
+    use autograd::{Variable, Function, FuncId, RootKind};
+    use tensor::{Tensor, TensorKind};
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
