@@ -31,7 +31,28 @@ impl BackendIntf for THNN_FloatBackend {
                                  inplace: bool) {
 
     }
+    // Dropout
 
+    // Linear
+
+    // Loss
+    fn ClassNLLCriterion_updateOutput(&self,
+                                      input: &TensorKind,
+                                      target: &TensorKind,
+                                      output: &mut TensorKind,
+                                      size_average: bool,
+                                      weights: Option<&TensorKind>,
+                                      total_weight: &TensorKind) {
+
+    }
+    fn ClassNLLCriterion_updateGradInput(&self,
+                                         input: &TensorKind,
+                                         target: &TensorKind,
+                                         grad_input: &mut TensorKind,
+                                         size_average: bool,
+                                         weights: Option<&TensorKind>,
+                                         total_weight: &TensorKind) {
+    }
     // Pooling
     fn SpatialDilatedMaxPooling_updateOutput(&self,
                                              input: &TensorKind,
