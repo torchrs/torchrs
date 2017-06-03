@@ -18,10 +18,6 @@ pub trait BackendIntf {
                                  threshold_: f32,
                                  val_: f32,
                                  inplace: bool);
-    // Dropout
-
-    // Linear
-
     // Loss
     fn ClassNLLCriterion_updateOutput(&self,
                                       input: &TensorKind,
@@ -38,6 +34,12 @@ pub trait BackendIntf {
                                          size_average: bool,
                                          weights: Option<&TensorKind>,
                                          total_weight: &TensorKind);
+    fn LogSoftMax_updateOutput(&self, input: &TensorKind, output: &mut TensorKind);
+    fn LogSoftMax_updateGradInput(&self,
+                                  input: &TensorKind,
+                                  grad_output: &TensorKind,
+                                  grad_input: &mut TensorKind,
+                                  output: &TensorKind);
 
     // Pooling
     fn SpatialDilatedMaxPooling_updateOutput(&self,
