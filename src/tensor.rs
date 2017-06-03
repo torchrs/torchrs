@@ -38,6 +38,12 @@ impl TensorKind {
     pub fn long(&self) -> Self {
         unimplemented!()
     }
+    pub fn in_thft(&self) -> *mut THFloatTensor {
+        unimplemented!();
+    }
+    pub fn in_thlt(&self) -> *mut THLongTensor {
+        unimplemented!();
+    }
     //    pub fn backend(&self) -> &
 }
 
