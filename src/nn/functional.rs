@@ -1,9 +1,10 @@
-//use torchrs::nn::functional::{max_pool2d, relu, conv2d, dropout, dropout2d, linear, log_softmax};
+use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, Dropout1d, Dropout2d, Threshold, LogSoftmax,
+               NLLLoss, LinearF, Variable};
 
-use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, FuncIntf, MaxPool2d, Dropout1d, Dropout2d,
-               Threshold, LogSoftmax, NLLLoss, LinearF, Variable, VarKind};
+pub use autograd::{DropoutArgs, NLLLossArgs};
+use nn::_functions::MaxPool2d;
+pub use nn::_functions::MaxPool2dArgs;
 
-pub use autograd::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
 pub fn max_pool2d<T: Copy>(input: &Variable<T>,
                            kernel_size: (u32, u32),
