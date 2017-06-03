@@ -448,9 +448,6 @@ impl<T: Copy> Variable<T> {
             None => None,
         }
     }
-    pub fn kind(self) -> VarKind {
-        VarKind::from(self)
-    }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
     }
