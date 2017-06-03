@@ -24,10 +24,10 @@ impl Threshold {
 impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }

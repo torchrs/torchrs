@@ -75,20 +75,19 @@ impl MaxPool2d {
                         args: args.clone(),
                     })
     }
-    fn forward_apply(&mut self, input: &TensorKindList) -> TensorKindList {
-        unimplemented!()
-    }
-    fn backward_apply(&mut self, input: &TensorKindList) -> TensorKindList {
-        unimplemented!()
-    }
 }
 impl_func_delegate!(MaxPool2d);
 
 impl FuncIntf for MaxPool2d {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
-        self.forward_apply(input)
+    fn forward(&mut self, input_: &mut TensorKindList) -> TensorKindList {
+        let input = input_.remove(0);
+        let input2d = input.unsqueeze(2);
+        //        let backend = input.backend();
+        let (indices, output) = (input2d.new().long(), input2d.new());
+
+        vec![output]
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
-        self.backward_apply(input)
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+        unimplemented!()
     }
 }

@@ -1,9 +1,7 @@
-use autograd::{Conv2dFArgs, ConvNdArgs, ConvNd, Dropout1d, Dropout2d, Threshold, LogSoftmax,
-               NLLLoss, LinearF, Variable};
-
-pub use autograd::{DropoutArgs, NLLLossArgs};
-use nn::_functions::MaxPool2d;
-pub use nn::_functions::MaxPool2dArgs;
+use autograd::Variable;
+use nn::_functions::{Conv2dFArgs, ConvNdArgs, ConvNd, Dropout1d, Dropout2d, Threshold, LogSoftmax,
+                     NLLLoss, LinearF, MaxPool2d};
+pub use nn::_functions::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
 
 pub fn max_pool2d<T: Copy>(input: &Variable<T>,

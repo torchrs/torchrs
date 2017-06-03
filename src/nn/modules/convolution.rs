@@ -1,5 +1,6 @@
 use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
-use autograd::{Variable, Conv2dFArgs};
+use autograd::Variable;
+use nn::_functions::Conv2dFArgs;
 use std::marker::PhantomData;
 use nn::functional as F;
 

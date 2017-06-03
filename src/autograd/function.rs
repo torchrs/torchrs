@@ -22,16 +22,15 @@ impl RootKind {
     }
 }
 
-
 struct FuncStub {
     delegate: Function,
 }
 impl_func_delegate!(FuncStub);
 impl FuncIntf for FuncStub {
-    fn forward(&mut self, input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unreachable!()
     }
-    fn backward(&mut self, input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unreachable!()
     }
 }
@@ -145,7 +144,7 @@ impl Function {
         self.access().to_save = input.iter().map(|t| t.id).collect();
     }
     pub fn _do_backward(&mut self,
-                        grad_output: &TensorKindList,
+                        grad_output: &mut TensorKindList,
                         retain_variables: bool)
                         -> TensorKindList {
         let inner = self.access();
@@ -169,8 +168,8 @@ pub trait FuncDelegate {
 }
 
 pub trait FuncIntf: FuncDelegate {
-    fn forward(&mut self, input: &TensorKindList) -> TensorKindList;
-    fn backward(&mut self, input: &TensorKindList) -> TensorKindList;
+    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList;
+    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList;
     fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
         {
@@ -200,8 +199,8 @@ pub trait FuncIntf: FuncDelegate {
         }
         let v;
         {
-            let input_tensors = input_.iter_mut().map(|v| v.data()).collect();
-            v = self.forward(&input_tensors);
+            let mut input_tensors = input_.iter_mut().map(|v| v.data()).collect();
+            v = self.forward(&mut input_tensors);
         }
         let f = self.delegate();
         let mut inner = f.access();

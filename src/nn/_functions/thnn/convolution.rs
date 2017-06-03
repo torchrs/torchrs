@@ -112,11 +112,11 @@ impl ConvNd {
 impl_func_delegate!(ConvNd);
 
 impl FuncIntf for ConvNd {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         // run native code here
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         // run native code here
         unimplemented!()
     }

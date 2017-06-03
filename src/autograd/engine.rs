@@ -165,8 +165,8 @@ pub mod ExecutionEngine {
         match var.grad_fn() {
             Some(v) => grad_fn = v,
             None => {
-                let grad_tensor = Tensor::<T>::from(grad);
-                var._do_backward(&grad_tensor);
+                let mut grad_tensor = Tensor::<T>::from(grad);
+                var._do_backward(&mut grad_tensor);
                 return;
             }
         }
@@ -177,8 +177,8 @@ pub mod ExecutionEngine {
 
         let dependencies = _compute_dependencies(&grad_fn);
         while !ready.is_empty() {
-            let (mut func, grad) = ready.pop_front().unwrap();
-            let grad_input = func._do_backward(&grad, retain_variables);
+            let (mut func, mut grad) = ready.pop_front().unwrap();
+            let grad_input = func._do_backward(&mut grad, retain_variables);
             for (&(ref prev_func_, ref arg_id), ref d_prev_func) in
                 itertools::zip(func.previous_functions(), grad_input) {
                 if !prev_func_.requires_grad() {

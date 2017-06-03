@@ -52,19 +52,19 @@ impl Dropout2d {
 impl_func_delegate!(Dropout2d);
 
 impl FuncIntf for Dropout1d {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }
 
 impl FuncIntf for Dropout2d {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }

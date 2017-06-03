@@ -16,10 +16,10 @@ impl LogSoftmax {
 impl_func_delegate!(LogSoftmax);
 
 impl FuncIntf for LogSoftmax {
-    fn forward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
 }
@@ -61,10 +61,10 @@ impl FuncDelegate for NLLLoss {
 }
 
 impl FuncIntf for NLLLoss {
-    fn forward(&mut self, input: &TensorKindList) -> TensorKindList {
+    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unimplemented!();
     }
-    fn backward(&mut self, input: &TensorKindList) -> TensorKindList {
+    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unimplemented!();
     }
 }
