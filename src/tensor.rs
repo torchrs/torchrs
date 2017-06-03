@@ -8,6 +8,7 @@ use storage::*;
 use rand;
 use {Ixs, RcMut};
 
+
 #[derive(Hash)]
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),
@@ -24,10 +25,20 @@ impl TensorKind {
     pub fn add_(&mut self, rhs: &TensorKind) {
         unimplemented!()
     }
+    pub fn new(&self) -> Self {
+        unimplemented!()
+    }
     // perform deep copy
     pub fn copy(&self) -> Self {
         unimplemented!()
     }
+    pub fn unsqueeze(self, dim: usize) -> Self {
+        unimplemented!()
+    }
+    pub fn long(&self) -> Self {
+        unimplemented!()
+    }
+    //    pub fn backend(&self) -> &
 }
 
 impl PartialEq for TensorKind {
