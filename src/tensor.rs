@@ -1,3 +1,5 @@
+// while a WIP
+#![allow(unused_variables)]
 use rutorch::*;
 use std::ops::{Index, IndexMut};
 use std::convert::From;
@@ -28,14 +30,130 @@ pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = i32;
 
 impl TensorKind {
-    pub fn add_(&mut self, rhs: &NumKind) {
+    pub fn abs(&self) -> Self {
         unimplemented!()
     }
-    pub fn new(&self) -> Self {
+    pub fn abs_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn acos(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn acos_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn add(&self, rhs: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn add_(self, rhs: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn addcdiv(&self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addcdiv_(self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addcmul(&self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addcmul_(self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addr(&self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addr_(self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn bernoulli(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn bernoulli_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn ceil(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn ceil_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn chunk(&self, n_chunks: usize, dim: usize) -> TensorKindList {
+        unimplemented!()
+    }
+    pub fn clamp(&self, min: f32, max: f32) -> Self {
+        unimplemented!()
+    }
+    pub fn clamp_(self, min: f32, max: f32) -> Self {
+        unimplemented!()
+    }
+    pub fn contiguous(&self) -> Self {
         unimplemented!()
     }
     // perform deep copy
     pub fn copy(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn copy_(self, src: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn copy_async_(self, src: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn cpu(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn cuda(&self, device: Option<i32>) -> Self {
+        unimplemented!()
+    }
+    pub fn cuda_async(&self, device: Option<i32>) -> Self {
+        unimplemented!()
+    }
+    pub fn diag(&self, diag: u32) -> Self {
+        unimplemented!()
+    }
+    pub fn dist(&self, other: &Self, p: u32) -> f32 {
+        unimplemented!()
+    }
+    pub fn div(&self, value: &Self) -> Self {
+
+        unimplemented!()
+    }
+    pub fn div_(self, value: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn dot(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn double(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn eig(&self, eigenvectors: bool) -> (Self, Self) {
+        unimplemented!()
+    }
+    pub fn element_size(&self) -> i32 {
+        unimplemented!()
+    }
+    pub fn eq_tensor(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn eq_tensor_(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn exp(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn exp_(self) -> Self {
+        unimplemented!()
+    }
+
+    pub fn new(&self) -> Self {
         unimplemented!()
     }
     pub fn unsqueeze(self, dim: usize) -> Self {
