@@ -331,9 +331,6 @@ impl<T> From<usize> for Variable<T> {
     }
 }
 
-#[derive(Default, Clone)]
-pub struct BackwardArgs {}
-
 #[derive(Builder)]
 #[builder(pattern="owned")]
 pub struct VariableArgs {
@@ -362,6 +359,24 @@ impl VariableArgsBuilder {
     }
 }
 
+macro_rules! impl_var_dispatch {
+    ($key:ident, $var:ident, $action:expr ) => {(
+        match * $key {
+            FloatVariable(ref $var) => $action ,
+            LongVariable(ref $var) => $action ,
+        }
+    )}
+}
+
+macro_rules! impl_var_mut_dispatch {
+    ($key:ident, $var:ident, $action:expr ) => {(
+        match * $key {
+            FloatVariable(ref mut $var) => $action ,
+            LongVariable(ref mut $var) => $action ,
+        }
+    )}
+}
+
 impl VarKind {
     pub fn new_args(data: TensorKind, args: &VariableArgs) -> Self {
         use self::TensorKind::{FloatTensor, LongTensor};
@@ -373,38 +388,23 @@ impl VarKind {
 
     pub fn is_volatile(&self) -> bool {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref v) => v.is_volatile(),
-            LongVariable(ref v) => v.is_volatile(),
-        }
+        impl_var_dispatch!(self, v, v.is_volatile())
     }
     pub fn varid(&self) -> VarId {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref v) => v.id,
-            LongVariable(ref v) => v.id,
-        }
+        impl_var_dispatch!(self, v, v.id)
     }
     pub fn requires_grad(&self) -> bool {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref v) => v.requires_grad(),
-            LongVariable(ref v) => v.requires_grad(),
-        }
+        impl_var_dispatch!(self, v, v.requires_grad())
     }
     pub fn grad_fn(&self) -> Option<Function> {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref v) => v.grad_fn(),
-            LongVariable(ref v) => v.grad_fn(),
-        }
+        impl_var_dispatch!(self, v, v.grad_fn())
     }
     pub fn data(&mut self) -> TensorKind {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref mut v) => v.data().clone().into(),
-            LongVariable(ref mut v) => v.data().clone().into(),
-        }
+        impl_var_mut_dispatch!(self, v, v.data_into())
     }
     pub fn tid(&mut self) -> TensorId {
         use self::VarKind::{FloatVariable, LongVariable};
@@ -415,26 +415,23 @@ impl VarKind {
     }
     pub fn requires_nograd(&mut self) {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref mut v) => v.requires_nograd(),
-            LongVariable(ref mut v) => v.requires_nograd(),
-        }
+        impl_var_mut_dispatch!(self, v, v.requires_nograd())
     }
     pub fn typed<T>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
     pub fn _do_backward(&mut self, grad_output: &TensorKind) {
         use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref mut v) => v._do_backward(grad_output.into()),
-            LongVariable(ref mut v) => v._do_backward(grad_output.into()),
-        }
+        impl_var_mut_dispatch!(self, v, v._do_backward(grad_output.into()))
     }
 }
 
 impl<T: Copy> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
+    }
+    fn data_into(&mut self) -> TensorKind {
+        self.data().clone().into()
     }
     pub fn is_volatile(&self) -> bool {
         self.access().volatile
