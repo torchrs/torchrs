@@ -492,7 +492,7 @@ impl<T: Copy> Variable<T> {
         let inner = self.access();
         assert_eq!(inner.dirty, false);
         inner._call_hooks(grad_output);
-        inner.grad().add_(grad_output);
+        inner.grad().add_(&grad_output[0]);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)

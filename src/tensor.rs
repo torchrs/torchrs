@@ -14,6 +14,12 @@ pub enum TensorKind {
     FloatTensor(Tensor<f32>),
     LongTensor(Tensor<i64>),
 }
+pub enum NumKind {
+    Float(f32),
+    Double(f64),
+    Long(i64),
+}
+
 
 pub type TensorList<T> = Vec<Tensor<T>>;
 pub type TensorKindList = Vec<TensorKind>;
@@ -22,7 +28,7 @@ pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = i32;
 
 impl TensorKind {
-    pub fn add_(&mut self, rhs: &TensorKind) {
+    pub fn add_(&mut self, rhs: &NumKind) {
         unimplemented!()
     }
     pub fn new(&self) -> Self {
@@ -45,6 +51,13 @@ impl TensorKind {
         unimplemented!();
     }
     //    pub fn backend(&self) -> &
+}
+
+impl Index<usize> for TensorKind {
+    type Output = NumKind;
+    fn index(&self, idx: usize) -> &Self::Output {
+        unimplemented!()
+    }
 }
 
 impl PartialEq for TensorKind {
@@ -197,7 +210,7 @@ impl<T> Tensor<T> {
     pub fn zero_(&mut self) -> Self {
         unimplemented!()
     }
-    pub fn add_(&mut self, rhs: &Tensor<T>) {
+    pub fn add_(&mut self, rhs: &T) {
         unimplemented!()
     }
     pub fn cuda(&self) -> Self {
