@@ -14,26 +14,24 @@ use std::ops::{Index, IndexMut};
 // XXX Move to a separate module
 static ZERO: usize = 0;
 pub struct Counter<T: Hash + Eq + Clone> {
-    pub map: RefCell<HashMap<T, Cell<usize>>>,
+    pub map: HashMap<T, Cell<usize>>,
 }
 impl<T: Hash + Eq + Clone> Counter<T> {
     pub fn new() -> Self {
-        Counter { map: RefCell::new(HashMap::new()) }
+        Counter { map: HashMap::new() }
     }
     pub fn len(&self) -> usize {
-        self.map.borrow().len()
+        self.map.len()
     }
-    pub fn remove(&self, idx: &T) {
-        self.map.borrow_mut().remove(idx);
+    pub fn remove(&mut self, idx: &T) {
+        self.map.remove(idx);
     }
 }
 impl<T: Hash + Eq + Clone> Index<T> for Counter<T> {
     type Output = usize;
     fn index(&self, idx: T) -> &Self::Output {
-        let mapp = self.map.as_ptr();
-        let map = unsafe { &mut *mapp };
-        if map.contains_key(&idx) {
-            let cntp = map[&idx].as_ptr();
+        if self.map.contains_key(&idx) {
+            let cntp = self.map[&idx].as_ptr();
             unsafe { &*cntp }
         } else {
             //map.insert(idx, Cell::new(0));
@@ -45,14 +43,12 @@ impl<T: Hash + Eq + Clone> Index<T> for Counter<T> {
 }
 impl<T: Hash + Eq + Clone> IndexMut<T> for Counter<T> {
     fn index_mut(&mut self, idx: T) -> &mut Self::Output {
-        let mapp = self.map.as_ptr();
-        let mut map = unsafe { &mut *mapp };
-        if map.contains_key(&idx) {
-            let cntp = map[&idx].as_ptr();
+        if self.map.contains_key(&idx) {
+            let cntp = self.map[&idx].as_ptr();
             unsafe { &mut *cntp }
         } else {
-            map.insert(idx.clone(), Cell::new(0));
-            let cntp = map[&idx].as_ptr();
+            self.map.insert(idx.clone(), Cell::new(0));
+            let cntp = self.map[&idx].as_ptr();
             unsafe { &mut *cntp }
         }
     }
