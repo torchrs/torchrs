@@ -5,30 +5,124 @@
 #![allow(unused_assignments)]
 #![allow(unused_imports)]
 
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::cell::{Cell, RefCell};
+use std::ops::{Index, IndexMut};
+
+// Pythonesque Counter implementation
+// XXX Move to a separate module
+static ZERO: usize = 0;
+pub struct Counter<T: Hash + Eq + Clone> {
+    pub map: RefCell<HashMap<T, Cell<usize>>>,
+}
+impl<T: Hash + Eq + Clone> Counter<T> {
+    pub fn new() -> Self {
+        Counter { map: RefCell::new(HashMap::new()) }
+    }
+    pub fn len(&self) -> usize {
+        self.map.borrow().len()
+    }
+    pub fn remove(&self, idx: &T) {
+        self.map.borrow_mut().remove(idx);
+    }
+}
+impl<T: Hash + Eq + Clone> Index<T> for Counter<T> {
+    type Output = usize;
+    fn index(&self, idx: T) -> &Self::Output {
+        let mapp = self.map.as_ptr();
+        let map = unsafe { &mut *mapp };
+        if map.contains_key(&idx) {
+            let cntp = map[&idx].as_ptr();
+            unsafe { &*cntp }
+        } else {
+            //map.insert(idx, Cell::new(0));
+            //let mut cntp = map[&idx].as_ptr();
+            //unsafe {& *cntp}
+            &ZERO
+        }
+    }
+}
+impl<T: Hash + Eq + Clone> IndexMut<T> for Counter<T> {
+    fn index_mut(&mut self, idx: T) -> &mut Self::Output {
+        let mapp = self.map.as_ptr();
+        let mut map = unsafe { &mut *mapp };
+        if map.contains_key(&idx) {
+            let cntp = map[&idx].as_ptr();
+            unsafe { &mut *cntp }
+        } else {
+            map.insert(idx.clone(), Cell::new(0));
+            let cntp = map[&idx].as_ptr();
+            unsafe { &mut *cntp }
+        }
+    }
+}
+
 
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
-
-    type FnRefs = HashMap<FuncId, u32>;
-    type FnDependencies = HashMap<FuncId, FnRefs>;
-    use autograd::{Variable, Function, FuncId, FuncIntf, RootKind};
+    use autograd::{Variable, Function, FuncId, FuncIntf, RootKind, VarId};
     use tensor::{Tensor, TensorKind, TensorKindList};
     use std::collections::{HashSet, HashMap, VecDeque};
+    use std::cell::RefCell;
     use itertools;
+    use super::Counter;
+
+    type FnRefs = RefCell<Vec<Counter<FuncId>>>;
+    type FnDependencies = HashMap<FuncId, FnRefs>;
+
+    fn fn_ref_init(count: usize) -> FnRefs {
+        let mut v = Vec::new();
+        for _ in 0..count {
+            v.push(Counter::new())
+        }
+        RefCell::new(v)
+    }
 
     fn _compute_dependencies(function: &Function) -> FnDependencies {
-        unimplemented!()
+        let mut dependencies = FnDependencies::new();
+        let mut seen: HashSet<FuncId> = HashSet::new();
+        let mut queue = VecDeque::new();
+        seen.insert(function.id);
+        queue.push_back(function);
+        while !queue.is_empty() {
+            let func = queue.pop_front().unwrap();
+            for &(ref prev_func_, ref arg_id) in func.previous_functions().iter() {
+                let prev_func = match prev_func_ {
+                    &RootKind::RootVar(_) => continue,
+                    &RootKind::RootFunc(ref f) => f,
+                };
+                if !dependencies.contains_key(&prev_func.id) {
+                    dependencies.insert(prev_func.id, fn_ref_init(prev_func.output_ids().len()));
+                }
+                let output_idx = prev_func.output_ids()[arg_id];
+                let mut fnrefs = dependencies[&prev_func.id].borrow_mut();
+                fnrefs[output_idx][func.id] += 1;
+                if !seen.contains(&prev_func.id) {
+                    queue.push_back(prev_func);
+                    seen.insert(prev_func.id);
+                }
+            }
+        }
+        dependencies
     }
     fn _free_backward_dependency(dependencies: &FnDependencies,
                                  prev_func: &Function,
                                  func: &Function,
                                  arg_id: i32)
                                  -> usize {
-        unimplemented!();
+        let mut deps = dependencies[&prev_func.id].borrow_mut();
+        let output_idx = prev_func.output_ids()[&arg_id];
+        let mut output_deps = &mut deps[output_idx];
+        output_deps[func.id] -= 1;
+        if output_deps[func.id] == 0 {
+            output_deps.remove(&func.id)
+        }
+        output_idx
     }
     fn _is_ready_for_backward(dependencies: &FnDependencies, function: &Function) -> bool {
-        for ref deps in dependencies[&function.id].iter() {
-            if deps.1 > &0 {
+        for ref deps in dependencies[&function.id].borrow().iter() {
+            if deps.len() > 0 {
                 return false;
             }
         }
