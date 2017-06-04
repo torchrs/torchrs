@@ -3,8 +3,8 @@
 
 use tensor::TensorKind;
 
-pub trait BackendIntf {
-    // Activation
+
+pub trait BackendIntfActivation {
     fn Threshold_updateOutput(&self,
                               input: &mut TensorKind,
                               output: &mut TensorKind,
@@ -18,7 +18,9 @@ pub trait BackendIntf {
                                  threshold_: f32,
                                  val_: f32,
                                  inplace: bool);
-    // Loss
+}
+
+pub trait BackendIntfLoss {
     fn ClassNLLCriterion_updateOutput(&self,
                                       input: &TensorKind,
                                       target: &TensorKind,
@@ -40,8 +42,9 @@ pub trait BackendIntf {
                                   grad_output: &TensorKind,
                                   grad_input: &mut TensorKind,
                                   output: &TensorKind);
+}
 
-    // Pooling
+pub trait BackendIntfPooling {
     fn SpatialDilatedMaxPooling_updateOutput(&self,
                                              input: &TensorKind,
                                              output: &mut TensorKind,
@@ -62,4 +65,8 @@ pub trait BackendIntf {
                                                 padding: (i32, i32),
                                                 dilation: (i32, i32),
                                                 ceil_mode: bool);
+}
+
+pub trait BackendIntf
+    : BackendIntfActivation + BackendIntfLoss + BackendIntfPooling {
 }

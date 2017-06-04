@@ -4,7 +4,7 @@
 #![allow(unused_variables)]
 
 use tensor::TensorKind;
-use nn::backends::backend::BackendIntf;
+use nn::backends::backend::*;
 use rutorch::*;
 
 
@@ -12,8 +12,7 @@ pub struct THNN_FloatBackend {
     state: *mut ::std::os::raw::c_void,
 }
 
-impl BackendIntf for THNN_FloatBackend {
-    // Activation
+impl BackendIntfActivation for THNN_FloatBackend {
     fn Threshold_updateOutput(&self,
                               input: &mut TensorKind,
                               output: &mut TensorKind,
@@ -31,7 +30,9 @@ impl BackendIntf for THNN_FloatBackend {
                                  inplace: bool) {
 
     }
-    // Loss
+}
+
+impl BackendIntfLoss for THNN_FloatBackend {
     fn ClassNLLCriterion_updateOutput(&self,
                                       input: &TensorKind,
                                       target: &TensorKind,
@@ -56,8 +57,9 @@ impl BackendIntf for THNN_FloatBackend {
                                   grad_input: &mut TensorKind,
                                   output: &TensorKind) {
     }
+}
 
-    // Pooling
+impl BackendIntfPooling for THNN_FloatBackend {
     fn SpatialDilatedMaxPooling_updateOutput(&self,
                                              input: &TensorKind,
                                              output: &mut TensorKind,
@@ -98,3 +100,5 @@ impl BackendIntf for THNN_FloatBackend {
 
     }
 }
+
+impl BackendIntf for THNN_FloatBackend {}
