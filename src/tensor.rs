@@ -117,6 +117,9 @@ impl TensorKind {
     pub fn byte(self) -> Self {
         unimplemented!()
     }
+    //
+    // cauchy_
+    //
     pub fn ceil(&self) -> Self {
         unimplemented!()
     }
@@ -175,6 +178,9 @@ impl TensorKind {
     pub fn diag(&self, diag: u32) -> Self {
         unimplemented!()
     }
+    pub fn dim(&self) -> i32 {
+        unimplemented!()
+    }
     pub fn dist(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()
     }
@@ -197,7 +203,7 @@ impl TensorKind {
     pub fn element_size(&self) -> i32 {
         unimplemented!()
     }
-    pub fn eq_tensor(&self, other: &Self) -> Self {
+    pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
     pub fn eq_tensor_(&self, other: &Self) -> Self {
@@ -242,7 +248,7 @@ impl TensorKind {
     pub fn gather(&self, dim: i32, index: Tensor<i64>) {
         unimplemented!()
     }
-    pub fn ge_tensor(&self, other: &Self) -> Self {
+    pub fn ge_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
     pub fn ge_tensor_(&self, other: &Self) -> Self {
@@ -251,7 +257,7 @@ impl TensorKind {
     pub fn gels(&self, other: &Self) -> Self {
         unimplemented!();
     }
-    pub fn gt_tensor(&self, other: &Self) -> Self {
+    pub fn gt_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
     pub fn gt_tensor_(&self, other: &Self) -> Self {
@@ -263,10 +269,154 @@ impl TensorKind {
     pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
         unimplemented!()
     }
-
+    pub fn index_add_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn index_copy_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn index_fill_(self, dim: i32, index: Tensor<i64>, val: f32) -> Self {
+        unimplemented!()
+    }
+    pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
+        unimplemented!()
+    }
+    pub fn int(self) -> Self {
+        unimplemented!()
+    }
+    pub fn is_cuda(&self) -> bool {
+        unimplemented!()
+    }
+    pub fn is_pinned(&self) -> bool {
+        unimplemented!()
+    }
+    pub fn is_set_to(&self, tensor: &Self) -> bool {
+        unimplemented!()
+    }
+    pub fn is_signed(&self) -> bool {
+        unimplemented!()
+    }
+    pub fn kthvalue(&self, k: i32, dim: Option<i32>) -> (Self, Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn le_tensor(&self, other: &Self) -> Tensor<u8> {
+        unimplemented!()
+    }
+    pub fn le_tensor_(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn lerp(&self, start: &Self, end: &Self, weight: f32) -> Self {
+        unimplemented!()
+    }
+    pub fn lerp_(&self, start: &Self, end: &Self, weight: f32) -> Self {
+        unimplemented!()
+    }
+    pub fn log(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn log_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn log1p(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn log1p_(self) -> Self {
+        unimplemented!()
+    }
+    //
+    // log_normal(...)
+    //
     pub fn long(self) -> Self {
         unimplemented!()
     }
+    pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
+        unimplemented!()
+    }
+    pub fn lt_tensor_(self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    //
+    // map_
+    //
+    pub fn masked_copy_(self, mask: Tensor<u8>, source: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
+        unimplemented!()
+    }
+    pub fn max(&self) -> NumKind {
+        unimplemented!()
+    }
+    pub fn max_reduce(&self, dim: i32) -> (TensorKind, Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn mean(&self) -> NumKind {
+        unimplemented!()
+    }
+    pub fn mean_reduce(&self, dim: i32) -> (TensorKind, Tensor<i64>) {
+        unimplemented!()
+    }
+    //
+    // median
+    //
+    pub fn min(&self) -> NumKind {
+        unimplemented!()
+    }
+    pub fn min_reduce(&self, dim: i32) -> (TensorKind, Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn mm(&self, rhs: &TensorKind) -> Self {
+        unimplemented!()
+    }
+    //
+    // mode
+    //
+    pub fn mul(&self, rhs: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn mul_(self, rhs: &NumKind) -> Self {
+        unimplemented!()
+    }
+    //
+    // multinomial
+    //
+    pub fn mv(&self, vec: &TensorKind) -> Self {
+        unimplemented!()
+    }
+    pub fn narrow(&self, dim: i32, start: i32, length: i32) -> Self {
+        unimplemented!()
+    }
+    pub fn ndimension(&self) -> i32 {
+        unimplemented!()
+    }
+    pub fn ne_tensor(&self, other: &Self) -> Tensor<u8> {
+        unimplemented!()
+    }
+    pub fn ne_tensor_(self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn neg(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn neg_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn nonzero(&self) -> Tensor<i64> {
+        unimplemented!()
+    }
+    pub fn norm(&self, p: i32) -> f32 {
+        unimplemented!()
+    }
+    //
+    // normal_
+    //
+    pub fn numel(&self) -> i32 {
+        unimplemented!()
+    }
+    //
+    // numpy() (need native tensor equivalent - rust-ndarray?)
+    //
+
 
     pub fn new(&self) -> Self {
         unimplemented!()
