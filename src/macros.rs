@@ -48,3 +48,30 @@ macro_rules! impl_func {
 
 	)
 }
+
+
+#[macro_export]
+macro_rules! impl_func_args {
+	($name:ident, $args:ident) => (
+
+#[derive(Clone)]
+pub struct $name {
+    delegate: Function,
+    args: $args,
+}
+
+impl $name {
+    pub fn new(args: & $args) -> FIWrap<Self> {
+        FIWrap::new($name {
+                        delegate: Function::new(),
+                        args: args.clone(),
+                    })
+    }
+}
+
+impl FuncDelegate for $name {
+    fn delegate(&mut self) -> &mut Function {
+        &mut self.delegate
+    }
+}
+)}
