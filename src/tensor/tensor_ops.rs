@@ -328,13 +328,13 @@ impl<T: Copy> Tensor<T> {
     pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
         unimplemented!()
     }
-    pub fn max(&self) -> NumKind {
+    pub fn max(&self) -> T {
         unimplemented!()
     }
     pub fn max_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
         unimplemented!()
     }
-    pub fn mean(&self) -> NumKind {
+    pub fn mean(&self) -> T {
         unimplemented!()
     }
     pub fn mean_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
@@ -343,7 +343,7 @@ impl<T: Copy> Tensor<T> {
     //
     // median
     //
-    pub fn min(&self) -> NumKind {
+    pub fn min(&self) -> T {
         unimplemented!()
     }
     pub fn min_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
@@ -682,7 +682,11 @@ impl TensorKind {
         impl_tk_dispatch_self!(self, v, v.acos_())
     }
     pub fn add(&self, rhs: &NumKind) -> Self {
-        unimplemented!()
+        match *self {
+            TensorKind::FloatTensor(ref t) => TensorKind::FloatTensor(t.add(rhs.intof32())),
+            TensorKind::LongTensor(ref t) => TensorKind::LongTensor(t.add(rhs.intoi64())),
+        }
+
     }
     pub fn add_(self, rhs: &NumKind) -> Self {
         unimplemented!()
