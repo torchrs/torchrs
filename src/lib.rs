@@ -21,6 +21,7 @@ pub mod autograd;
 pub mod optim;
 pub mod utils;
 pub mod tensor;
+pub mod tensor_ops;
 pub mod storage;
 use std::rc::Rc;
 use std::cell::RefCell;

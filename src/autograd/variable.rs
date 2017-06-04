@@ -244,7 +244,7 @@ pub struct VariableImpl<T> {
     requires_grad: bool,
 }
 
-impl<T> VariableImpl<T> {
+impl<T: Copy> VariableImpl<T> {
     fn new(data_: Tensor<T>, args: &VariableArgs) -> Self {
         let creator = match args.creator {
             Some(ref f) => Some(f.clone()),
@@ -466,7 +466,7 @@ impl<T: Copy> Variable<T> {
     // Computes the gradient of current variable w.r.t. graph leaves
     pub fn backward_args(&mut self, gradient_: Option<&mut Tensor<T>>, retain_variables: bool) {
         let mut store;
-        let mut gradient;
+        let gradient;
         {
             let parent = self.access();
             if parent.volatile {
@@ -489,7 +489,9 @@ impl<T: Copy> Variable<T> {
         let inner = self.access();
         assert_eq!(inner.dirty, false);
         inner._call_hooks(grad_output);
-        inner.grad().add_(&grad_output[0]);
+        // in place operations consume their input
+        // grad returns a borrowed reference
+        inner.grad().clone().add_(grad_output[0]);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)
