@@ -116,7 +116,7 @@ fn train(model: &mut Net<f32>,
     model.train();
     for (batch_idx, (ref data, ref target)) in train_loader.iter().enumerate() {
         let (mut data, target) = if args.cuda {
-            (Variable::new(data.cuda().clone()), Variable::new(target.cuda().clone()))
+            (Variable::new(data.cuda(None).clone()), Variable::new(target.cuda(None).clone()))
         } else {
             (Variable::new(data.clone()), Variable::new(target.clone()))
         };
@@ -136,7 +136,7 @@ fn train(model: &mut Net<f32>,
     }
 }
 
-fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, i64>, epoch: u32) {
+fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, i64>) {
     model.eval();
     let mut test_loss = 0.;
     let mut correct = 0;
@@ -146,15 +146,15 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             ..Default::default()
         };
         let (mut data, mut target) = if args.cuda {
-            (Variable::new_args(data.cuda().clone(), &varargs),
-             Variable::new(target.cuda().clone()))
+            (Variable::new_args(data.cuda(None).clone(), &varargs),
+             Variable::new(target.cuda(None).clone()))
         } else {
             (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
         let mut output = model.f(&mut data);
         test_loss += F::nll_loss(&output, &target, &F::NLLLossArgs::default());
-        let pred = output.data().reduce_max(1).1;
-        correct += pred.tensor_eq(&*target.data()).cpu().sum();
+        let pred = output.data().max_reduce(1).1;
+        correct += pred.eq_tensor(&*target.data()).cpu().sum() as u32;
     }
     test_loss /= test_loader.len() as f32;
     println!("\nTest set: Average loss: {:.4}, Accuracy: {}/{} ({:.0}%)\n",
@@ -177,6 +177,6 @@ fn main() {
     let mut model = Net::new();
     for epoch in 1..args.epochs + 1 {
         train(&mut model, &args, &train_loader, epoch, &mut optimizer);
-        test(&mut model, &args, &test_loader, epoch);
+        test(&mut model, &args, &test_loader);
     }
 }
