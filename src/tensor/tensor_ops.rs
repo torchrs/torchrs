@@ -17,14 +17,17 @@ impl<T: Copy> Tensor<T> {
     pub fn add(&self, rhs: T) -> Self {
         let inner = self.value.borrow_mut();
         let output = inner.new();
-        inner.add(rhs, &output);
-        Tensor {
-            id: 0,
-            value: output,
-        }
+        inner.add(rhs, &mut *output.borrow_mut());
+        Tensor { value: output }
     }
     pub fn add_(self, rhs: T) -> Self {
-        unimplemented!()
+        // Scoped so that we drop the borrow before
+        // returning self
+        {
+            let inner = self.value.borrow();
+            inner.add(rhs, &*inner);
+        }
+        self
     }
     pub fn addbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
@@ -243,6 +246,9 @@ impl<T: Copy> Tensor<T> {
     }
     pub fn half(self) -> Self {
         unimplemented!()
+    }
+    pub fn id(&self) -> usize {
+        self.value.borrow().inner() as usize
     }
     pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
         unimplemented!()
@@ -898,6 +904,12 @@ impl TensorKind {
     }
     pub fn half(self) -> Self {
         unimplemented!()
+    }
+    pub fn id(&self) -> usize {
+        match *self {
+            TensorKind::FloatTensor(ref t) => t.id(),
+            TensorKind::LongTensor(ref t) => t.id(),
+        }
     }
     pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
         unimplemented!()

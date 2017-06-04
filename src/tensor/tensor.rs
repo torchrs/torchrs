@@ -38,7 +38,7 @@ pub type TensorList<T> = Vec<Tensor<T>>;
 pub type TensorKindList = Vec<TensorKind>;
 pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
-pub type TensorId = i32;
+pub type TensorId = usize;
 
 
 impl TensorKind {
@@ -64,8 +64,8 @@ impl PartialEq for TensorKind {
     fn eq(&self, other: &Self) -> bool {
         use self::TensorKind::{FloatTensor, LongTensor};
         match (self, other) {
-            (&FloatTensor(ref t1), &FloatTensor(ref t2)) => t1.id == t2.id,
-            (&LongTensor(ref t1), &LongTensor(ref t2)) => t1.id == t2.id,
+            (&FloatTensor(ref t1), &FloatTensor(ref t2)) => t1.id() == t2.id(),
+            (&LongTensor(ref t1), &LongTensor(ref t2)) => t1.id() == t2.id(),
             _ => false,
         }
     }
@@ -150,12 +150,11 @@ impl From<TensorKind> for Tensor<i64> {
     }
 }
 pub struct Tensor<T> {
-    pub id: i32,
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
-impl<T> Hash for Tensor<T> {
+impl<T: Copy> Hash for Tensor<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state)
+        self.id().hash(state)
     }
 }
 
@@ -217,10 +216,7 @@ impl<T> Default for Tensor<T> {
 
 impl<T> Clone for Tensor<T> {
     fn clone(&self) -> Self {
-        Tensor {
-            id: self.id,
-            value: self.value.clone(),
-        }
+        Tensor { value: self.value.clone() }
     }
 }
 
@@ -233,19 +229,28 @@ impl<T: Copy> Index<isize> for Tensor<T> {
 }
 
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
+type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
     fn new(&self) -> RefTI<T>;
-    fn add(&self, value: T, output: &RefTI<T>);
+    fn add(&self, value: T, output: &TIArg<T>);
+    fn inner(&self) -> *mut ::std::os::raw::c_void;
 }
-
 
 impl TensorImpl<f32> for FloatTensor {
     fn new(&self) -> RefTI<f32> {
         // XXX place holder implementation
         RcMutNew(FloatTensor::new())
     }
-    fn add(&self, value: f32, output: &RefTI<f32>) {}
+    fn add(&self, value: f32, output: &TIArg<f32>) {
+        let out = typecast!(output.inner(), THFloatTensor);
+        unsafe {
+            THFloatTensor_add(out, self.t, value);
+        };
+    }
+    fn inner(&self) -> *mut ::std::os::raw::c_void {
+        self.t as *mut ::std::os::raw::c_void
+    }
 }
 
 impl Index<isize> for FloatTensor {

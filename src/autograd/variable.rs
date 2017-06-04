@@ -409,8 +409,8 @@ impl VarKind {
     pub fn tid(&mut self) -> TensorId {
         use self::VarKind::{FloatVariable, LongVariable};
         match *self {
-            FloatVariable(ref mut v) => v.data().id,
-            LongVariable(ref mut v) => v.data().id,
+            FloatVariable(ref mut v) => v.data().id(),
+            LongVariable(ref mut v) => v.data().id(),
         }
     }
     pub fn requires_nograd(&mut self) {

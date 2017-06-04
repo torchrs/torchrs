@@ -22,3 +22,8 @@ macro_rules! impl_mod_delegate {
 
 	)
 }
+
+#[macro_export]
+macro_rules! typecast {
+    ($value:expr, $type:ident) => {$value as *mut $type}
+}

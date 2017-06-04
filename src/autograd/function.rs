@@ -140,8 +140,8 @@ impl Function {
             .map(|v| VarKind::from(*v).data())
             .collect()
     }
-    pub fn save_for_backward<T>(&mut self, input: &RefTensorList<T>) {
-        self.access().to_save = input.iter().map(|t| t.id).collect();
+    pub fn save_for_backward(&mut self, input: &TensorKindList) {
+        self.access().to_save = input.iter().map(|t| t.id()).collect();
     }
     pub fn _do_backward(&mut self,
                         grad_output: &mut TensorKindList,
