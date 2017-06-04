@@ -416,8 +416,84 @@ impl TensorKind {
     //
     // numpy() (need native tensor equivalent - rust-ndarray?)
     //
-
-
+    //
+    // orgqr
+    //
+    // ormqr
+    //
+    pub fn permute(&self, dims: &[u32]) -> Self {
+        unimplemented!()
+    }
+    pub fn pin_memory(&mut self) -> Self {
+        unimplemented!()
+    }
+    //
+    // potrf
+    //
+    //
+    // potri
+    //
+    //
+    // potrs
+    //
+    pub fn pow(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn pow_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn prod(&self) -> f32 {
+        unimplemented!()
+    }
+    //
+    // pstrf
+    //
+    //
+    // qr
+    //
+    //
+    // random_
+    //
+    pub fn reciprocal(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn reciprocal_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn remainder(&self, divisor: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn remainder_(self, divisor: &NumKind) -> Self {
+        unimplemented!()
+    }
+    //
+    // renorm
+    //
+    //
+    // renorm_
+    //
+    pub fn repeat(&self, sizes: &[i32]) -> Self {
+        // NB: copies data
+        unimplemented!()
+    }
+    pub fn resize_(self, sizes: &[i32]) -> Self {
+        unimplemented!()
+    }
+    pub fn resize_as(self, tensor: &TensorKind) -> Self {
+        unimplemented!()
+    }
+    pub fn round(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn round_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn rsqrt(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn rsqrt_(self) -> Self {
+        unimplemented!()
+    }
     pub fn new(&self) -> Self {
         unimplemented!()
     }
