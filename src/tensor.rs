@@ -233,6 +233,7 @@ impl<T: Copy> Index<isize> for Tensor<T> {
 }
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
+    fn new(&self) -> RcMut<TensorImpl<T>>;
 }
 
 
