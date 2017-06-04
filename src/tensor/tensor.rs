@@ -7,7 +7,8 @@ use std::cmp::max;
 use std::hash::{Hash, Hasher};
 
 use storage::*;
-pub use tensor_ops::*;
+use ::*;
+pub use tensor::tensor_ops::*;
 use rand;
 use {Ixs, RcMut};
 
@@ -59,7 +60,6 @@ impl Index<usize> for TensorKind {
         unimplemented!()
     }
 }
-
 impl PartialEq for TensorKind {
     fn eq(&self, other: &Self) -> bool {
         use self::TensorKind::{FloatTensor, LongTensor};
@@ -238,6 +238,23 @@ pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     fn new(&self) -> RefTI<T>;
     fn add(&self, value: T, output: &RefTI<T>);
 }
+
+
+impl TensorImpl<f32> for FloatTensor {
+    fn new(&self) -> RefTI<f32> {
+        // XXX place holder implementation
+        RcMutNew(FloatTensor::new())
+    }
+    fn add(&self, value: f32, output: &RefTI<f32>) {}
+}
+
+impl Index<isize> for FloatTensor {
+    type Output = f32;
+    fn index(&self, idx: isize) -> &Self::Output {
+        unimplemented!()
+    }
+}
+
 
 pub struct FloatTensor {
     t: *mut THFloatTensor,
