@@ -48,6 +48,12 @@ impl TensorKind {
     pub fn add_(self, rhs: &NumKind) -> Self {
         unimplemented!()
     }
+    pub fn addbmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addbmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
     pub fn addcdiv(&self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
@@ -66,10 +72,37 @@ impl TensorKind {
     pub fn addmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
+    pub fn addmv(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, vec: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn addmv_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, vec: &Self) -> Self {
+        unimplemented!()
+    }
     pub fn addr(&self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
         unimplemented!()
     }
     pub fn addr_(self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn asin(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn asin_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn atan(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn atan2(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn atan2_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn baddbmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn baddbmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
     pub fn bernoulli(&self) -> Self {
@@ -78,13 +111,22 @@ impl TensorKind {
     pub fn bernoulli_(self) -> Self {
         unimplemented!()
     }
+    pub fn bmm(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn byte(self) -> Self {
+        unimplemented!()
+    }
     pub fn ceil(&self) -> Self {
         unimplemented!()
     }
     pub fn ceil_(self) -> Self {
         unimplemented!()
     }
-    pub fn chunk(&self, n_chunks: usize, dim: usize) -> TensorKindList {
+    pub fn char(self) -> Self {
+        unimplemented!()
+    }
+    pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
         unimplemented!()
     }
     pub fn clamp(&self, min: f32, max: f32) -> Self {
@@ -106,7 +148,22 @@ impl TensorKind {
     pub fn copy_async_(self, src: &Self) -> Self {
         unimplemented!()
     }
+    pub fn cos(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn cos_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn cosh(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn cosh_(self) -> Self {
+        unimplemented!()
+    }
     pub fn cpu(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn cross(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
     pub fn cuda(&self, device: Option<i32>) -> Self {
@@ -152,14 +209,69 @@ impl TensorKind {
     pub fn exp_(self) -> Self {
         unimplemented!()
     }
+    pub fn expand(&self, dims: &[u32]) -> Self {
+        unimplemented!()
+    }
+    pub fn expand_as(&self, tensor: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn fill_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn float(self) -> Self {
+        unimplemented!()
+    }
+    pub fn floor(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn floor_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn fmod(&self, divisor: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn fmod_(self, divisor: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn frac(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn frac_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn gather(&self, dim: i32, index: Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn ge_tensor(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn ge_tensor_(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn gels(&self, other: &Self) -> Self {
+        unimplemented!();
+    }
+    pub fn gt_tensor(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn gt_tensor_(&self, other: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn half(self) -> Self {
+        unimplemented!()
+    }
+    pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
+        unimplemented!()
+    }
+
+    pub fn long(self) -> Self {
+        unimplemented!()
+    }
 
     pub fn new(&self) -> Self {
         unimplemented!()
     }
     pub fn unsqueeze(self, dim: usize) -> Self {
-        unimplemented!()
-    }
-    pub fn long(&self) -> Self {
         unimplemented!()
     }
     pub fn in_thft(&self) -> *mut THFloatTensor {
