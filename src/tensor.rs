@@ -10,6 +10,15 @@ use storage::*;
 use rand;
 use {Ixs, RcMut};
 
+pub enum TensorType {
+    Float,
+    Double,
+    Byte,
+    Char,
+    Short,
+    Int,
+    Long,
+}
 
 #[derive(Hash)]
 pub enum TensorKind {
@@ -494,10 +503,179 @@ impl TensorKind {
     pub fn rsqrt_(self) -> Self {
         unimplemented!()
     }
-    pub fn new(&self) -> Self {
+    pub fn scatter_(self, dim: i32, index: Tensor<i64>, src: &TensorKind) -> Self {
         unimplemented!()
     }
-    pub fn unsqueeze(self, dim: usize) -> Self {
+    pub fn select(&self, dim: i32, index: i32) -> Self {
+        unimplemented!()
+    }
+    //
+    // set_
+    //
+    //
+    // share_memory_
+    //
+    pub fn short(self) -> Self {
+        unimplemented!()
+    }
+    pub fn sigmoid(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn sigmoid_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn sign(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn sign_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn sin(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn sin_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn sinh(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn sinh_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn size(&self) -> Vec<i32> {
+        unimplemented!()
+    }
+    pub fn sort(&self, dim: Option<i32>, descending: bool) -> (Self, Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn sqrt(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn sqrt_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn squeeze(&self, dim: Option<i32>) -> Self {
+        unimplemented!()
+    }
+    pub fn squeeze_(self, dim: Option<i32>) -> Self {
+        unimplemented!()
+    }
+    pub fn std(&self) -> f32 {
+        unimplemented!()
+    }
+    //
+    // storage
+    //
+    //
+    // storage_offset
+    //
+    pub fn stride(&self) -> Vec<i32> {
+        unimplemented!()
+    }
+    pub fn sub(&self, rhs: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn sub_(self, rhs: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn sum(&self) -> f32 {
+        unimplemented!()
+    }
+    pub fn sum_reduce(&self, dim: i32, keepdim: bool) -> Self {
+        unimplemented!()
+    }
+    pub fn svd(&self, some: bool) -> (Self, Self, Self) {
+        unimplemented!()
+    }
+    //
+    // symeig
+    //
+    pub fn t(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn t_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn tan(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn tan_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn tanh(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn tanh_(self) -> Self {
+        unimplemented!()
+    }
+    //
+    // tolist
+    //
+    pub fn topk(k: i32, dim: Option<i32>, largest: bool, sorted: bool) -> (Self, Tensor<i64>) {
+        unimplemented!()
+    }
+    pub fn trace(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn transpose(&self, dim0: i32, dim1: i32) -> Self {
+        unimplemented!()
+    }
+    pub fn transpose_(&self, dim0: i32, dim1: i32) -> Self {
+        unimplemented!()
+    }
+    //
+    // tril
+    //
+    //
+    // tril_
+    //
+    //
+    // triu
+    //
+    //
+    // tril_
+    //
+    //
+    // trtrs
+    //
+    pub fn trunc(&self) -> Self {
+        unimplemented!()
+    }
+    pub fn trunc_(self) -> Self {
+        unimplemented!()
+    }
+    pub fn type_as(&self, tensor: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn typecast(&self, new_type: TensorType, async: bool) -> Self {
+        unimplemented!()
+    }
+    pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
+        unimplemented!()
+    }
+    pub fn uniform_(self, range: (i32, i32)) -> Self {
+        unimplemented!()
+    }
+    pub fn unsqueeze(&self, dim: i32) -> Self {
+        unimplemented!()
+    }
+    pub fn unsqueeze_(self, dim: i32) -> Self {
+        unimplemented!()
+    }
+    pub fn var(&self) -> f32 {
+        unimplemented!()
+    }
+    pub fn view(&self, dims: &[i32]) -> Self {
+        unimplemented!()
+    }
+    pub fn view_as(&self, tensor: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn zero_(self) -> Self {
+        unimplemented!()
+    }
+
+    pub fn new(&self) -> Self {
         unimplemented!()
     }
     pub fn in_thft(&self) -> *mut THFloatTensor {
@@ -517,7 +695,7 @@ impl Index<usize> for TensorKind {
 }
 
 impl PartialEq for TensorKind {
-    fn eq(&self, other: &TensorKind) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         use self::TensorKind::{FloatTensor, LongTensor};
         match (self, other) {
             (&FloatTensor(ref t1), &FloatTensor(ref t2)) => t1.id == t2.id,
@@ -545,27 +723,27 @@ impl<T> From<Tensor<T>> for TensorKind {
 }
 
 impl From<Tensor<f32>> for TensorKind {
-    fn from(input: Tensor<f32>) -> TensorKind {
+    fn from(input: Tensor<f32>) -> Self {
         TensorKind::FloatTensor(input)
     }
 }
 
 impl From<Tensor<i64>> for TensorKind {
-    fn from(input: Tensor<i64>) -> TensorKind {
+    fn from(input: Tensor<i64>) -> Self {
         TensorKind::LongTensor(input)
     }
 }
 
 impl<T> From<TensorKind> for Tensor<T> {
     #[allow(unused_variables)]
-    default fn from(input: TensorKind) -> Tensor<T> {
+    default fn from(input: TensorKind) -> Self {
         panic!("bad cast")
     }
 }
 
 impl<'a, T> From<&'a TensorKind> for &'a Tensor<T> {
     #[allow(unused_variables)]
-    default fn from(input: &'a TensorKind) -> &'a Tensor<T> {
+    default fn from(input: &'a TensorKind) -> Self {
         panic!("bad cast")
     }
 }
