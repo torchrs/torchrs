@@ -33,6 +33,48 @@ pub enum NumKind {
     Long(i64),
 }
 
+impl NumKind {
+    pub fn intof32(&self) -> f32 {
+        use self::NumKind::{Float, Double, Long};
+        match *self {
+            Float(v) => v,
+            Double(v) => unimplemented!(),
+            Long(v) => unimplemented!(),
+        }
+    }
+    pub fn intoi64(&self) -> i64 {
+        use self::NumKind::{Float, Double, Long};
+        match *self {
+            Float(v) => unimplemented!(),
+            Double(v) => unimplemented!(),
+            Long(v) => v,
+        }
+    }
+}
+
+
+impl<T: Copy> From<T> for NumKind {
+    #[allow(unused_variables)]
+    default fn from(input: T) -> Self {
+        unreachable!()
+    }
+}
+impl From<f32> for NumKind {
+    fn from(input: f32) -> Self {
+        NumKind::Float(input)
+    }
+}
+impl From<f64> for NumKind {
+    fn from(input: f64) -> Self {
+        NumKind::Double(input)
+    }
+}
+impl From<i64> for NumKind {
+    fn from(input: i64) -> Self {
+        NumKind::Long(input)
+    }
+}
+
 
 pub type TensorList<T> = Vec<Tensor<T>>;
 pub type TensorKindList = Vec<TensorKind>;
