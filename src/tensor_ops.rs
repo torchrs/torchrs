@@ -15,7 +15,13 @@ impl<T: Copy> Tensor<T> {
         unimplemented!()
     }
     pub fn add(&self, rhs: T) -> Self {
-        unimplemented!()
+        let inner = self.value.borrow_mut();
+        let output = inner.new();
+        inner.add(rhs, &output);
+        Tensor {
+            id: 0,
+            value: output,
+        }
     }
     pub fn add_(self, rhs: T) -> Self {
         unimplemented!()

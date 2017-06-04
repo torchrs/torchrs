@@ -151,7 +151,7 @@ impl From<TensorKind> for Tensor<i64> {
 }
 pub struct Tensor<T> {
     pub id: i32,
-    value: RcMut<TensorImpl<T, Output = T>>,
+    pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 impl<T> Hash for Tensor<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -231,11 +231,13 @@ impl<T: Copy> Index<isize> for Tensor<T> {
         unimplemented!()
     }
 }
+
+type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
-    fn new(&self) -> RcMut<TensorImpl<T>>;
+    fn new(&self) -> RefTI<T>;
+    fn add(&self, value: T, output: &RefTI<T>);
 }
-
 
 pub struct FloatTensor {
     t: *mut THFloatTensor,
