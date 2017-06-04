@@ -3,17 +3,7 @@ use macros::*;
 use tensor::TensorKindList;
 use ::*;
 
-#[derive(Clone)]
-pub struct LinearF {
-    delegate: Function,
-}
-
-impl LinearF {
-    pub fn new() -> FIWrap<Self> {
-        FIWrap::new(LinearF { delegate: Function::new() })
-    }
-}
-impl_func_delegate!(LinearF);
+impl_func!(LinearF);
 
 impl FuncIntf for LinearF {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {

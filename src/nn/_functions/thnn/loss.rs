@@ -3,17 +3,7 @@ use macros::*;
 use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList};
 use ::*;
 
-#[derive(Clone)]
-pub struct LogSoftmax {
-    delegate: Function,
-}
-
-impl LogSoftmax {
-    pub fn new() -> FIWrap<Self> {
-        FIWrap::new(LogSoftmax { delegate: Function::new() })
-    }
-}
-impl_func_delegate!(LogSoftmax);
+impl_func!(LogSoftmax);
 
 impl FuncIntf for LogSoftmax {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
