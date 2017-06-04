@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use tensor::*;
 
 impl<T: Copy> Tensor<T> {
@@ -663,10 +664,10 @@ impl TensorKind {
         impl_tk_dispatch_self!(self, v, v.abs_())
     }
     pub fn acos(&self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref!(self, v, v.acos())
     }
     pub fn acos_(self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self!(self, v, v.acos_())
     }
     pub fn add(&self, rhs: &NumKind) -> Self {
         unimplemented!()
