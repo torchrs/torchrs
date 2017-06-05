@@ -84,9 +84,6 @@ pub type TensorId = usize;
 
 
 impl TensorKind {
-    pub fn new(&self) -> Self {
-        unimplemented!()
-    }
     pub fn in_thft(&self) -> *mut THFloatTensor {
         unimplemented!();
     }
@@ -241,6 +238,41 @@ impl<T> New<Vec<usize>, Tensor<T>> for Tensor<T> {
     }
 }
 
+
+impl New<usize, TensorKind> for TensorKind {
+    fn new(args: usize) -> Self {
+        unimplemented!()
+    }
+    fn new_(&self, args: usize) -> Self {
+        unimplemented!()
+    }
+}
+impl New<(), TensorKind> for TensorKind {
+    fn new(args: ()) -> Self {
+        unimplemented!()
+    }
+    fn new_(&self, args: ()) -> Self {
+        unimplemented!()
+    }
+}
+impl New<Vec<usize>, TensorKind> for TensorKind {
+    fn new(args: Vec<usize>) -> Self {
+        unimplemented!()
+    }
+    fn new_(&self, args: Vec<usize>) -> Self {
+        unimplemented!()
+    }
+}
+impl New<[usize; 2], TensorKind> for TensorKind {
+    fn new(args: [usize; 2]) -> Self {
+        unimplemented!()
+    }
+    fn new_(&self, args: [usize; 2]) -> Self {
+        unimplemented!()
+    }
+}
+
+
 impl<T> Tensor<T> {
     pub fn len(&self) -> usize {
         unimplemented!()
@@ -271,11 +303,12 @@ impl<T: Copy> Index<isize> for Tensor<T> {
 }
 
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
-type TIArg<T> = TensorImpl<T, Output = T>;
+pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
     fn new(&self) -> RefTI<T>;
     fn add(&self, value: T, output: &TIArg<T>);
+    fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
 }
 
@@ -292,6 +325,9 @@ impl TensorImpl<f32> for FloatTensor {
     }
     fn inner(&self) -> *mut ::std::os::raw::c_void {
         self.t as *mut ::std::os::raw::c_void
+    }
+    fn addt(&self, value: f32, rhs: &TIArg<f32>, output: &TIArg<f32>) {
+        let rhsp = typecast!(rhs.inner(), THFloatTensor);
     }
 }
 
