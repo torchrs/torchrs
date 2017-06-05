@@ -22,10 +22,7 @@ impl RootKind {
     }
 }
 
-struct FuncStub {
-    delegate: Function,
-}
-impl_func_delegate!(FuncStub);
+impl_func!(FuncStub);
 impl FuncIntf for FuncStub {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unreachable!()
@@ -34,12 +31,6 @@ impl FuncIntf for FuncStub {
         unreachable!()
     }
 }
-impl FuncStub {
-    fn new() -> Self {
-        FuncStub { delegate: Function::default() }
-    }
-}
-
 pub struct FuncImpl {
     previous_functions: Vec<(RootKind, i32)>,
     saved_variables: Vec<VarId>,
@@ -60,7 +51,7 @@ impl Default for FuncImpl {
             output_ids: HashMap::new(),
             to_save: Vec::new(),
             requires_grad: false,
-            owner: RcMutNew(FuncStub::new()),
+            owner: FuncStub::new().value,
         }
     }
 }
