@@ -34,7 +34,7 @@ impl FuncIntf for FuncStub {
 pub struct FuncImpl {
     previous_functions: Vec<(RootKind, i32)>,
     saved_variables: Vec<VarId>,
-    needs_input_grad: Vec<VarId>,
+    needs_input_grad: Vec<bool>,
     non_differentiable: Vec<TensorId>,
     output_ids: HashMap<VarId, usize>,
     to_save: Vec<TensorId>,
@@ -131,6 +131,14 @@ impl Function {
             .map(|v| VarKind::from(*v).data())
             .collect()
     }
+    pub fn saved_variables(&mut self) -> VarKindList {
+        // XXX see if we can't avoid the clone
+        self.access()
+            .saved_variables
+            .iter()
+            .map(|v| VarKind::from(*v))
+            .collect()
+    }
     pub fn save_for_backward(&mut self, input: &TensorKindList) {
         self.access().to_save = input.iter().map(|t| t.id()).collect();
     }
@@ -164,6 +172,9 @@ pub trait FuncIntf: FuncDelegate {
     fn save_for_backward(&mut self, input: &TensorKindList) {
         self.delegate().save_for_backward(input)
     }
+    fn saved_variables(&mut self) -> VarKindList {
+        self.delegate().saved_variables()
+    }
     fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
         {
@@ -179,15 +190,8 @@ pub trait FuncIntf: FuncDelegate {
                              (RootKind::RootVar(v.clone()), v.varid())
                          })
                     .collect();
-                inner.needs_input_grad = input_
-                    .iter()
-                    .filter_map(|v| if v.requires_grad() {
-                                    Some(v.varid())
-                                } else {
-                                    None
-                                })
-                    .collect();
-                inner.requires_grad = inner.needs_input_grad.len() != 0;
+                inner.needs_input_grad = input_.iter().map(|v| v.requires_grad()).collect();
+                inner.requires_grad = inner.needs_input_grad.iter().any(|v| *v);
             }
         }
         let v;
