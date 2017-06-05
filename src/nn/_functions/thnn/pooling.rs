@@ -1,5 +1,6 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
 use tensor::TensorKindList;
+use tensor::*;
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -69,7 +70,7 @@ impl FuncIntf for MaxPool2d {
         let input = input_.remove(0);
         let input2d = input.unsqueeze(2);
         //        let backend = input.backend();
-        let (indices, output) = (input2d.new().long(), input2d.new());
+        let (indices, output) = (input2d.new_(()).long(), input2d.new_(()));
 
         vec![output]
     }
