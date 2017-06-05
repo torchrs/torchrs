@@ -1,6 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
-use tensor::{RefTensorList, TensorKindList};
-use ::*;
+use tensor::{TensorKindList, OptTensorKindList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -26,7 +25,7 @@ impl FuncIntf for Dropout1d {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
     }
 }
@@ -35,7 +34,7 @@ impl FuncIntf for Dropout2d {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
     }
 }

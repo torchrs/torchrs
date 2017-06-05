@@ -51,7 +51,7 @@ impl<T: Hash + Eq + Clone> IndexMut<T> for Counter<T> {
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
     use autograd::{Variable, Function, FuncId, RootKind};
-    use tensor::{Tensor, TensorKind};
+    use tensor::{Tensor, TensorKind, OptTensorKindList};
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
@@ -124,14 +124,9 @@ pub mod ExecutionEngine {
         // We can't match and operate on the vector at
         // the same time because that would be performing
         // a mutable borrow in the middle of an immutable
-        // borrow so we use a boolean
-        // d_prev_func is just used as a placeholder so that
-        // both arms match
-        let (mut grad_tensor, matched) = match prev_grad[output_nr] {
-            Some(ref t) => (t.clone(), true),
-            None => (d_prev_func.clone(), false),
-        };
-        if matched {
+        // borrow so we take a temporary
+        let grad_tensor_ = prev_grad[output_nr].clone();
+        if let Some(mut grad_tensor) = grad_tensor_ {
             if need_copy.contains(&grad_tensor) {
                 need_copy.remove(&grad_tensor);
                 grad_tensor = grad_tensor.copy();
@@ -139,10 +134,10 @@ pub mod ExecutionEngine {
                 // in order to avoid an extra clone since
                 // creation of the Option and subsequent
                 // assignment moves the grad_tensor
-                let grad_tensor = grad_tensor.add_(&d_prev_func[0]);
+                let grad_tensor = grad_tensor.addt_(&1.into(), &d_prev_func);
                 prev_grad[output_nr] = Some(grad_tensor);
             } else {
-                grad_tensor.add_(&d_prev_func[0]);
+                grad_tensor.addt_(&1.into(), &d_prev_func);
             }
         } else {
             // We need to clone twice here as the compiler
@@ -164,7 +159,7 @@ pub mod ExecutionEngine {
             }
         }
         let mut ready = VecDeque::new();
-        ready.push_back((grad_fn.clone(), vec![grad]));
+        ready.push_back((grad_fn.clone(), vec![Some(grad)]));
         let mut need_copy: HashSet<TensorKind> = HashSet::new();
         let mut not_ready: HashMap<FuncId, Vec<Option<TensorKind>>> = HashMap::new();
 
@@ -172,14 +167,18 @@ pub mod ExecutionEngine {
         while !ready.is_empty() {
             let (mut func, mut grad) = ready.pop_front().unwrap();
             let grad_input = func._do_backward(&mut grad, retain_variables);
-            for (&(ref prev_func_, ref arg_id), ref d_prev_func) in
+            for (&(ref prev_func_, ref arg_id), ref d_prev_func_) in
                 itertools::zip(func.previous_functions(), grad_input) {
                 if !prev_func_.requires_grad() {
                     continue;
                 }
+                let d_prev_func = match *d_prev_func_ {
+                    Some(ref f) => f,
+                    None => continue,
+                };
                 let prev_func = match prev_func_ {
                     &RootKind::RootVar(ref v) => {
-                        v.clone()._do_backward(&d_prev_func);
+                        v.clone()._do_backward(&Some(d_prev_func.clone()));
                         return;
                     }
                     &RootKind::RootFunc(ref f) => f,
@@ -191,15 +190,8 @@ pub mod ExecutionEngine {
                         let mut prev_grad = not_ready[&prev_func.id].clone();
                         _add_grad(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
                         prev_grad
-                            .iter()
-                            .map(|sv| if let &Some(ref v) = sv {
-                                     v.clone()
-                                 } else {
-                                     panic!("found None")
-                                 })
-                            .collect()
                     } else {
-                        vec![d_prev_func.clone()]
+                        vec![Some(d_prev_func.clone())]
                     };
                     ready.push_front((prev_func.clone(), prev_grad))
                 } else {

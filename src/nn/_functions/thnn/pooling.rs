@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::TensorKindList;
+use tensor::{TensorKindList, OptTensorKindList};
 use tensor::*;
 
 #[builder(pattern="owned")]
@@ -74,7 +74,7 @@ impl FuncIntf for MaxPool2d {
 
         vec![output]
     }
-    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
     }
 }

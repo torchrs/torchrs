@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, FIWrap};
-use tensor::TensorKindList;
+use tensor::{TensorKindList, OptTensorKindList};
 use ::*;
 
 #[builder(pattern="owned")]
@@ -102,7 +102,7 @@ impl FuncIntf for ConvNd {
         // run native code here
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         // run native code here
         unimplemented!()
     }

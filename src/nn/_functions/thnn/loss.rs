@@ -1,6 +1,6 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarId, FIWrap};
 use macros::*;
-use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList};
+use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList, OptTensorKindList};
 use ::*;
 
 impl_func!(LogSoftmax);
@@ -9,7 +9,7 @@ impl FuncIntf for LogSoftmax {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
     }
 }
@@ -35,7 +35,7 @@ impl FuncIntf for NLLLoss {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unimplemented!();
     }
-    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!();
     }
 }

@@ -1,6 +1,6 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarKindList, FIWrap};
 use macros::*;
-use tensor::TensorKindList;
+use tensor::{TensorKindList, OptTensorKindList};
 use ::*;
 
 pub struct Threshold {
@@ -27,7 +27,7 @@ impl FuncIntf for Threshold {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unimplemented!()
     }
-    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
     }
 }

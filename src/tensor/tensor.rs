@@ -78,6 +78,7 @@ impl From<i64> for NumKind {
 
 pub type TensorList<T> = Vec<Tensor<T>>;
 pub type TensorKindList = Vec<TensorKind>;
+pub type OptTensorKindList = Vec<Option<TensorKind>>;
 pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = usize;

@@ -27,7 +27,7 @@ impl FuncIntf for FuncStub {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unreachable!()
     }
-    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList {
+    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
         unreachable!()
     }
 }
@@ -146,9 +146,9 @@ impl Function {
         self.access().to_save = input.iter().map(|t| t.id()).collect();
     }
     pub fn _do_backward(&mut self,
-                        grad_output: &mut TensorKindList,
+                        grad_output: &mut OptTensorKindList,
                         retain_variables: bool)
-                        -> TensorKindList {
+                        -> OptTensorKindList {
         let inner = self.access();
         if inner.saved_variables.is_empty() {
             panic!("Trying to backward through the graph second \
@@ -157,11 +157,11 @@ impl Function {
                     the first time.");
         };
         let grad_input = inner.owner.borrow_mut().backward(grad_output);
-        inner._call_hooks(&grad_input, grad_output);
+        //inner._call_hooks(&grad_input, grad_output);
         if !retain_variables {
             inner.saved_variables.clear();
         };
-        grad_input.into()
+        grad_input
     }
 }
 
@@ -171,12 +171,15 @@ pub trait FuncDelegate {
 
 pub trait FuncIntf: FuncDelegate {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList;
-    fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList;
+    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList;
     fn save_for_backward(&mut self, input: &TensorKindList) {
         self.delegate().save_for_backward(input)
     }
     fn saved_variables(&mut self) -> VarKindList {
         self.delegate().saved_variables()
+    }
+    fn saved_tensors(&mut self) -> TensorKindList {
+        self.delegate().saved_tensors()
     }
     fn needs_input_grad(&mut self) -> &Vec<bool> {
         self.delegate().needs_input_grad()

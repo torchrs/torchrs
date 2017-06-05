@@ -420,9 +420,11 @@ impl VarKind {
     pub fn typed<T>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
-    pub fn _do_backward(&mut self, grad_output: &TensorKind) {
+    pub fn _do_backward(&mut self, grad_output_: &Option<TensorKind>) {
         use self::VarKind::{FloatVariable, LongVariable};
-        impl_var_mut_dispatch!(self, v, v._do_backward(grad_output.into()))
+        if let Some(ref grad_output) = *grad_output_ {
+            impl_var_mut_dispatch!(self, v, v._do_backward(grad_output.into()))
+        }
     }
 }
 
