@@ -39,7 +39,6 @@ impl FuncIntf for LinearF {
         };
         output.push(grad_weight);
         if tensorlist.len() > 0 && needs_input_grad[2] {
-            let bias = &tensorlist[2];
             let grad_bias = grad_output.sum_reduce(0, false);
             output.push(Some(grad_bias));
         }
