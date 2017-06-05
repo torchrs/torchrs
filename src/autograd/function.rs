@@ -115,6 +115,9 @@ impl Function {
     pub fn requires_grad(&self) -> bool {
         self.access().requires_grad
     }
+    pub fn needs_input_grad(&self) -> &Vec<bool> {
+        &self.access().needs_input_grad
+    }
     fn access(&self) -> &mut FuncImpl {
         let vecp = FUNC_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
@@ -174,6 +177,9 @@ pub trait FuncIntf: FuncDelegate {
     }
     fn saved_variables(&mut self) -> VarKindList {
         self.delegate().saved_variables()
+    }
+    fn needs_input_grad(&mut self) -> &Vec<bool> {
+        self.delegate().needs_input_grad()
     }
     fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
