@@ -1,5 +1,7 @@
 #![allow(unused_variables)]
 use tensor::*;
+use std::cell::RefMut;
+
 
 impl<T: Copy> Tensor<T> {
     pub fn abs(&self) -> Self {
@@ -26,6 +28,21 @@ impl<T: Copy> Tensor<T> {
         {
             let inner = self.value.borrow();
             inner.add(rhs, &*inner);
+        }
+        self
+    }
+    pub fn addt(&self, val: T, rhs: &Self) -> Self {
+        let inner = self.value.borrow_mut();
+        let output = inner.new();
+        inner.addt(val, &*rhs.inner(), &mut *output.borrow_mut());
+        Tensor { value: output }
+    }
+    pub fn addt_(self, val: T, rhs: &Self) -> Self {
+        // Scoped so that we drop the borrow before
+        // returning self
+        {
+            let inner = self.value.borrow();
+            inner.addt(val, &*rhs.inner(), &*inner);
         }
         self
     }
@@ -264,6 +281,9 @@ impl<T: Copy> Tensor<T> {
     }
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
         unimplemented!()
+    }
+    pub fn inner(&self) -> RefMut<TIArg<T>> {
+        self.value.borrow_mut()
     }
     pub fn int(self) -> Self {
         unimplemented!()
@@ -686,10 +706,27 @@ impl TensorKind {
             TensorKind::FloatTensor(ref t) => TensorKind::FloatTensor(t.add(rhs.intof32())),
             TensorKind::LongTensor(ref t) => TensorKind::LongTensor(t.add(rhs.intoi64())),
         }
-
     }
     pub fn add_(self, rhs: &NumKind) -> Self {
-        unimplemented!()
+        match self {
+            TensorKind::FloatTensor(t) => TensorKind::FloatTensor(t.add(rhs.intof32())),
+            TensorKind::LongTensor(t) => TensorKind::LongTensor(t.add(rhs.intoi64())),
+        }
+    }
+    pub fn addt(&self, val: &NumKind, rhs: &Self) -> Self {
+        use self::TensorKind::{FloatTensor, LongTensor};
+
+        match (self, rhs) {
+            (&FloatTensor(ref t1), &FloatTensor(ref t2)) => FloatTensor(t1.addt(val.intof32(), t2)),
+            (&LongTensor(ref t1), &LongTensor(ref t2)) => LongTensor(t1.addt(val.intoi64(), t2)),
+            _ => unimplemented!(),
+        }
+    }
+    pub fn addt_(self, val: &NumKind, rhs: &Self) -> Self {
+        match self {
+            TensorKind::FloatTensor(t) => TensorKind::FloatTensor(t.add(val.intof32())),
+            TensorKind::LongTensor(t) => TensorKind::LongTensor(t.add(val.intoi64())),
+        }
     }
     pub fn addbmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
