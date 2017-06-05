@@ -170,6 +170,9 @@ pub trait FuncDelegate {
 pub trait FuncIntf: FuncDelegate {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList;
     fn backward(&mut self, input: &mut TensorKindList) -> TensorKindList;
+    fn save_for_backward(&mut self, input: &TensorKindList) {
+        self.delegate().save_for_backward(input)
+    }
     fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
         {
@@ -179,8 +182,7 @@ pub trait FuncIntf: FuncDelegate {
             if !is_volatile {
                 inner.previous_functions = input_
                     .iter()
-                    .enumerate()
-                    .map(|(i, v)| if let Some(grad_fn) = v.grad_fn() {
+                    .map(|v| if let Some(grad_fn) = v.grad_fn() {
                              (RootKind::RootFunc(grad_fn), v.varid())
                          } else {
                              (RootKind::RootVar(v.clone()), v.varid())
