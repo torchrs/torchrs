@@ -29,26 +29,7 @@ impl Default for NLLLossArgs {
     }
 }
 
-#[derive(Clone)]
-pub struct NLLLoss {
-    delegate: Function,
-    args: NLLLossArgs,
-}
-
-impl NLLLoss {
-    pub fn new(args: &NLLLossArgs) -> FIWrap<Self> {
-        FIWrap::new(NLLLoss {
-                        delegate: Function::new(),
-                        args: args.clone(),
-                    })
-    }
-}
-
-impl FuncDelegate for NLLLoss {
-    fn delegate(&mut self) -> &mut Function {
-        &mut self.delegate
-    }
-}
+impl_func_args!(NLLLoss, NLLLossArgs);
 
 impl FuncIntf for NLLLoss {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {

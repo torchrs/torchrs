@@ -62,21 +62,7 @@ impl Default for MaxPool3dArgs {
     }
 }
 
-#[derive(Clone)]
-pub struct MaxPool2d {
-    delegate: Function,
-    args: MaxPoolFArgs,
-}
-
-impl MaxPool2d {
-    pub fn new(args: &MaxPoolFArgs) -> FIWrap<Self> {
-        FIWrap::new(MaxPool2d {
-                        delegate: Function::new(),
-                        args: args.clone(),
-                    })
-    }
-}
-impl_func_delegate!(MaxPool2d);
+impl_func_args!(MaxPool2d, MaxPoolFArgs);
 
 impl FuncIntf for MaxPool2d {
     fn forward(&mut self, input_: &mut TensorKindList) -> TensorKindList {

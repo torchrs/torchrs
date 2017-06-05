@@ -95,21 +95,7 @@ impl<'a> From<&'a mut Conv2dFArgs> for ConvNdArgs {
     }
 }
 
-#[derive(Clone)]
-pub struct ConvNd {
-    delegate: Function,
-    args: ConvNdArgs,
-}
-
-impl ConvNd {
-    pub fn new(args: &ConvNdArgs) -> FIWrap<Self> {
-        FIWrap::new(ConvNd {
-                        delegate: Function::new(),
-                        args: args.clone(),
-                    })
-    }
-}
-impl_func_delegate!(ConvNd);
+impl_func_args!(ConvNd, ConvNdArgs);
 
 impl FuncIntf for ConvNd {
     fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
