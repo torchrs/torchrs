@@ -103,10 +103,10 @@ impl<T: Copy> Tensor<T> {
     pub fn baddbmm_(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli(&self) -> Self {
+    pub fn bernoulli(&self, p: T) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli_(self) -> Self {
+    pub fn bernoulli_(self, p: T) -> Self {
         unimplemented!()
     }
     pub fn bmm(&self, other: &Self) -> Self {
@@ -182,11 +182,18 @@ impl<T: Copy> Tensor<T> {
     pub fn dist(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()
     }
-    pub fn div(&self, value: &Self) -> Self {
+    pub fn div(&self, value: T) -> Self {
 
         unimplemented!()
     }
-    pub fn div_(self, value: &Self) -> Self {
+    pub fn div_(self, value: T) -> Self {
+        unimplemented!()
+    }
+    pub fn divt(&self, value: &Self) -> Self {
+
+        unimplemented!()
+    }
+    pub fn divt_(self, value: &Self) -> Self {
         unimplemented!()
     }
     pub fn dot(&self, other: &Self) -> Self {
@@ -379,6 +386,12 @@ impl<T: Copy> Tensor<T> {
         unimplemented!()
     }
     pub fn mul_(self, rhs: T) -> Self {
+        unimplemented!()
+    }
+    pub fn mult(&self, rhs: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn mult_(self, rhs: &Self) -> Self {
         unimplemented!()
     }
     //
@@ -785,10 +798,10 @@ impl TensorKind {
     pub fn baddbmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli(&self) -> Self {
+    pub fn bernoulli(&self, p: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli_(self) -> Self {
+    pub fn bernoulli_(self, p: &NumKind) -> Self {
         unimplemented!()
     }
     pub fn bmm(&self, other: &Self) -> Self {
@@ -864,11 +877,17 @@ impl TensorKind {
     pub fn dist(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()
     }
-    pub fn div(&self, value: &Self) -> Self {
+    pub fn div(&self, value: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn div_(self, value: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn divt(&self, value: &Self) -> Self {
 
         unimplemented!()
     }
-    pub fn div_(self, value: &Self) -> Self {
+    pub fn divt_(self, value: &Self) -> Self {
         unimplemented!()
     }
     pub fn dot(&self, other: &Self) -> Self {
@@ -1061,6 +1080,12 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn mul_(self, rhs: &NumKind) -> Self {
+        unimplemented!()
+    }
+    pub fn mult(&self, rhs: &Self) -> Self {
+        unimplemented!()
+    }
+    pub fn mult_(self, rhs: &Self) -> Self {
         unimplemented!()
     }
     //
