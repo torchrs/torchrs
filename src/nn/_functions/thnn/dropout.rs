@@ -49,6 +49,22 @@ trait Dropout: Noise + FuncIntf {
         };
         vec![output]
     }
+    fn dropout_backward(&mut self,
+                        grad_output_: &mut OptTensorKindList,
+                        args: &DropoutArgs)
+                        -> OptTensorKindList {
+        match grad_output_[0] {
+            None => return grad_output_.clone(),
+            Some(ref grad_output) => {
+                if args.p > 0. && args.training {
+                    let noise = &self.saved_tensors()[0];
+                    vec![Some(grad_output.clone().mult_(noise))]
+                } else {
+                    grad_output_.clone()
+                }
+            }
+        }
+    }
 }
 
 impl Dropout for Dropout1d {}
@@ -72,8 +88,9 @@ impl FuncIntf for Dropout1d {
         let args = self.args.clone();
         self.dropout_forward(input, &args)
     }
-    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
-        unimplemented!()
+    fn backward(&mut self, grad_output: &mut OptTensorKindList) -> OptTensorKindList {
+        let args = self.args.clone();
+        self.dropout_backward(grad_output, &args)
     }
 }
 impl FuncIntf for Dropout2d {
@@ -81,7 +98,8 @@ impl FuncIntf for Dropout2d {
         let args = self.args.clone();
         self.dropout_forward(input, &args)
     }
-    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
-        unimplemented!()
+    fn backward(&mut self, grad_output: &mut OptTensorKindList) -> OptTensorKindList {
+        let args = self.args.clone();
+        self.dropout_backward(grad_output, &args)
     }
 }
