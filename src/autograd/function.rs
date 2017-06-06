@@ -24,6 +24,7 @@ impl RootKind {
 
 impl_func!(FuncStub);
 impl FuncIntf for FuncStub {
+    #[allow(unused_variables)]
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
         unreachable!()
     }
@@ -36,6 +37,7 @@ pub struct FuncImpl {
     saved_variables: Vec<VarId>,
     needs_input_grad: Vec<bool>,
     non_differentiable: Vec<TensorId>,
+    dirty_tensors: Vec<TensorKind>,
     output_ids: HashMap<VarId, usize>,
     to_save: Vec<TensorId>,
     requires_grad: bool,
@@ -47,6 +49,7 @@ impl Default for FuncImpl {
             previous_functions: Vec::new(),
             saved_variables: Vec::new(),
             needs_input_grad: Vec::new(),
+            dirty_tensors: Vec::new(),
             non_differentiable: Vec::new(),
             output_ids: HashMap::new(),
             to_save: Vec::new(),
@@ -118,6 +121,12 @@ impl Function {
     pub fn needs_input_grad(&self) -> &Vec<bool> {
         &self.access().needs_input_grad
     }
+    pub fn mark_dirty(&mut self, input: &TensorKindList) {
+        self.access().dirty_tensors = input.iter().map(|t| t.clone()).collect();
+    }
+    pub fn mark_non_differentiable(&mut self, input: &TensorKindList) {
+        self.access().non_differentiable = input.iter().map(|t| t.id()).collect();
+    }
     fn access(&self) -> &mut FuncImpl {
         let vecp = FUNC_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
@@ -184,6 +193,13 @@ pub trait FuncIntf: FuncDelegate {
     fn needs_input_grad(&mut self) -> &Vec<bool> {
         self.delegate().needs_input_grad()
     }
+    fn mark_dirty(&mut self, input: &TensorKindList) {
+        self.delegate().mark_dirty(input)
+    }
+    fn mark_non_differentiable(&mut self, input: &TensorKindList) {
+        self.delegate().mark_non_differentiable(input)
+    }
+
     fn f(&mut self, mut input_: &mut VarKindList) -> VarKindList {
         let is_volatile = input_.iter().any(|v| v.is_volatile());
         {
