@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList, TensorKind, New};
+use tensor::{TensorKindList, OptTensorKindList, TensorKind, NewSelf};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -71,7 +71,7 @@ impl Dropout for Dropout1d {}
 impl Dropout for Dropout2d {}
 impl Noise for Dropout1d {
     fn make_noise(&self, input: &TensorKind) -> TensorKind {
-        input.new_(())
+        input.new(())
     }
 }
 impl Noise for Dropout2d {
@@ -80,7 +80,7 @@ impl Noise for Dropout2d {
         for _ in 0..input.dim() - 2 {
             v.push(1)
         }
-        input.new_(v)
+        input.new(v)
     }
 }
 impl FuncIntf for Dropout1d {

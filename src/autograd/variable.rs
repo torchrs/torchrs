@@ -1,5 +1,5 @@
 use autograd::{Function, FuncId, ExecutionEngine};
-use tensor::Tensor;
+use tensor::{Tensor, NewSelf};
 use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
@@ -265,7 +265,7 @@ impl<T: Copy> VariableImpl<T> {
         match self.grad {
             Some(ref mut t) => t,
             None => {
-                output = Tensor::new(self.data.size()).zero_();
+                output = self.data.new(()).zero_();
                 self.grad = Some(output);
                 self.grad()
             }
@@ -480,7 +480,7 @@ impl<T: Copy> Variable<T> {
             gradient = match gradient_ {
                 Some(gradient) => gradient,
                 None => {
-                    store = parent.data.new_(1);
+                    store = parent.data.new(1);
                     &mut store
                 }
             };

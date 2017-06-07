@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList, New};
+use tensor::{TensorKindList, OptTensorKindList, NewSelf};
 
 
 impl_func!(LogSoftmax);
@@ -47,7 +47,7 @@ impl FuncIntf for Threshold {
             self.mark_dirty(input_);
             input_[0].clone()
         } else {
-            input_[0].new_(())
+            input_[0].new(())
         };
         self.save_for_backward(input_);
         backend.Threshold_updateOutput(&mut input_[0],

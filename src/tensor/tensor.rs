@@ -52,7 +52,6 @@ impl NumKind {
     }
 }
 
-
 impl<T: Copy> From<T> for NumKind {
     #[allow(unused_variables)]
     default fn from(input: T) -> Self {
@@ -221,56 +220,43 @@ impl<T: Copy> Index<i32> for Tensor<T> {
 
 pub trait New<D, T> {
     fn new(args: D) -> T;
-    fn new_(&self, args: D) -> T;
+}
+pub trait NewSelf<D, T> {
+    fn new(&self, args: D) -> T;
 }
 
-impl<T> New<usize, Tensor<T>> for Tensor<T> {
-    fn new(args: usize) -> Self {
-        unimplemented!()
-    }
-    fn new_(&self, args: usize) -> Self {
+impl<T> NewSelf<usize, Tensor<T>> for Tensor<T> {
+    fn new(&self, args: usize) -> Self {
         unimplemented!()
     }
 }
-impl<T> New<Vec<usize>, Tensor<T>> for Tensor<T> {
-    fn new(args: Vec<usize>) -> Self {
-        unimplemented!()
-    }
-    fn new_(&self, args: Vec<usize>) -> Self {
+impl<T> NewSelf<(), Tensor<T>> for Tensor<T> {
+    fn new(&self, args: ()) -> Self {
         unimplemented!()
     }
 }
-
-
-impl New<usize, TensorKind> for TensorKind {
-    fn new(args: usize) -> Self {
-        unimplemented!()
-    }
-    fn new_(&self, args: usize) -> Self {
+impl<T> NewSelf<Vec<usize>, Tensor<T>> for Tensor<T> {
+    fn new(&self, args: Vec<usize>) -> Self {
         unimplemented!()
     }
 }
-impl New<(), TensorKind> for TensorKind {
-    fn new(args: ()) -> Self {
-        unimplemented!()
-    }
-    fn new_(&self, args: ()) -> Self {
+impl NewSelf<usize, TensorKind> for TensorKind {
+    fn new(&self, args: usize) -> Self {
         unimplemented!()
     }
 }
-impl New<Vec<usize>, TensorKind> for TensorKind {
-    fn new(args: Vec<usize>) -> Self {
-        unimplemented!()
-    }
-    fn new_(&self, args: Vec<usize>) -> Self {
+impl NewSelf<(), TensorKind> for TensorKind {
+    fn new(&self, args: ()) -> Self {
         unimplemented!()
     }
 }
-impl New<[usize; 2], TensorKind> for TensorKind {
-    fn new(args: [usize; 2]) -> Self {
+impl NewSelf<Vec<usize>, TensorKind> for TensorKind {
+    fn new(&self, args: Vec<usize>) -> Self {
         unimplemented!()
     }
-    fn new_(&self, args: [usize; 2]) -> Self {
+}
+impl NewSelf<[usize; 2], TensorKind> for TensorKind {
+    fn new(&self, args: [usize; 2]) -> Self {
         unimplemented!()
     }
 }
