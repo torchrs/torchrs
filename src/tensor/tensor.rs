@@ -91,7 +91,9 @@ impl TensorKind {
     pub fn in_thlt(&self) -> *mut THLongTensor {
         unimplemented!();
     }
-    //    pub fn backend(&self) -> &
+    pub fn backend(&self) -> Box<nn::BackendIntf> {
+        unimplemented!()
+    }
 }
 
 impl Index<usize> for TensorKind {
