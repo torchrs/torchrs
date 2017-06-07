@@ -8,3 +8,4 @@ pub use self::modules::module::*;
 pub use self::modules::convolution::*;
 pub use self::modules::linear::*;
 pub use self::parameter::*;
+pub use self::backends::*;

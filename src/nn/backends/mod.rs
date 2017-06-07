@@ -2,5 +2,5 @@
 pub mod backend;
 pub mod thnn;
 
-use self::backend::*;
-use self::thnn::*;
+pub use self::backend::*;
+pub use self::thnn::*;
