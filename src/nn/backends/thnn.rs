@@ -30,6 +30,13 @@ impl BackendIntfActivation for THNN_FloatBackend {
                                  inplace: bool) {
 
     }
+    fn LogSoftMax_updateOutput(&self, input: &TensorKind, output: &mut TensorKind) {}
+    fn LogSoftMax_updateGradInput(&self,
+                                  input: &TensorKind,
+                                  grad_output: &TensorKind,
+                                  grad_input: &mut TensorKind,
+                                  output: &TensorKind) {
+    }
 }
 
 impl BackendIntfLoss for THNN_FloatBackend {
@@ -49,13 +56,6 @@ impl BackendIntfLoss for THNN_FloatBackend {
                                          size_average: bool,
                                          weights: Option<&TensorKind>,
                                          total_weight: &TensorKind) {
-    }
-    fn LogSoftMax_updateOutput(&self, input: &TensorKind, output: &mut TensorKind) {}
-    fn LogSoftMax_updateGradInput(&self,
-                                  input: &TensorKind,
-                                  grad_output: &TensorKind,
-                                  grad_input: &mut TensorKind,
-                                  output: &TensorKind) {
     }
 }
 

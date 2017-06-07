@@ -1,6 +1,18 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
 use tensor::{TensorKindList, OptTensorKindList, New};
 
+
+impl_func!(LogSoftmax);
+impl FuncIntf for LogSoftmax {
+    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
+        unimplemented!()
+    }
+    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
+        unimplemented!()
+    }
+}
+
+
 pub struct Threshold {
     delegate: Function,
     threshold: f32,
@@ -46,6 +58,7 @@ impl FuncIntf for Threshold {
         vec![output]
     }
     fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
+        /* Why are they doing backprop on a volatile variable? */
         unimplemented!()
     }
 }

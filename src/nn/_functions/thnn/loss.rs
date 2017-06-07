@@ -1,18 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, Variable, VarId, FIWrap};
-use macros::*;
 use tensor::{RefTensorList, RefTensorKindList, TensorList, TensorKindList, OptTensorKindList};
-use ::*;
-
-impl_func!(LogSoftmax);
-
-impl FuncIntf for LogSoftmax {
-    fn forward(&mut self, mut input: &mut TensorKindList) -> TensorKindList {
-        unimplemented!()
-    }
-    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
-        unimplemented!()
-    }
-}
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
