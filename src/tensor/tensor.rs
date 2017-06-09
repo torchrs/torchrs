@@ -93,6 +93,9 @@ impl TensorKind {
     pub fn backend(&self) -> Box<nn::BackendIntf> {
         unimplemented!()
     }
+    pub fn inner(&self) -> *mut ::std::os::raw::c_void {
+        unimplemented!()
+    }
 }
 
 impl Index<usize> for TensorKind {

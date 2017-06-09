@@ -34,7 +34,7 @@ impl<T: Copy> Tensor<T> {
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
         let inner = self.value.borrow_mut();
         let output = inner.new();
-        inner.addt(val, &*rhs.inner(), &mut *output.borrow_mut());
+        inner.addt(val, &*rhs.inner_impl(), &mut *output.borrow_mut());
         Tensor { value: output }
     }
     pub fn addt_(self, val: T, rhs: &Self) -> Self {
@@ -42,7 +42,7 @@ impl<T: Copy> Tensor<T> {
         // returning self
         {
             let inner = self.value.borrow();
-            inner.addt(val, &*rhs.inner(), &*inner);
+            inner.addt(val, &*rhs.inner_impl(), &*inner);
         }
         self
     }
@@ -289,8 +289,11 @@ impl<T: Copy> Tensor<T> {
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
         unimplemented!()
     }
-    pub fn inner(&self) -> RefMut<TIArg<T>> {
+    pub fn inner_impl(&self) -> RefMut<TIArg<T>> {
         self.value.borrow_mut()
+    }
+    pub fn inner(&self) -> *mut ::std::os::raw::c_void {
+        unimplemented!()
     }
     pub fn int(self) -> Self {
         unimplemented!()
