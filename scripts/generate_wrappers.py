@@ -275,8 +275,8 @@ def wrap_generic():
     wrapper = ''
     for name, backends in defs.items():
         wrapper += wrap_generic_function(name, backends)
-    with open('target/work/THNN_generic.cwrap', 'w') as f:
-        f.write(wrapper)
+#    with open('target/work/THNN_generic.cwrap', 'w') as f:
+#        f.write(wrapper)
 
 #    cwrap('torch/csrc/nn/THNN_generic.cwrap', plugins=[
 #        GenericNN(header=True),
