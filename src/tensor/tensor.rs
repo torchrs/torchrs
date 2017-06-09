@@ -84,12 +84,6 @@ pub type TensorId = usize;
 
 
 impl TensorKind {
-    pub fn in_thft(&self) -> *mut THFloatTensor {
-        unimplemented!();
-    }
-    pub fn in_thlt(&self) -> *mut THLongTensor {
-        unimplemented!();
-    }
     pub fn backend(&self) -> Box<nn::BackendIntf> {
         unimplemented!()
     }
@@ -330,7 +324,6 @@ impl Index<isize> for FloatTensor {
     }
 }
 
-
 pub struct FloatTensor {
     t: *mut THFloatTensor,
     storage: FloatStorage,
@@ -342,7 +335,6 @@ impl Default for FloatTensor {
         FloatTensor::new()
     }
 }
-
 
 impl FloatTensor {
     pub fn new() -> Self {
