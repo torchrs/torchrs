@@ -15,13 +15,13 @@ impl FuncIntf for LogSoftmax {
 
 pub struct Threshold {
     delegate: Function,
-    threshold: f32,
-    value: f32,
+    threshold: f64,
+    value: f64,
     inplace: bool,
 }
 
 impl Threshold {
-    pub fn new(threshold: f32, value: f32, inplace: bool) -> FIWrap<Self> {
+    pub fn new(threshold: f64, value: f64, inplace: bool) -> FIWrap<Self> {
         if inplace {
             panic!("in-place processing requires value ({}) to not \
                     exceed threshold ({})",
@@ -42,7 +42,7 @@ impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {
     fn forward(&mut self, input_: &mut TensorKindList) -> TensorKindList {
-        let backend = input_[0].backend();
+        let mut backend = input_[0].backend();
         let mut output = if self.inplace {
             self.mark_dirty(input_);
             input_[0].clone()
