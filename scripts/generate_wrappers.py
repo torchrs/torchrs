@@ -221,19 +221,6 @@ def build_args(name, args):
 	return fn_class
 
 def _make_function_class_criterion(class_name, update_output, update_grad_input, acc_grad_parameters):
-	weight_arg_idx = -1
-	for i, arg in enumerate(update_output.arguments):
-		if arg.name.startswith('weight'):
-			weight_arg_idx = i
-			break
-
-	buffers_idx = []
-	additional_arg_idx = 0
-	for arg in update_output.arguments[4:]:
-		if not arg.name.startswith('weight') and arg.type == 'THTensor*':
-			buffers_idx.append(additional_arg_idx)
-		additional_arg_idx += 1
-
 	args = [arg for arg in update_output.arguments[4:] if "Tensor" not in arg.type]
 	full_args = update_output.arguments[4:]
 	tensor_idxs = [idx for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
