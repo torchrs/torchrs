@@ -212,10 +212,11 @@ def build_backward(name, args):
 
 
 def build_args(name, args):
-	fn_class = "#[derive(Clone, Default)]\n"
+	fn_class = "#[builder(pattern=\"owned\")]\n"
+	fn_class += "#[derive(Builder, Clone, Default)]\n"
 	fn_class += "pub struct {}Args ".format(name) + "{\n"
 	for arg in args:
-		fn_class += "\t{}: {},\n".format(arg.name, rstype(arg))
+		fn_class += "\tpub {}: {},\n".format(arg.name, rstype(arg))
 	fn_class += "}\n"
 	return fn_class
 
