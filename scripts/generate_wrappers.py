@@ -221,11 +221,11 @@ def build_args(name, args):
 	return fn_class
 
 def _make_function_class_criterion(class_name, update_output, update_grad_input, acc_grad_parameters):
-	args = [arg for arg in update_output.arguments[4:] if "Tensor" not in arg.type]
 	full_args = update_output.arguments[4:]
+	args = [arg for arg in full_args if "Tensor" not in arg.type]
 	tensor_idxs = [idx for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
-	input_args = ["self.args.{}".format(arg.name) for arg in update_output.arguments[4:] if "Tensor" not in arg.type]
-	output_args = ["self.args.{}".format(arg.name) for arg in update_output.arguments[4:] if "Tensor" not in arg.type]
+	input_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
+	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	for i, idx in enumerate(tensor_idxs):
 		output_args.insert(idx, "&mut input_list[{}].clone()".format(i+2))
 		input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
