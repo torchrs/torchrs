@@ -418,3 +418,11 @@ impl<'a> IndexMut<&'a [isize]> for FloatTensor {
         &mut self.storage[index]
     }
 }
+
+pub fn make_vec(val: usize, count: usize) -> Vec<usize> {
+    let mut vec = Vec::new();
+    for _ in 0..count {
+        vec.push(val)
+    }
+    vec
+}
