@@ -1,0 +1,6 @@
+[package]
+name = "torchvision"
+version = "0.1.0"
+authors = ["Matt Macy <mmacy@mattmacy.io>"]
+
+[dependencies]
