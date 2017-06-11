@@ -2,9 +2,5 @@ target/
 **/*.rs.bk
 Cargo.lock
 *~
-*/tmp*
-*/*~
-src/tmp*
-src/*/tmp*
-src/*/*/tmp*
-src/*/*/*/tmp*
+**/*~
+**/tmp*
