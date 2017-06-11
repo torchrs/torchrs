@@ -11,7 +11,6 @@ extern crate torchrs;
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
-
 use torchrs::macros::*;
 use torchrs::nn;
 use torchrs::nn::{ModuleStruct, ModIntf, ModDelegate, Module};
@@ -52,10 +51,10 @@ impl Default for NetArgs {
 }
 
 fn parse_args() -> NetArgs {
+    unimplemented!();
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let mut opts = Options::new();
-    unimplemented!();
     /*
     	* XXX do parsey stuff
     	*/
@@ -93,17 +92,17 @@ impl_mod_delegate!(Net);
 // a) as a near verbatim implementation of the python version
 impl ModIntf<f32> for Net<f32> {
     fn forward(&mut self, args: &mut Variable<f32>) -> Variable<f32> {
-        let training = self.delegate.training;
         let pool_val = F::MaxPool2dArgs::default();
-        let dropout_val = F::DropoutArgs::default();
+        let mut dropout_val = F::DropoutArgs::default();
+        dropout_val.training = self.delegate.training;
         let mut x = F::relu(&F::max_pool2d(&self.conv1.f(args), (2, 2), &pool_val));
-        let mut x = F::relu(&F::max_pool2d(&F::dropout2d(&self.conv2.f(&mut x), &dropout_val),
+        x = F::relu(&F::max_pool2d(&F::dropout2d(&self.conv2.f(&mut x), &dropout_val),
                                            (2, 2),
                                            &pool_val));
-        let mut x = x.view(&[-1, 320]);
-        let x = F::relu(&self.fc1.f(&mut x));
-        let mut x = F::dropout(&x, &dropout_val);
-        let x = self.fc2.f(&mut x);
+        x = x.view(&[-1, 320]);
+        x = F::relu(&self.fc1.f(&mut x));
+        x = F::dropout(&x, &dropout_val);
+        x = self.fc2.f(&mut x);
         F::log_softmax(&x)
     }
 }
