@@ -1,18 +1,6 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
 use tensor::{TensorKindList, OptTensorKindList, NewSelf};
 
-
-impl_func!(LogSoftmax);
-impl FuncIntf for LogSoftmax {
-    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
-        unimplemented!()
-    }
-    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
-        unimplemented!()
-    }
-}
-
-
 pub struct Threshold {
     delegate: Function,
     threshold: f64,
