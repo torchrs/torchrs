@@ -196,7 +196,7 @@ def build_header():
 	header += "#![allow(non_snake_case)]\n"
 	header += "#![allow(non_camel_case)]\n\n"
 	header += "use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};\n"
-	header += "use tensor::{OptTensorKindList, TensorKindList, NewSelf, make_vec};\n"
+	header += "use tensor::{OptTensorKindList, TensorKindList, TensorKind, NewSelf, make_vec};\n"
 	header += "use itertools::repeat_call;\n"
 	header += "use nn::backends::backend::*;\n\n\n"
 	return header
@@ -241,22 +241,23 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 
 	def build_backward_class_criterion():
 		backward = "\t\tlet mut saved = self.saved_tensors();\n"
-		backward += "\t\tlet mut input = saved[0].clone();\n"
-		backward += "\t\tlet mut target = saved[1].clone();\n"
+		backward += "\t\tlet (mut input, mut target) = (saved[0].clone(), saved[1].clone());\n"
 		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
-		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as(&input).zero_();\n"
+		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&input).zero_();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
 		backward += ', '.join(arg for arg in input_args) + ");\n"
-		backward += "\t\tlet mut grad_output_expanded = grad_output.view(make_vec(1, grad_input.dim() as usize).as_slice());\n"
+		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);"
+		backward += "\t\tlet mut grad_output_expanded = grad_output.view(dims.as_slice());\n"
 		backward += "\t\tlet mut grad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"		
 		backward += "\t\tlet grad_input = grad_input.mult_(&grad_output_expanded);\n"
 		backward += "\t\tvec![Some(grad_input), None]"
 		return backward
 
-	fn_class = build_args(class_name, args)
+	fn_class = ""
 	needs_args = len(args) >  0
 	if needs_args:
+		fn_class += build_args(class_name, args)
 		fn_class += "impl_func_args!({}, {}Args);\n".format(class_name, class_name)
 	else:
 		fn_class += "impl_func!({});\n".format(class_name)
@@ -272,21 +273,188 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 	fn_class += "}\n\n"
 	return fn_class
 
-
+def _find_buffers(args, ignored_args):
+    additional_arg_idx = 0
+    buffers = []
+    for arg in args:
+        if arg.name in ignored_args:
+            continue
+        if arg.type == 'THTensor*':
+            buffers.append((additional_arg_idx, arg.name))
+        additional_arg_idx += 1
+    return buffers
 
 def _make_function_class(class_name, update_output, update_grad_input, acc_grad_parameters):
-	return ""
+	def has_argument(fn, name):
+		for arg in fn.arguments:
+			if arg.name == name:
+				return True
+		return False
+	save_output = has_argument(update_grad_input, 'output')
+	needs_input = has_argument(update_grad_input, 'input')
+
+	param_args = {'weight', 'bias'}
+	ignored_args = {'weight', 'bias', 'gradWeight', 'gradBias', 'output'}
+	expected_params = [arg for arg in update_output.arguments[3:]
+                       if arg.name in param_args]
+	buffers = {}
+	buffers['update_output'] = _find_buffers(update_output.arguments[3:],
+	                                         ignored_args)
+	buffers['update_grad_input'] = _find_buffers(
+	    update_grad_input.arguments[4:], ignored_args)
+	if acc_grad_parameters is not None:
+	    buffers['acc_grad_parameters'] = _find_buffers(
+	        acc_grad_parameters.arguments[3:], ignored_args)
+
+	full_args = update_output.arguments[3:]
+	args = [arg for arg in full_args if "Tensor" not in arg.type]
+
+	tensor_idxs = [idx for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
+	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
+	#added_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
+	added_args = full_args
+
+	start = 4 if needs_input else 3
+	grad_input_args = [arg for arg in update_grad_input.arguments[start:] if "Tensor" not in arg.type]
+	input_args = ["self.args.{}".format(arg.name) for arg in grad_input_args if "Tensor" not in arg.type]
+	if len(grad_input_args) > len(args):
+		args = grad_input_args
+
+	for i, idx in enumerate(tensor_idxs):
+		output_args.insert(idx, "&mut input_list[{}].clone()".format(i+1))
+
+	ga_start = 5 if save_output else 4
+
+	tensor_idxs_input = [idx for idx, arg in enumerate(update_grad_input.arguments[ga_start:]) if "Tensor" in arg.type]
+	for i, idx in enumerate(tensor_idxs_input):
+		if save_output:
+			input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
+		else:
+			input_args.insert(idx, "&mut saved[{}].clone()".format(i+1))
+
+	is_inplace = update_output.arguments[-1].name == 'inplace'
+	needs_args = len(args) >  0 or len(grad_input_args) > 0
+
+	def initialize_buffers(fn_name):
+		print(class_name)
+		print(full_args)
+		additional_args = added_args
+		for idx, name in buffers[fn_name]:
+            # TODO: some buffers are necessary only for update output and can be
+            # freed right afterwards
+			buffer = buffers[name]
+			print(buffer)
+			additional_args = additional_args[:idx] + [buffer] + additional_args[idx:]
+		print(additional_args)
+		return tuple(additional_args)
+
+	def build_forward():
+		forward = "\t\tlet mut backend = input_list[0].backend();\n"
+		if is_inplace:
+			forward += "\t\tlet mut output = if self.args.inplace {\n"
+			forward += "\t\t\tself.mark_dirty(input_list);\n"
+			forward += "\t\t\tinput_list[0].clone()\n"
+			forward += "\t\t} else {\n"
+			forward += "\t\t\tinput_list[0].new(())\n"
+			forward += "\t\t};\n"
+		else:
+			forward += "\t\tlet mut output = input_list[0].new(());\n"
+
+		if save_output:
+			forward += "\t\t{\n"
+			forward += "\t\t\tlet mut save_list = input_list.clone();\n"
+			forward += "\t\t\tsave_list.push(output.clone());\n"
+			forward += "\t\t\tself.save_for_backward(&mut save_list);\n"
+			forward += "\t\t}\n"
+		else:
+			forward += "\t\tself.save_for_backward(input_list);\n"
+
+
+		forward += "\t\tlet mut input = input_list.remove(0);\n"
+		forward += "\t\tbackend.{}(&mut input, &mut output, ".format(update_output.name)
+		forward +=  ', '.join(arg for arg in output_args) + ");\n"
+		forward += "\t\tvec![output]\n"
+		return forward
+
+	def build_backward():
+		input = "& mut input, " if needs_input else ""
+		backward = "\t\tlet mut saved = self.saved_tensors();\n"
+		# XXX acknowledge that this is incomplete
+		backward += '\t\tpanic!("backward will not work properly until save_for is done correctly.");\n' 
+		backward += "\t\tunimplemented!();\n"
+		if save_output:
+			backward += "\t\tlet (mut input, mut output) = (saved[0].clone(), saved[1].clone());\n"
+		else:
+			backward += "\t\tlet mut input = saved[0].clone();\n"
+		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
+		backward += "\t\tlet needs_input_grad = self.needs_input_grad().clone();\n"
+		backward += "\t\tlet mut grad_input_result : Option<TensorKind> = None;\n"
+		backward += "\t\tlet mut backend = input.backend();\n"
+
+		# update_grad_input()
+		#ext_args = initialize_buffers('update_grad_input')
+		backward += "\t\tif needs_input_grad[0] {\n"
+		backward += "\t\t\tlet mut grad_input = input.new(());\n"
+		backward += "\t\t\tbackend.{}({}&mut grad_output, &mut grad_input".format(update_grad_input.name, input)
+		if save_output:
+			backward += ", &mut output"
+
+		gi_args = input_args
+		if len(input_args) > 0:
+			backward +=  ', ' + ', '.join(arg for arg in gi_args) + ");\n"
+		else:
+			backward += ");\n"
+		backward += "\t\t\tgrad_input_result = Some(grad_input);\n"
+		backward += "\t\t}\n"
+
+		# acc_grad_parameters()
+		if acc_grad_parameters:
+			backward += "\t\tif needs_input_grad[1..].iter().any(|t| *t) {\n"
+
+			backward += "\t\t}\n"
+
+		backward += "\t\tlet result = vec![grad_input_result];\n"
+		backward += "\t\t//append additional arguments"
+		backward += "\t\tresult"
+		return backward
+		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
+		backward += "\t\tlet mut backend = input.backend();\n"
+		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&input).zero_();\n"
+		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
+		backward += ', '.join(arg for arg in input_args) + ");\n"
+		backward += "\t\tlet mut grad_output_expanded = grad_output.view(make_vec(1, grad_input.dim() as usize).as_slice());\n"
+		backward += "\t\tgrad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"
+		backward += "\t\tgrad_input = grad_input.mult_(&grad_output_expanded);\n"
+		backward += "\t\tvec![Some(grad_input), None]"
+		return backward
+
+	fn_class = ""
+	if needs_args:
+		fn_class += build_args(class_name, args)
+		fn_class += "impl_func_args!({}, {}Args);\n".format(class_name, class_name)
+	else:
+		fn_class += "impl_func!({});\n".format(class_name)
+
+	fn_class += "impl FuncIntf for {} ".format(class_name) + " {\n"
+	fn_class += "\tfn forward(&mut self, input_list: &mut TensorKindList) -> TensorKindList {\n"
+	fn_class += build_forward()
+	fn_class += "\n\t}\n"
+	fn_class += "\tfn backward(&mut self, grad_output_list: &mut OptTensorKindList) -> OptTensorKindList {\n"
+	fn_class += build_backward()
+	fn_class += "\n\t}\n"
+	fn_class += "}\n\n"
+	return fn_class
+
 
 def generate_function_classes():
 	auto = build_header()
 
 	nn_functions = thnn_utils.parse_header(thnn_utils.THNN_H_PATH)
-	print(len(nn_functions))
 	function_list = list(filter(lambda fn: "unfolded" not in fn.name, nn_functions))
 	function_by_name = {fn.name: fn for fn in function_list}
-	print(len(function_by_name))
 	classes_to_generate = {fn.name.partition('_')[0] for fn in function_list}
-	print(len(classes_to_generate))
+	# make partition output deterministic
+	#classes_to_generate = sorted(classes_to_generate.items(), key=lambda x: x.name)
 	exceptions = {
 		'Linear',
 		'IndexLinear',
@@ -344,7 +512,8 @@ def generate_function_classes():
     }
 
 	classes_to_generate -= exceptions
-	print(*classes_to_generate)
+	# make end result deterministic
+	classes_to_generate = sorted([fn for fn in classes_to_generate])
 	for fn in classes_to_generate:
 		update_output = function_by_name[fn + '_updateOutput']
 		update_grad_input = function_by_name[fn + '_updateGradInput']
