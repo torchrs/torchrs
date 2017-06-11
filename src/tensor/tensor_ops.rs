@@ -499,7 +499,7 @@ impl<T: Copy> Tensor<T> {
     pub fn resize_(self, sizes: &[i32]) -> Self {
         unimplemented!()
     }
-    pub fn resize_as(self, tensor: &Self) -> Self {
+    pub fn resize_as_(self, tensor: &Self) -> Self {
         unimplemented!()
     }
     pub fn round(&self) -> Self {
@@ -1193,7 +1193,7 @@ impl TensorKind {
     pub fn resize_(self, sizes: &[i32]) -> Self {
         unimplemented!()
     }
-    pub fn resize_as(self, tensor: &Self) -> Self {
+    pub fn resize_as_(self, tensor: &Self) -> Self {
         unimplemented!()
     }
     pub fn round(&self) -> Self {
