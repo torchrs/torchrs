@@ -12,6 +12,11 @@ extern crate derive_builder;
 
 extern crate itertools;
 
+// only needed for torchvision
+extern crate curl;
+extern crate flate2;
+
+
 #[macro_use]
 pub mod macros;
 
