@@ -6,8 +6,11 @@ use std::{io, fs};
 use curl::easy::Easy;
 use flate2::{Flush, Decompress};
 use std::io::Write;
+use utils::data::{Dataset, DatasetIntf};
+use std::rc::Rc;
+use tensor::Tensor;
 
-type Sample = (Vec<u8>, u32);
+type Sample = (Tensor<f32>, Tensor<i64>);
 
 static URLS: [&str; 4] = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
                           "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
@@ -75,9 +78,9 @@ pub struct MNISTArgs {
 }
 
 impl MNISTArgsBuilder {
-    pub fn done(self) -> MNIST {
+    pub fn done(self) -> Dataset<Sample> {
         let args = self.build().unwrap();
-        MNIST::new(&args)
+        Dataset::new(Rc::new(MNIST::new(&args)))
     }
 }
 
