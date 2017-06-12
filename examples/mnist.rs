@@ -3,26 +3,20 @@ extern crate getopts;
 extern crate modparse_derive;
 #[macro_use]
 extern crate derive_builder;
-
 #[macro_use]
 extern crate torchrs;
-
 
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
-use torchrs::macros::*;
 use torchrs::nn;
 use torchrs::nn::{ModuleStruct, ModIntf, ModDelegate, Module};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
+use torchrs::utils::torchvision::{datasets, transforms};
 
 use getopts::Options;
 use std::env;
-
-fn MNIST() -> D::Dataset<D::Batch<f32, i64>> {
-    unimplemented!()
-}
 
 #[derive(Clone, Builder)]
 struct NetArgs {
@@ -55,6 +49,7 @@ fn parse_args() -> NetArgs {
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let mut opts = Options::new();
+
     /*
     	* XXX do parsey stuff
     	*/
@@ -97,8 +92,8 @@ impl ModIntf<f32> for Net<f32> {
         dropout_val.training = self.delegate.training;
         let mut x = F::relu(&F::max_pool2d(&self.conv1.f(args), (2, 2), &pool_val));
         x = F::relu(&F::max_pool2d(&F::dropout2d(&self.conv2.f(&mut x), &dropout_val),
-                                           (2, 2),
-                                           &pool_val));
+                                   (2, 2),
+                                   &pool_val));
         x = x.view(&[-1, 320]);
         x = F::relu(&self.fc1.f(&mut x));
         x = F::dropout(&x, &dropout_val);
@@ -166,10 +161,13 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
 
 fn main() {
     // no data loaders yet so demonstrate with Vec placeholder
-    let train_loader: D::BatchLoader<f32, i64> = D::DataLoader::new(MNIST(),
-                                                                    D::DataLoaderArgs::default());
-    let test_loader: D::BatchLoader<f32, i64> = D::DataLoader::new(MNIST(),
-                                                                   D::DataLoaderArgs::default());
+
+    let train_loader: D::BatchLoader<f32, i64> =
+        D::DataLoader::new(datasets::MNIST::build("../data").done(),
+                           D::DataLoaderArgs::default());
+    let test_loader: D::BatchLoader<f32, i64> =
+        D::DataLoader::new(datasets::MNIST::build("../data").done(),
+                           D::DataLoaderArgs::default());
     let args = parse_args();
     let mut optimizer = optim::SGD::new();
 
