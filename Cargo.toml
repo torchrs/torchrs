@@ -12,3 +12,7 @@ rand = "^0.3"
 derive_builder = "^0.4.7"
 getopts = "0.2"
 itertools= "0.6"
+
+# torchvision
+curl = "0.4"
+flate2 = "0.2"
