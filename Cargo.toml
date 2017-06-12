@@ -16,3 +16,6 @@ itertools= "0.6"
 # torchvision
 curl = "0.4"
 flate2 = "0.2"
+
+# examples
+clap = "2.24"
