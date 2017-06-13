@@ -1,10 +1,13 @@
-extern crate getopts;
 #[macro_use]
 extern crate modparse_derive;
 #[macro_use]
 extern crate derive_builder;
 #[macro_use]
 extern crate torchrs;
+#[macro_use]
+extern crate clap;
+
+
 
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::tensor::Tensor;
@@ -15,7 +18,8 @@ use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
 use torchrs::utils::torchvision::{datasets, transforms};
 
-use getopts::Options;
+use clap::{Arg, App, SubCommand};
+
 use std::env;
 
 #[derive(Clone, Builder)]
@@ -48,11 +52,35 @@ fn parse_args() -> NetArgs {
     unimplemented!();
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
-    let mut opts = Options::new();
-
-    /*
-    	* XXX do parsey stuff
-    	*/
+    let matches = App::new("Torch.rs MNIST Example")
+        .version("0.1")
+        .author("Some Guy")
+        .about("recognize handwritten digits")
+        .arg(Arg::with_name("batch-size").takes_value(true))
+        .arg(Arg::with_name("test-batch-size").takes_value(true))
+        .arg(Arg::with_name("epochs").takes_value(true))
+        .arg(Arg::with_name("lr").takes_value(true))
+        .arg(Arg::with_name("momentum").takes_value(true))
+        .arg(Arg::with_name("no-cuda").takes_value(false))
+        .arg(Arg::with_name("seed").takes_value(true))
+        .arg(Arg::with_name("log-interval").takes_value(true))
+        .get_matches();
+    let (b_size, tb_size, epochs, lr, seed, momentum, log_int) =
+        (value_t!(matches.value_of("batch-size"), usize),
+         value_t!(matches.value_of("test-batch-size"), usize),
+         value_t!(matches.value_of("epochs"), u32),
+         value_t!(matches.value_of("lr"), f32),
+         value_t!(matches.value_of("momentum"), f32),
+         value_t!(matches.value_of("seed"), u32),
+         value_t!(matches.value_of("log-interval"), u32));
+    if let Some(b_size) = b_size {args.batch_size = b_size}
+    if let Some(tb_size) = tb_size {args.test_batch_size = tb_size}
+    if let Some(epochs) = epochs {args.epochs = epochs}
+    if let Some(lr) = lr {args.lr = lr}
+    if let Some(momentum) = momentum {args.momentum = momentum}
+    if let Some(seed) = seed {args.seed = seed}
+    if let Some(log_int) = log_int {args.log_interval = log_int}
+    //XXX CUDA?
     args
 }
 
