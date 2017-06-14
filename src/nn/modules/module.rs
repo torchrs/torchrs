@@ -76,7 +76,7 @@ impl<'a, TMod: 'a + Copy> ModIter<'a, TMod> {
 impl<'a, T: Copy> Iterator for ModIter<'a, T> {
     type Item = &'a mut nn::Parameter<T>;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some((name, t)) = self.iter.next() {
+        if let Some((_, t)) = self.iter.next() {
             Some(t)
         } else if let Some(modulep) = self.modules.next() {
             let mut module = unsafe { &mut *modulep as &mut Module<T> };
