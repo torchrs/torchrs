@@ -1,6 +1,7 @@
 use std::collections::{HashMap, hash_map};
 use tensor::Tensor;
 use autograd::Variable;
+use std::vec::IntoIter;
 use nn;
 
 // placeholder
@@ -30,6 +31,17 @@ pub struct PtrIter<'a, T: 'a> {
     mod_iter: hash_map::Iter<'a, String, *mut T>,
 }
 
+impl<'a, T> Iterator for PtrIter<'a, T> {
+    type Item = (&'a str, &'a T);
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some((name, t)) = self.mod_iter.next() {
+            Some((name, unsafe { &**t as &T }))
+        } else {
+            None
+        }
+    }
+}
+
 impl<'a, T> Iterator for PtrIterMut<'a, T> {
     type Item = (&'a String, &'a mut T);
     fn next(&mut self) -> Option<Self::Item> {
@@ -41,11 +53,35 @@ impl<'a, T> Iterator for PtrIterMut<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for PtrIter<'a, T> {
-    type Item = (&'a str, &'a T);
+pub struct ModIter<'a, T: 'a + Copy> {
+    pub modules: IntoIter<*mut Module<T>>,
+    pub iter: PtrIterMut<'a, nn::Parameter<T>>,
+}
+fn mod_accum<TMod: Copy>(module: &mut Module<TMod>, arg: &mut Vec<*mut Module<TMod>>) {
+    arg.push((module));
+}
+impl<'a, TMod: 'a + Copy> ModIter<'a, TMod> {
+    pub fn new(root: &'a mut Module<TMod>) -> Self {
+        let mut mods = Vec::new();
+        root.apply_arg(&mut mods, mod_accum);
+        // XXX assert is root
+        mods.pop();
+        ModIter {
+            modules: mods.into_iter(),
+            iter: root.params_iter_mut(),
+        }
+    }
+}
+
+impl<'a, T: Copy> Iterator for ModIter<'a, T> {
+    type Item = &'a mut nn::Parameter<T>;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some((name, t)) = self.mod_iter.next() {
-            Some((name, unsafe { &**t as &T }))
+        if let Some((name, t)) = self.iter.next() {
+            Some(t)
+        } else if let Some(modulep) = self.modules.next() {
+            let mut module = unsafe { &mut *modulep as &mut Module<T> };
+            self.iter = module.params_iter_mut();
+            self.next()
         } else {
             None
         }
@@ -89,6 +125,9 @@ impl<T: Copy> Module<T> {
     pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {
         self._buffers.insert(String::from(name), tensor.clone());
     }
+    pub fn parameters(&mut self) -> ModIter<T> {
+        ModIter::new(self)
+    }
     fn _apply(&mut self, callback: fn(&mut Tensor<T>)) {
         for (_, module) in self.modules_iter_mut() {
             module._apply(callback)
@@ -103,11 +142,17 @@ impl<T: Copy> Module<T> {
             /* see also _buffers */
         }
     }
-    fn apply(&mut self, callback: fn(&mut Self)) {
+    pub fn apply(&mut self, callback: fn(&mut Self)) {
         for (_, module) in self.modules_iter_mut() {
             module.apply(callback)
         }
         callback(self)
+    }
+    fn apply_arg<Ta>(&mut self, arg: &mut Ta, callback: fn(&mut Self, &mut Ta)) {
+        for (_, module) in self.modules_iter_mut() {
+            module.apply_arg(arg, callback)
+        }
+        callback(self, arg)
     }
     pub fn repr(&mut self) -> String {
         let mut tmpstr = format!("{} (\n", self._name);
