@@ -17,7 +17,8 @@ extern crate flate2;
 // serialization support
 #[macro_use]
 extern crate serde_derive;
-extern crate bincode;
+extern crate rmp;
+extern crate rmp_serde as rmps;
 extern crate serde;
 
 
@@ -31,6 +32,7 @@ pub mod optim;
 pub mod utils;
 pub mod tensor;
 pub mod storage;
+pub mod torch;
 use std::rc::Rc;
 use std::cell::RefCell;
 
