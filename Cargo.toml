@@ -19,3 +19,8 @@ flate2 = "0.2"
 
 # examples
 clap = "2.24"
+
+# serialization support
+bincode = "^0.8.0"
+serde = "^0.9.7"
+serde_derive = "^0.9"
