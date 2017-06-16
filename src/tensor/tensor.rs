@@ -195,17 +195,17 @@ pub struct Tensor<T> {
 
 impl<T> Serialize for Tensor<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer {
-            unimplemented!()
-        }
+        where S: Serializer
+    {
+        unimplemented!()
+    }
 }
 impl<'de, T> Deserialize<'de> for Tensor<T> {
-     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de> {
-            unimplemented!()
-        }
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        unimplemented!()
+    }
 }
 
 impl<T: Copy> Hash for Tensor<T> {
@@ -344,17 +344,17 @@ impl Index<isize> for FloatTensor {
 
 impl Serialize for FloatTensor {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer {
-            unimplemented!()
-        }
+        where S: Serializer
+    {
+        unimplemented!()
+    }
 }
 impl<'de> Deserialize<'de> for FloatTensor {
-     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de> {
-            unimplemented!()
-        }
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        unimplemented!()
+    }
 }
 
 pub struct FloatTensor {
