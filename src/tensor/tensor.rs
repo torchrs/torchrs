@@ -5,6 +5,7 @@ use std::ops::{Index, IndexMut};
 use std::convert::From;
 use std::cmp::max;
 use std::hash::{Hash, Hasher};
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 use storage::*;
 use ::*;
@@ -22,7 +23,7 @@ pub enum TensorType {
     Long,
 }
 
-#[derive(Hash)]
+#[derive(Hash, Serialize, Deserialize)]
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),
     LongTensor(Tensor<i64>),
@@ -187,9 +188,26 @@ impl From<TensorKind> for Tensor<i64> {
         }
     }
 }
+
 pub struct Tensor<T> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
+
+impl<T> Serialize for Tensor<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer {
+            unimplemented!()
+        }
+}
+impl<'de, T> Deserialize<'de> for Tensor<T> {
+     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de> {
+            unimplemented!()
+        }
+}
+
 impl<T: Copy> Hash for Tensor<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state)
@@ -322,6 +340,21 @@ impl Index<isize> for FloatTensor {
     fn index(&self, idx: isize) -> &Self::Output {
         unimplemented!()
     }
+}
+
+impl Serialize for FloatTensor {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer {
+            unimplemented!()
+        }
+}
+impl<'de> Deserialize<'de> for FloatTensor {
+     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de> {
+            unimplemented!()
+        }
 }
 
 pub struct FloatTensor {
