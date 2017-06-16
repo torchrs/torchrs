@@ -1,20 +1,24 @@
 #![feature(specialization)]
-#![feature(trace_macros)]
-#![feature(log_syntax)]
 
-extern crate num;
-extern crate rand;
 extern crate rutorch;
 #[macro_use]
 extern crate modparse_derive;
 #[macro_use]
 extern crate derive_builder;
 
+extern crate num;
+extern crate rand;
 extern crate itertools;
 
 // only needed for torchvision
 extern crate curl;
 extern crate flate2;
+
+// serialization support
+#[macro_use]
+extern crate serde_derive;
+extern crate bincode;
+extern crate serde;
 
 
 #[macro_use]
