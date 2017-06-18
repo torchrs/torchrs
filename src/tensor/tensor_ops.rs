@@ -676,7 +676,7 @@ impl<T: Copy> Tensor<T> {
     pub fn var(&self) -> f32 {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[usize]) -> Self {
+    pub fn view(&self, dims: &[isize]) -> Self {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
@@ -1370,7 +1370,7 @@ impl TensorKind {
     pub fn var(&self) -> f32 {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[usize]) -> Self {
+    pub fn view(&self, dims: &[isize]) -> Self {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
