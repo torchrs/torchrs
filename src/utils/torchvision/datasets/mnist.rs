@@ -196,8 +196,12 @@ impl Index<usize> for MNIST {
         let img = self.data.s(idx);
         let xfrmp = self.transformed.as_ptr();
         let mut xfrm = unsafe { &mut *xfrmp };
-
-        xfrm[idx] = (img.copy().into(), self.labels[idx] as i64);
+        let img = if let Some(ref transform) = self.transform {
+            transform(&img.into())
+        } else {
+            img.copy().into()
+        };
+        xfrm[idx] = (img, self.labels[idx] as i64);
         &xfrm[idx]
     }
 }
