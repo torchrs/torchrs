@@ -30,5 +30,4 @@ pub fn load<P>(path: P) -> io::Result<Vec<TensorKind>>
     let mut de = Deserializer::new(&encoded[..]);
     let decoded = Deserialize::deserialize(&mut de).expect("decode failed");
     Ok(decoded)
-
 }
