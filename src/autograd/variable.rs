@@ -245,13 +245,13 @@ pub struct VariableImpl<T> {
 }
 
 impl<T: Copy> VariableImpl<T> {
-    fn new(data_: Tensor<T>, args: &VariableArgs) -> Self {
+    fn new(data: Tensor<T>, args: &VariableArgs) -> Self {
         let creator = match args.creator {
             Some(ref f) => Some(f.clone()),
             None => None,
         };
         VariableImpl {
-            data: data_,
+            data: data,
             grad_fn: creator,
             grad: None,
             dirty: false,
@@ -260,7 +260,7 @@ impl<T: Copy> VariableImpl<T> {
         }
     }
     fn grad(&mut self) -> &mut Tensor<T> {
-        let mut output;
+        let output;
         // XXX assert requires_grad
         match self.grad {
             Some(ref mut t) => t,
@@ -273,6 +273,13 @@ impl<T: Copy> VariableImpl<T> {
     }
     fn _call_hooks(&self, grad_output: &Tensor<T>) {
         unimplemented!()
+    }
+    pub fn copy_refs(&mut self, rhs: &Self) {
+        self.grad_fn = rhs.grad_fn.clone();
+        self.grad = rhs.grad.clone();
+        self.dirty = rhs.dirty;
+        self.volatile = rhs.volatile;
+        self.requires_grad = rhs.requires_grad;
     }
 }
 
@@ -461,9 +468,6 @@ impl<T: Copy> Variable<T> {
     }
     pub fn requires_nograd(&mut self) {
         self.access().requires_grad = false;
-    }
-    pub fn view(&self, dims: &[i32]) -> Self {
-        unimplemented!()
     }
     // Computes the gradient of current variable w.r.t. graph leaves
     pub fn backward_args(&mut self, gradient_: Option<&mut Tensor<T>>, retain_variables: bool) {
