@@ -1,12 +1,11 @@
 use std::rc::Rc;
-use std::ops::Index;
 
 #[derive(Clone)]
 pub struct Dataset<T: Clone> {
-    value: Rc<DatasetIntf<T, Output = T>>,
+    value: Rc<DatasetIntf<T>>,
 }
 impl<T: Clone> Dataset<T> {
-    pub fn new(arg: Rc<DatasetIntf<T, Output = T>>) -> Self {
+    pub fn new(arg: Rc<DatasetIntf<T>>) -> Self {
         Dataset { value: arg }
     }
     pub fn len(&self) -> usize {
@@ -17,7 +16,8 @@ impl<T: Clone> Dataset<T> {
     }
 }
 
-pub trait DatasetIntf<T>: Index<usize, Output = T> {
+pub trait DatasetIntf<T> {
     fn len(&self) -> usize;
     fn iter(&self) -> Box<Iterator<Item = T>>;
+    fn index(&mut self, idx: usize) -> T;
 }

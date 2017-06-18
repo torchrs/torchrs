@@ -1,7 +1,6 @@
 #![allow(deprecated)]
-use std::ops::Index;
 use std::path::PathBuf;
-use std::{io, fs, slice, cell};
+use std::{io, fs, slice};
 use curl::easy::Easy;
 use memmap::{Mmap, Protection};
 use flate2::{Flush, Decompress};
@@ -121,19 +120,18 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
         length = data[1] as usize;
     }
     let data = unsafe { fp.as_slice() };
-    let mut labels: Vec<i64> = Vec::with_capacity(length);
+    let mut labels: Vec<u8> = Vec::with_capacity(length);
     for i in 0..length {
-        labels.push(data[8 + i] as i64)
+        labels.push(data[8 + i])
     }
-    Ok(torch::long_tensor(labels))
+    Ok(torch::byte_tensor(labels))
 }
 
 pub struct MNIST {
     pub root: String,
     pub train: bool,
     pub data: Tensor<u8>,
-    pub labels: Tensor<i64>,
-    pub transformed: cell::RefCell<Vec<(TensorKind, i64)>>,
+    pub labels: Tensor<u8>,
     pub transform: Option<Xfrm>,
 }
 
@@ -173,36 +171,14 @@ impl MNIST {
             torch::load(processed_path.join(TEST_FILE)).expect("torch load failed")
         };
         let (data, labels) = (v.remove(0), v.remove(0));
-        let count = data.size()[0];
-        let mut mutable: Vec<(TensorKind, i64)> = Vec::with_capacity(count);
-        for i in 0..count {
-            mutable.push((data.s(i).copy().into(), i as i64))
-        }
 
         MNIST {
             root: args.root.clone(),
             train: args.train,
             data: data.into(),
             labels: labels.into(),
-            transformed: cell::RefCell::new(mutable),
             transform: xfrm,
         }
-    }
-}
-
-impl Index<usize> for MNIST {
-    type Output = Sample;
-    fn index(&self, idx: usize) -> &Self::Output {
-        let img = self.data.s(idx);
-        let xfrmp = self.transformed.as_ptr();
-        let mut xfrm = unsafe { &mut *xfrmp };
-        let img = if let Some(ref transform) = self.transform {
-            transform(&img.into())
-        } else {
-            img.copy().into()
-        };
-        xfrm[idx] = (img, self.labels[idx] as i64);
-        &xfrm[idx]
     }
 }
 
@@ -212,5 +188,14 @@ impl DatasetIntf<Sample> for MNIST {
     }
     fn iter(&self) -> Box<Iterator<Item = Sample>> {
         unimplemented!();
+    }
+    fn index(&mut self, idx: usize) -> (TensorKind, i64) {
+        let img = self.data.s(idx);
+        let img = if let Some(ref transform) = self.transform {
+            transform(&img.into())
+        } else {
+            img.copy().into()
+        };
+        (img, self.labels[idx] as i64)
     }
 }
