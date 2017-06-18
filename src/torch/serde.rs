@@ -9,7 +9,7 @@ use std::io::{Write, Read, Error, ErrorKind};
 
 use tensor::TensorKind;
 
-pub fn save<P>(path: P, arg: &Vec<TensorKind>) -> io::Result<usize>
+pub fn save<P, T: Serialize>(path: P, arg: &Vec<T>) -> io::Result<usize>
     where P: AsRef<Path>
 {
     let mut buffer = File::create(path)?;
@@ -18,7 +18,7 @@ pub fn save<P>(path: P, arg: &Vec<TensorKind>) -> io::Result<usize>
     buffer.write(encoded.as_slice())
 }
 
-pub fn load<P>(path: P) -> io::Result<Vec<TensorKind>>
+pub fn load<'a, P, T: 'a + Deserialize<'a>>(path: P) -> io::Result<Vec<T>>
     where P: AsRef<Path>
 {
     let mut buffer = File::open(path)?;
