@@ -7,22 +7,21 @@ build = "build.rs"
 [dependencies]
 rutorch = { path = "rutorch" }
 modparse_derive = { path = "modparse_derive"}
-num = "^0.1.37"
+num = "^0.1"
 rand = "^0.3"
-derive_builder = "^0.4.7"
-getopts = "0.2"
+derive_builder = "^0.4"
 itertools= "0.6"
 
 # torchvision
 curl = "0.4"
 flate2 = "0.2"
+memmap = "^0.5"
 
 # examples
 clap = "2.24"
 
 # serialization support
-serde = "^1.0.8"
-serde_derive = "^1.0.8"
-rmp-serde = "^0.13.3"
-[dependencies.rmp]
+serde = "^1.0"
+serde_derive = "^1.0"
+rmp-serde = "^0.13"
 rmp= "^0.8"

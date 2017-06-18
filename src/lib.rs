@@ -13,6 +13,7 @@ extern crate itertools;
 // only needed for torchvision
 extern crate curl;
 extern crate flate2;
+extern crate memmap;
 
 // serialization support
 #[macro_use]
