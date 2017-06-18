@@ -91,6 +91,12 @@ impl TensorKind {
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
         unimplemented!()
     }
+    pub fn len(&self) -> usize {
+        unimplemented!()
+    }
+    pub fn s(&self, dim: usize) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Index<usize> for TensorKind {
@@ -452,10 +458,10 @@ impl<'a> IndexMut<&'a [isize]> for FloatTensor {
     }
 }
 
-pub fn make_vec(val: usize, count: usize) -> Vec<usize> {
+pub fn make_vec(val: usize, count: usize) -> Vec<isize> {
     let mut vec = Vec::new();
     for _ in 0..count {
-        vec.push(val)
+        vec.push(val as isize)
     }
     vec
 }
