@@ -76,7 +76,8 @@ fn download(root: &String) -> io::Result<()> {
     }
     println!("Proceeding");
 
-    let training_set = vec![read_image_file(raw_path.join("train-images-idx3-ubyte"))?,
+    let training_set =
+        vec![read_image_file(raw_path.join("train-images-idx3-ubyte"))?,
                             read_label_file(raw_path.join("train-labels-idx1-ubyte"))?];
     let test_set = vec![read_image_file(raw_path.join("t10k-images-idx3-ubyte"))?,
                         read_label_file(raw_path.join("t10k-labels-idx1-ubyte"))?];
@@ -116,7 +117,7 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     let length;
     {
         let data = unsafe { slice::from_raw_parts(fp.ptr() as *const u32, fp.len()) };
-        assert_eq!(data[0], 20549);
+        assert_eq!(data[0], 2049);
         length = data[1] as usize;
     }
     let data = unsafe { fp.as_slice() };
