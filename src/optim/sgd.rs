@@ -1,4 +1,5 @@
 use optim::*;
+use std::ops::Neg;
 use num;
 
 pub struct SGD<'a, T: Copy + 'a> {
@@ -6,8 +7,8 @@ pub struct SGD<'a, T: Copy + 'a> {
 }
 
 impl<'a, T: Copy + 'a> SGD<'a, T> {
-    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimOpts>) -> Self {
-        let mut sgd_defaults = map_opt!{"lr" => OptimOpts::Required, "momentum" => 0.0, "dampening" => 0.0,
+    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimVal>) -> Self {
+        let mut sgd_defaults = map_opt!{"lr" => OptimVal::Required, "momentum" => 0.0, "dampening" => 0.0,
                  "weight_decay"=> 0.0, "nesterov"=>false};
 
         for (ref key, ref value) in defaults {
@@ -19,7 +20,7 @@ impl<'a, T: Copy + 'a> SGD<'a, T> {
 }
 
 
-impl<'a, T : 'a + Copy + From<OptimOpts> + num::Zero + PartialEq> OptIntf<'a, T> for SGD<'a, T> {
+impl<'a, T : 'a + Copy + From<OptimVal> + num::Num + num::Float + Neg<Output=T>> OptIntf<'a, T> for SGD<'a, T> {
     fn optimizer(&mut self) -> &mut Optimizer<'a, T> {
         &mut self.optimizer
     }
@@ -30,6 +31,7 @@ impl<'a, T : 'a + Copy + From<OptimOpts> + num::Zero + PartialEq> OptIntf<'a, T>
         let momentum : T = group["momentum"].clone().into();
         let dampening : T = group["dampening"].clone().into();
         let nesterov : bool = group["nesterov"].clone().into();
+        let lr : T = group["lr"].clone().into();
 
         for p in params {
             let mut v = &mut p.v;
@@ -41,6 +43,24 @@ impl<'a, T : 'a + Copy + From<OptimOpts> + num::Zero + PartialEq> OptIntf<'a, T>
             if !weight_decay.is_zero() {
                 d_p.addt_(weight_decay, v.data());
             }
+            if !momentum.is_zero() {
+                let mut state = &mut self.optimizer.state[v.id];
+                let mut buf : Tensor<T>;
+                if !state.contains_key("momentum_buffer") {
+                    buf = d_p.copy();
+                    state.insert("momentum_buffer", buf.clone().into());
+                } else {
+                    buf = state["momentum_buffer"].clone().into();
+                    buf.mul_(momentum).addt_(T::one() - dampening,  &d_p);
+                }
+                if nesterov {
+                    d_p = d_p.addt(momentum, &buf);
+                } else {
+                    d_p = buf;
+                }
+
+            }
+            v.data().addt_(-lr, &d_p);
         }
     }
 }

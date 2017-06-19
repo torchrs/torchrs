@@ -1,73 +1,112 @@
 pub use std::collections::HashMap;
-pub use autograd::Variable;
+pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ParamIter;
-use tensor::NewSelf;
+pub use tensor::{Tensor, TensorKind, NewSelf};
+use std::cell::RefCell;
+use std::hash::Hash;
+use std::ops::{Index, IndexMut};
+
+pub struct MutMap<K, V: Default> {
+    map: HashMap<K, RefCell<V>>,
+}
+
+impl<K: Eq + Hash, V: Default> MutMap<K, V> {
+    fn new() -> Self {
+        MutMap { map: HashMap::new() }
+    }
+}
+
+impl<K: Hash + Eq, V: Default> Index<K> for MutMap<K, V> {
+    type Output = V;
+    fn index(&self, idx: K) -> &Self::Output {
+        let map = &mut self.map;
+        if !map.contains_key(&idx) {
+            map.insert(idx, RefCell::new(V::default()));
+        }
+        let cntp = map[&idx].as_ptr();
+        unsafe { &*cntp }
+    }
+}
+impl<K: Hash + Eq, V: Default> IndexMut<K> for MutMap<K, V> {
+    fn index_mut(&mut self, idx: K) -> &mut Self::Output {
+        let map = &mut self.map;
+        if !map.contains_key(&idx) {
+            map.insert(idx, RefCell::new(V::default()));
+        }
+        let cntp = map[&idx].as_ptr();
+        unsafe { &mut *cntp }
+    }
+}
 
 pub struct Optimizer<'a, T: Copy + 'a> {
     pub params: ParamIter<'a, T>,
-    pub defaults: HashMap<&'static str, OptimOpts>,
+    pub defaults: HashMap<&'static str, OptimVal>,
+    pub state: MutMap<VarId, ParamState>,
 }
+
 #[derive(Clone)]
-pub enum OptimOpts {
+pub enum OptimVal {
     Bool(bool),
     Int(i32),
     Float(f32),
+    Tensor(TensorKind),
+    Variable(VarKind),
     Required,
 }
-impl From<f32> for OptimOpts {
+impl From<f32> for OptimVal {
     fn from(input: f32) -> Self {
-        OptimOpts::Float(input)
+        OptimVal::Float(input)
     }
 }
-impl From<i32> for OptimOpts {
+impl From<i32> for OptimVal {
     fn from(input: i32) -> Self {
-        OptimOpts::Int(input)
+        OptimVal::Int(input)
     }
 }
-impl From<bool> for OptimOpts {
+impl From<bool> for OptimVal {
     fn from(input: bool) -> Self {
-        OptimOpts::Bool(input)
+        OptimVal::Bool(input)
     }
 }
-impl From<OptimOpts> for bool {
-    fn from(input: OptimOpts) -> Self {
+impl From<TensorKind> for OptimVal {
+    fn from(input: TensorKind) -> Self {
+        OptimVal::Tensor(input)
+    }
+}
+impl<T> From<Tensor<T>> for OptimVal {
+    fn from(input: Tensor<T>) -> Self {
+        OptimVal::Tensor(input.into())
+    }
+}
+impl From<OptimVal> for bool {
+    fn from(input: OptimVal) -> Self {
         match input {
-            self::OptimOpts::Bool(x) => x.clone(),
-            _ => unimplemented!()
+            self::OptimVal::Bool(x) => x.clone(),
+            _ => unimplemented!(),
         }
     }
 }
 
+impl<T> From<OptimVal> for Tensor<T> {
+    fn from(input: OptimVal) -> Self {
+        match input {
+            self::OptimVal::Tensor(x) => x.clone().into(),
+            _ => unimplemented!(),
+        }
+    }
+}
 
-impl OptimOpts {
-    pub fn intof32(&self) -> f32 {
-        use self::OptimOpts::Float;
-        match *self {
-            Float(v) => v,
-            _ => unimplemented!(),
-        }
-    }
-    pub fn intoi32(&self) -> i32 {
-        use self::OptimOpts::Int;
-        match *self {
-            Int(v) => v,
-            _ => unimplemented!(),
-        }
-    }
-    pub fn intobool(&self) -> bool {
-        use self::OptimOpts::Bool;
-        match *self {
-            Bool(v) => v,
-            _ => unimplemented!(),
-        }
-    }
+pub type ParamState = HashMap<&'static str, OptimVal>;
+pub fn param_state() -> ParamState {
+    RefCell::new(HashMap::new())
 }
 
 impl<'a, T: Copy + 'a> Optimizer<'a, T> {
-    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimOpts>) -> Self {
+    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimVal>) -> Self {
         Optimizer {
             params: params,
             defaults: defaults,
+            state: HashMap::new(),
         }
     }
 }
@@ -79,8 +118,8 @@ pub trait OptIntf<'a, T: Copy + 'a> {
         let params = opt.params.clone();
         // XXX figure out point of parameter groups
         for p in params {
-            // XXX when would this ever be None since we allocate on lookup?
             let mut opt_grad = p.v.grad();
+            // XXX where is this first allocated?
             if let Some(ref mut grad) = opt_grad.clone() {
                 if grad.is_volatile() {
                     grad.data().zero_();
