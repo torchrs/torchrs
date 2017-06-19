@@ -7,13 +7,13 @@ impl<T: Copy> Tensor<T> {
     pub fn abs(&self) -> Self {
         unimplemented!()
     }
-    pub fn abs_(self) -> Self {
+    pub fn abs_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn acos(&self) -> Self {
         unimplemented!()
     }
-    pub fn acos_(self) -> Self {
+    pub fn acos_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn add(&self, rhs: T) -> Self {
@@ -22,7 +22,7 @@ impl<T: Copy> Tensor<T> {
         inner.add(rhs, &mut *output.borrow_mut());
         Tensor { value: output }
     }
-    pub fn add_(self, rhs: T) -> Self {
+    pub fn add_(&mut self, rhs: T) -> &mut Self {
         // Scoped so that we drop the borrow before
         // returning self
         {
@@ -37,7 +37,7 @@ impl<T: Copy> Tensor<T> {
         inner.addt(val, &*rhs.inner_impl(), &mut *output.borrow_mut());
         Tensor { value: output }
     }
-    pub fn addt_(self, val: T, rhs: &Self) -> Self {
+    pub fn addt_(&mut self, val: T, rhs: &Self) -> &mut Self {
         // Scoped so that we drop the borrow before
         // returning self
         {
@@ -49,43 +49,43 @@ impl<T: Copy> Tensor<T> {
     pub fn addbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addbmm_(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addbmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addcdiv(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcdiv_(self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcdiv_(&mut self, value: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addcmul(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcmul_(self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcmul_(&mut self, value: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmm_(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addmv(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmv_(self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
+    pub fn addmv_(&mut self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addr(&self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addr_(self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> Self {
+    pub fn addr_(&mut self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn asin(&self) -> Self {
         unimplemented!()
     }
-    pub fn asin_(self) -> Self {
+    pub fn asin_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn atan(&self) -> Self {
@@ -94,25 +94,25 @@ impl<T: Copy> Tensor<T> {
     pub fn atan2(&self) -> Self {
         unimplemented!()
     }
-    pub fn atan2_(self) -> Self {
+    pub fn atan2_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn baddbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn baddbmm_(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn baddbmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn bernoulli(&self, p: T) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli_(self, p: T) -> Self {
+    pub fn bernoulli_(&mut self, p: T) -> &mut Self {
         unimplemented!()
     }
     pub fn bmm(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn byte(self) -> Self {
+    pub fn byte(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -121,10 +121,10 @@ impl<T: Copy> Tensor<T> {
     pub fn ceil(&self) -> Self {
         unimplemented!()
     }
-    pub fn ceil_(self) -> Self {
+    pub fn ceil_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn char(self) -> Self {
+    pub fn char(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
@@ -133,7 +133,7 @@ impl<T: Copy> Tensor<T> {
     pub fn clamp(&self, min: f32, max: f32) -> Self {
         unimplemented!()
     }
-    pub fn clamp_(self, min: f32, max: f32) -> Self {
+    pub fn clamp_(&mut self, min: f32, max: f32) -> &mut Self {
         unimplemented!()
     }
     pub fn contiguous(&self) -> Self {
@@ -143,22 +143,22 @@ impl<T: Copy> Tensor<T> {
     pub fn copy(&self) -> Self {
         unimplemented!()
     }
-    pub fn copy_(self, src: &Self) -> Self {
+    pub fn copy_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn copy_async_(self, src: &Self) -> Self {
+    pub fn copy_async_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn cos(&self) -> Self {
         unimplemented!()
     }
-    pub fn cos_(self) -> Self {
+    pub fn cos_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn cosh(&self) -> Self {
         unimplemented!()
     }
-    pub fn cosh_(self) -> Self {
+    pub fn cosh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn cpu(&self) -> Self {
@@ -186,14 +186,14 @@ impl<T: Copy> Tensor<T> {
 
         unimplemented!()
     }
-    pub fn div_(self, value: T) -> Self {
+    pub fn div_(&mut self, value: T) -> &mut Self {
         unimplemented!()
     }
     pub fn divt(&self, value: &Self) -> Self {
 
         unimplemented!()
     }
-    pub fn divt_(self, value: &Self) -> Self {
+    pub fn divt_(&mut self, value: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn dot(&self, other: &Self) -> Self {
@@ -217,7 +217,7 @@ impl<T: Copy> Tensor<T> {
     pub fn exp(&self) -> Self {
         unimplemented!()
     }
-    pub fn exp_(self) -> Self {
+    pub fn exp_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn expand(&self, dims: &[u32]) -> Self {
@@ -226,28 +226,28 @@ impl<T: Copy> Tensor<T> {
     pub fn expand_as(&self, tensor: &Self) -> Self {
         unimplemented!()
     }
-    pub fn fill_(self) -> Self {
+    pub fn fill_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn float(self) -> Self {
+    pub fn float(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn floor(&self) -> Self {
         unimplemented!()
     }
-    pub fn floor_(self) -> Self {
+    pub fn floor_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn fmod(&self, divisor: T) -> Self {
         unimplemented!()
     }
-    pub fn fmod_(self, divisor: T) -> Self {
+    pub fn fmod_(&mut self, divisor: T) -> &mut Self {
         unimplemented!()
     }
     pub fn frac(&self) -> Self {
         unimplemented!()
     }
-    pub fn frac_(self) -> Self {
+    pub fn frac_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn gather(&self, dim: i32, index: Tensor<i64>) {
@@ -268,22 +268,22 @@ impl<T: Copy> Tensor<T> {
     pub fn gt_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn half(self) -> Self {
+    pub fn half(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn id(&self) -> usize {
         self.value.borrow().inner() as usize
     }
-    pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
+    pub fn index_masked(&self, m: &Tensor<u8>) -> &mut Self {
         unimplemented!()
     }
-    pub fn index_add_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+    pub fn index_add_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn index_copy_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+    pub fn index_copy_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn index_fill_(self, dim: i32, index: Tensor<i64>, val: f32) -> Self {
+    pub fn index_fill_(&mut self, dim: i32, index: Tensor<i64>, val: f32) -> &mut Self {
         unimplemented!()
     }
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
@@ -295,7 +295,7 @@ impl<T: Copy> Tensor<T> {
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
         unimplemented!()
     }
-    pub fn int(self) -> Self {
+    pub fn int(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn is_cuda(&self) -> bool {
@@ -328,31 +328,31 @@ impl<T: Copy> Tensor<T> {
     pub fn log(&self) -> Self {
         unimplemented!()
     }
-    pub fn log_(self) -> Self {
+    pub fn log_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn log1p(&self) -> Self {
         unimplemented!()
     }
-    pub fn log1p_(self) -> Self {
+    pub fn log1p_(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
     // log_normal(...)
     //
-    pub fn long(self) -> Self {
+    pub fn long(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn lt_tensor_(self, other: &Self) -> Self {
+    pub fn lt_tensor_(&mut self, other: &Self) -> &mut Self {
         unimplemented!()
     }
     //
     // map_
     //
-    pub fn masked_copy_(self, mask: Tensor<u8>, source: &Self) -> Self {
+    pub fn masked_copy_(&mut self, mask: Tensor<u8>, source: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
@@ -388,13 +388,13 @@ impl<T: Copy> Tensor<T> {
     pub fn mul(&self, rhs: T) -> Self {
         unimplemented!()
     }
-    pub fn mul_(self, rhs: T) -> Self {
+    pub fn mul_(&mut self, rhs: T) -> &mut Self {
         unimplemented!()
     }
     pub fn mult(&self, rhs: &Self) -> Self {
         unimplemented!()
     }
-    pub fn mult_(self, rhs: &Self) -> Self {
+    pub fn mult_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -412,13 +412,13 @@ impl<T: Copy> Tensor<T> {
     pub fn ne_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn ne_tensor_(self, other: &Self) -> Self {
+    pub fn ne_tensor_(&mut self, other: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn neg(&self) -> Self {
         unimplemented!()
     }
-    pub fn neg_(self) -> Self {
+    pub fn neg_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn nonzero(&self) -> Tensor<i64> {
@@ -444,7 +444,7 @@ impl<T: Copy> Tensor<T> {
     pub fn permute(&self, dims: &[u32]) -> Self {
         unimplemented!()
     }
-    pub fn pin_memory(&mut self) -> Self {
+    pub fn pin_memory(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -459,7 +459,7 @@ impl<T: Copy> Tensor<T> {
     pub fn pow(&self) -> Self {
         unimplemented!()
     }
-    pub fn pow_(self) -> Self {
+    pub fn pow_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn prod(&self) -> f32 {
@@ -477,13 +477,13 @@ impl<T: Copy> Tensor<T> {
     pub fn reciprocal(&self) -> Self {
         unimplemented!()
     }
-    pub fn reciprocal_(self) -> Self {
+    pub fn reciprocal_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn remainder(&self, divisor: T) -> Self {
         unimplemented!()
     }
-    pub fn remainder_(self, divisor: T) -> Self {
+    pub fn remainder_(&mut self, divisor: T) -> &mut Self {
         unimplemented!()
     }
     //
@@ -496,25 +496,25 @@ impl<T: Copy> Tensor<T> {
         // NB: copies data
         unimplemented!()
     }
-    pub fn resize_(self, sizes: &[i32]) -> Self {
+    pub fn resize_(&mut self, sizes: &[i32]) -> &mut Self {
         unimplemented!()
     }
-    pub fn resize_as_(self, tensor: &Self) -> Self {
+    pub fn resize_as_(&mut self, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn round(&self) -> Self {
         unimplemented!()
     }
-    pub fn round_(self) -> Self {
+    pub fn round_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn rsqrt(&self) -> Self {
         unimplemented!()
     }
-    pub fn rsqrt_(self) -> Self {
+    pub fn rsqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn scatter_(self, dim: i32, index: Tensor<i64>, src: &Self) -> Self {
+    pub fn scatter_(&mut self, dim: i32, index: Tensor<i64>, src: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn select(&self, dim: i32, index: i32) -> Self {
@@ -526,31 +526,31 @@ impl<T: Copy> Tensor<T> {
     //
     // share_memory_
     //
-    pub fn short(self) -> Self {
+    pub fn short(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sigmoid(&self) -> Self {
         unimplemented!()
     }
-    pub fn sigmoid_(self) -> Self {
+    pub fn sigmoid_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sign(&self) -> Self {
         unimplemented!()
     }
-    pub fn sign_(self) -> Self {
+    pub fn sign_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sin(&self) -> Self {
         unimplemented!()
     }
-    pub fn sin_(self) -> Self {
+    pub fn sin_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sinh(&self) -> Self {
         unimplemented!()
     }
-    pub fn sinh_(self) -> Self {
+    pub fn sinh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn size(&self) -> Vec<usize> {
@@ -562,13 +562,13 @@ impl<T: Copy> Tensor<T> {
     pub fn sqrt(&self) -> Self {
         unimplemented!()
     }
-    pub fn sqrt_(self) -> Self {
+    pub fn sqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn squeeze(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn squeeze_(self, dim: Option<i32>) -> Self {
+    pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
         unimplemented!()
     }
     pub fn std(&self) -> f32 {
@@ -586,7 +586,7 @@ impl<T: Copy> Tensor<T> {
     pub fn sub(&self, rhs: &Self) -> Self {
         unimplemented!()
     }
-    pub fn sub_(self, rhs: &Self) -> Self {
+    pub fn sub_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn sum(&self) -> f32 {
@@ -604,19 +604,19 @@ impl<T: Copy> Tensor<T> {
     pub fn t(&self) -> Self {
         unimplemented!()
     }
-    pub fn t_(self) -> Self {
+    pub fn t_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn tan(&self) -> Self {
         unimplemented!()
     }
-    pub fn tan_(self) -> Self {
+    pub fn tan_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn tanh(&self) -> Self {
         unimplemented!()
     }
-    pub fn tanh_(self) -> Self {
+    pub fn tanh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -652,7 +652,7 @@ impl<T: Copy> Tensor<T> {
     pub fn trunc(&self) -> Self {
         unimplemented!()
     }
-    pub fn trunc_(self) -> Self {
+    pub fn trunc_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn type_as(&self, tensor: &Self) -> Self {
@@ -664,13 +664,13 @@ impl<T: Copy> Tensor<T> {
     pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
         unimplemented!()
     }
-    pub fn uniform_(self, range: (i32, i32)) -> Self {
+    pub fn uniform_(&mut self, range: (i32, i32)) -> &mut Self {
         unimplemented!()
     }
     pub fn unsqueeze(&self, dim: i32) -> Self {
         unimplemented!()
     }
-    pub fn unsqueeze_(self, dim: i32) -> Self {
+    pub fn unsqueeze_(&mut self, dim: i32) -> &mut Self {
         unimplemented!()
     }
     pub fn var(&self) -> f32 {
@@ -682,7 +682,7 @@ impl<T: Copy> Tensor<T> {
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()
     }
-    pub fn zero_(self) -> Self {
+    pub fn zero_(&mut self) -> &mut Self {
         unimplemented!()
     }
 }
@@ -697,9 +697,12 @@ macro_rules! impl_tk_dispatch_self_ref {
 }
 macro_rules! impl_tk_dispatch_self {
     ($key:ident, $var:ident, $action:expr ) => {(
-        match $key {
-            TensorKind::FloatTensor($var) => TensorKind::FloatTensor($action) ,
-            TensorKind::LongTensor($var) => TensorKind::LongTensor($action) ,
+        {
+        match * $key {
+            TensorKind::FloatTensor(ref mut $var) => {$action;} ,
+            TensorKind::LongTensor(ref mut $var) => {$action;} ,
+        };
+        $key
         }
     )}
 }
@@ -708,13 +711,13 @@ impl TensorKind {
     pub fn abs(&self) -> Self {
         impl_tk_dispatch_self_ref!(self, v, v.abs())
     }
-    pub fn abs_(self) -> Self {
+    pub fn abs_(&mut self) -> &mut Self {
         impl_tk_dispatch_self!(self, v, v.abs_())
     }
     pub fn acos(&self) -> Self {
         impl_tk_dispatch_self_ref!(self, v, v.acos())
     }
-    pub fn acos_(self) -> Self {
+    pub fn acos_(&mut self) -> &mut Self {
         impl_tk_dispatch_self!(self, v, v.acos_())
     }
     pub fn add(&self, rhs: &NumKind) -> Self {
@@ -723,11 +726,16 @@ impl TensorKind {
             TensorKind::LongTensor(ref t) => TensorKind::LongTensor(t.add(rhs.intoi64())),
         }
     }
-    pub fn add_(self, rhs: &NumKind) -> Self {
-        match self {
-            TensorKind::FloatTensor(t) => TensorKind::FloatTensor(t.add(rhs.intof32())),
-            TensorKind::LongTensor(t) => TensorKind::LongTensor(t.add(rhs.intoi64())),
-        }
+    pub fn add_(&mut self, rhs: &NumKind) -> &mut Self {
+        match *self {
+            TensorKind::FloatTensor(ref t) => {
+                t.add(rhs.intof32());
+            }
+            TensorKind::LongTensor(ref t) => {
+                t.add(rhs.intoi64());
+            }
+        };
+        self
     }
     pub fn addt(&self, val: &NumKind, rhs: &Self) -> Self {
         use self::TensorKind::{FloatTensor, LongTensor};
@@ -738,52 +746,77 @@ impl TensorKind {
             _ => unimplemented!(),
         }
     }
-    pub fn addt_(self, val: &NumKind, rhs: &Self) -> Self {
-        match self {
-            TensorKind::FloatTensor(t) => TensorKind::FloatTensor(t.add(val.intof32())),
-            TensorKind::LongTensor(t) => TensorKind::LongTensor(t.add(val.intoi64())),
-        }
+    pub fn addt_(&mut self, val: &NumKind, rhs: &Self) -> &mut Self {
+        match *self {
+            TensorKind::FloatTensor(ref mut t) => {
+                t.add_(val.intof32());
+            }
+            TensorKind::LongTensor(ref mut t) => {
+                t.add_(val.intoi64());
+            }
+        };
+        self
     }
     pub fn addbmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addbmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addbmm_(&mut self,
+                   beta: &NumKind,
+                   alpha: &NumKind,
+                   tensor1: &Self,
+                   tensor2: &Self)
+                   -> &mut Self {
         unimplemented!()
     }
     pub fn addcdiv(&self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcdiv_(self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcdiv_(&mut self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addcmul(&self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcmul_(self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcmul_(&mut self, value: &NumKind, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addmm_(&mut self,
+                  beta: &NumKind,
+                  alpha: &NumKind,
+                  tensor1: &Self,
+                  tensor2: &Self)
+                  -> &mut Self {
         unimplemented!()
     }
     pub fn addmv(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, vec: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmv_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, vec: &Self) -> Self {
+    pub fn addmv_(&mut self,
+                  beta: &NumKind,
+                  alpha: &NumKind,
+                  tensor1: &Self,
+                  vec: &Self)
+                  -> &mut Self {
         unimplemented!()
     }
     pub fn addr(&self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addr_(self, beta: &NumKind, alpha: &NumKind, vec1: &Self, vec2: &Self) -> Self {
+    pub fn addr_(&mut self,
+                 beta: &NumKind,
+                 alpha: &NumKind,
+                 vec1: &Self,
+                 vec2: &Self)
+                 -> &mut Self {
         unimplemented!()
     }
     pub fn asin(&self) -> Self {
         unimplemented!()
     }
-    pub fn asin_(self) -> Self {
+    pub fn asin_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn atan(&self) -> Self {
@@ -792,25 +825,30 @@ impl TensorKind {
     pub fn atan2(&self) -> Self {
         unimplemented!()
     }
-    pub fn atan2_(self) -> Self {
+    pub fn atan2_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn baddbmm(&self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn baddbmm_(self, beta: &NumKind, alpha: &NumKind, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn baddbmm_(&mut self,
+                    beta: &NumKind,
+                    alpha: &NumKind,
+                    tensor1: &Self,
+                    tensor2: &Self)
+                    -> &mut Self {
         unimplemented!()
     }
     pub fn bernoulli(&self, p: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli_(self, p: &NumKind) -> Self {
+    pub fn bernoulli_(&mut self, p: &NumKind) -> &mut Self {
         unimplemented!()
     }
     pub fn bmm(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn byte(self) -> Self {
+    pub fn byte(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -819,10 +857,10 @@ impl TensorKind {
     pub fn ceil(&self) -> Self {
         unimplemented!()
     }
-    pub fn ceil_(self) -> Self {
+    pub fn ceil_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn char(self) -> Self {
+    pub fn char(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
@@ -831,7 +869,7 @@ impl TensorKind {
     pub fn clamp(&self, min: f32, max: f32) -> Self {
         unimplemented!()
     }
-    pub fn clamp_(self, min: f32, max: f32) -> Self {
+    pub fn clamp_(&mut self, min: f32, max: f32) -> &mut Self {
         unimplemented!()
     }
     pub fn contiguous(&self) -> Self {
@@ -841,22 +879,22 @@ impl TensorKind {
     pub fn copy(&self) -> Self {
         unimplemented!()
     }
-    pub fn copy_(self, src: &Self) -> Self {
+    pub fn copy_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn copy_async_(self, src: &Self) -> Self {
+    pub fn copy_async_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn cos(&self) -> Self {
         unimplemented!()
     }
-    pub fn cos_(self) -> Self {
+    pub fn cos_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn cosh(&self) -> Self {
         unimplemented!()
     }
-    pub fn cosh_(self) -> Self {
+    pub fn cosh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn cpu(&self) -> Self {
@@ -883,14 +921,14 @@ impl TensorKind {
     pub fn div(&self, value: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn div_(self, value: &NumKind) -> Self {
+    pub fn div_(&mut self, value: &NumKind) -> &mut Self {
         unimplemented!()
     }
     pub fn divt(&self, value: &Self) -> Self {
 
         unimplemented!()
     }
-    pub fn divt_(self, value: &Self) -> Self {
+    pub fn divt_(&mut self, value: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn dot(&self, other: &Self) -> Self {
@@ -914,7 +952,7 @@ impl TensorKind {
     pub fn exp(&self) -> Self {
         unimplemented!()
     }
-    pub fn exp_(self) -> Self {
+    pub fn exp_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn expand(&self, dims: &[u32]) -> Self {
@@ -923,28 +961,28 @@ impl TensorKind {
     pub fn expand_as(&self, tensor: &Self) -> Self {
         unimplemented!()
     }
-    pub fn fill_(self) -> Self {
+    pub fn fill_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn float(self) -> Self {
+    pub fn float(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn floor(&self) -> Self {
         unimplemented!()
     }
-    pub fn floor_(self) -> Self {
+    pub fn floor_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn fmod(&self, divisor: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn fmod_(self, divisor: &NumKind) -> Self {
+    pub fn fmod_(&mut self, divisor: &NumKind) -> &mut Self {
         unimplemented!()
     }
     pub fn frac(&self) -> Self {
         unimplemented!()
     }
-    pub fn frac_(self) -> Self {
+    pub fn frac_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn gather(&self, dim: i32, index: Tensor<i64>) {
@@ -965,7 +1003,7 @@ impl TensorKind {
     pub fn gt_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn half(self) -> Self {
+    pub fn half(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn id(&self) -> usize {
@@ -977,19 +1015,19 @@ impl TensorKind {
     pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
         unimplemented!()
     }
-    pub fn index_add_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+    pub fn index_add_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn index_copy_(self, dim: i32, index: Tensor<i64>, tensor: &Self) -> Self {
+    pub fn index_copy_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn index_fill_(self, dim: i32, index: Tensor<i64>, val: f32) -> Self {
+    pub fn index_fill_(&mut self, dim: i32, index: Tensor<i64>, val: f32) -> &mut Self {
         unimplemented!()
     }
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
         unimplemented!()
     }
-    pub fn int(self) -> Self {
+    pub fn int(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn is_cuda(&self) -> bool {
@@ -1022,31 +1060,31 @@ impl TensorKind {
     pub fn log(&self) -> Self {
         unimplemented!()
     }
-    pub fn log_(self) -> Self {
+    pub fn log_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn log1p(&self) -> Self {
         unimplemented!()
     }
-    pub fn log1p_(self) -> Self {
+    pub fn log1p_(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
     // log_normal(...)
     //
-    pub fn long(self) -> Self {
+    pub fn long(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn lt_tensor_(self, other: &Self) -> Self {
+    pub fn lt_tensor_(&mut self, other: &Self) -> &mut Self {
         unimplemented!()
     }
     //
     // map_
     //
-    pub fn masked_copy_(self, mask: Tensor<u8>, source: &Self) -> Self {
+    pub fn masked_copy_(&mut self, mask: Tensor<u8>, source: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
@@ -1082,13 +1120,13 @@ impl TensorKind {
     pub fn mul(&self, rhs: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn mul_(self, rhs: &NumKind) -> Self {
+    pub fn mul_(&mut self, rhs: &NumKind) -> &mut Self {
         unimplemented!()
     }
     pub fn mult(&self, rhs: &Self) -> Self {
         unimplemented!()
     }
-    pub fn mult_(self, rhs: &Self) -> Self {
+    pub fn mult_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -1106,13 +1144,13 @@ impl TensorKind {
     pub fn ne_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn ne_tensor_(self, other: &Self) -> Self {
+    pub fn ne_tensor_(&mut self, other: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn neg(&self) -> Self {
         unimplemented!()
     }
-    pub fn neg_(self) -> Self {
+    pub fn neg_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn nonzero(&self) -> Tensor<i64> {
@@ -1138,7 +1176,7 @@ impl TensorKind {
     pub fn permute(&self, dims: &[u32]) -> Self {
         unimplemented!()
     }
-    pub fn pin_memory(&mut self) -> Self {
+    pub fn pin_memory(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -1153,7 +1191,7 @@ impl TensorKind {
     pub fn pow(&self) -> Self {
         unimplemented!()
     }
-    pub fn pow_(self) -> Self {
+    pub fn pow_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn prod(&self) -> f32 {
@@ -1171,13 +1209,13 @@ impl TensorKind {
     pub fn reciprocal(&self) -> Self {
         unimplemented!()
     }
-    pub fn reciprocal_(self) -> Self {
+    pub fn reciprocal_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn remainder(&self, divisor: &NumKind) -> Self {
         unimplemented!()
     }
-    pub fn remainder_(self, divisor: &NumKind) -> Self {
+    pub fn remainder_(&mut self, divisor: &NumKind) -> &mut Self {
         unimplemented!()
     }
     //
@@ -1190,25 +1228,25 @@ impl TensorKind {
         // NB: copies data
         unimplemented!()
     }
-    pub fn resize_(self, sizes: &[i32]) -> Self {
+    pub fn resize_(&mut self, sizes: &[i32]) -> &mut Self {
         unimplemented!()
     }
-    pub fn resize_as_(self, tensor: &Self) -> Self {
+    pub fn resize_as_(&mut self, tensor: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn round(&self) -> Self {
         unimplemented!()
     }
-    pub fn round_(self) -> Self {
+    pub fn round_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn rsqrt(&self) -> Self {
         unimplemented!()
     }
-    pub fn rsqrt_(self) -> Self {
+    pub fn rsqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn scatter_(self, dim: i32, index: Tensor<i64>, src: &Self) -> Self {
+    pub fn scatter_(&mut self, dim: i32, index: Tensor<i64>, src: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn select(&self, dim: i32, index: i32) -> Self {
@@ -1220,31 +1258,31 @@ impl TensorKind {
     //
     // share_memory_
     //
-    pub fn short(self) -> Self {
+    pub fn short(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sigmoid(&self) -> Self {
         unimplemented!()
     }
-    pub fn sigmoid_(self) -> Self {
+    pub fn sigmoid_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sign(&self) -> Self {
         unimplemented!()
     }
-    pub fn sign_(self) -> Self {
+    pub fn sign_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sin(&self) -> Self {
         unimplemented!()
     }
-    pub fn sin_(self) -> Self {
+    pub fn sin_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn sinh(&self) -> Self {
         unimplemented!()
     }
-    pub fn sinh_(self) -> Self {
+    pub fn sinh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn size(&self) -> Vec<usize> {
@@ -1256,13 +1294,13 @@ impl TensorKind {
     pub fn sqrt(&self) -> Self {
         unimplemented!()
     }
-    pub fn sqrt_(self) -> Self {
+    pub fn sqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn squeeze(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn squeeze_(self, dim: Option<i32>) -> Self {
+    pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
         unimplemented!()
     }
     pub fn std(&self) -> f32 {
@@ -1280,7 +1318,7 @@ impl TensorKind {
     pub fn sub(&self, rhs: &Self) -> Self {
         unimplemented!()
     }
-    pub fn sub_(self, rhs: &Self) -> Self {
+    pub fn sub_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn sum(&self) -> f32 {
@@ -1298,19 +1336,19 @@ impl TensorKind {
     pub fn t(&self) -> Self {
         unimplemented!()
     }
-    pub fn t_(self) -> Self {
+    pub fn t_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn tan(&self) -> Self {
         unimplemented!()
     }
-    pub fn tan_(self) -> Self {
+    pub fn tan_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn tanh(&self) -> Self {
         unimplemented!()
     }
-    pub fn tanh_(self) -> Self {
+    pub fn tanh_(&mut self) -> &mut Self {
         unimplemented!()
     }
     //
@@ -1346,7 +1384,7 @@ impl TensorKind {
     pub fn trunc(&self) -> Self {
         unimplemented!()
     }
-    pub fn trunc_(self) -> Self {
+    pub fn trunc_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn type_as(&self, tensor: &Self) -> Self {
@@ -1358,13 +1396,13 @@ impl TensorKind {
     pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
         unimplemented!()
     }
-    pub fn uniform_(self, range: (i32, i32)) -> Self {
+    pub fn uniform_(&mut self, range: (i32, i32)) -> &mut Self {
         unimplemented!()
     }
     pub fn unsqueeze(&self, dim: i32) -> Self {
         unimplemented!()
     }
-    pub fn unsqueeze_(self, dim: i32) -> Self {
+    pub fn unsqueeze_(&mut self, dim: i32) -> &mut Self {
         unimplemented!()
     }
     pub fn var(&self) -> f32 {
@@ -1376,7 +1414,7 @@ impl TensorKind {
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()
     }
-    pub fn zero_(self) -> Self {
+    pub fn zero_(&mut self) -> &mut Self {
         unimplemented!()
     }
 }

@@ -134,7 +134,7 @@ pub mod ExecutionEngine {
                 // in order to avoid an extra clone since
                 // creation of the Option and subsequent
                 // assignment moves the grad_tensor
-                let grad_tensor = grad_tensor.addt_(&1.into(), &d_prev_func);
+                grad_tensor.addt_(&1.into(), &d_prev_func);
                 prev_grad[output_nr] = Some(grad_tensor);
             } else {
                 grad_tensor.addt_(&1.into(), &d_prev_func);

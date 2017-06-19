@@ -31,22 +31,20 @@ trait Dropout: Noise + FuncIntf {
                        input: &mut TensorKindList,
                        args: &DropoutArgs)
                        -> TensorKindList {
-        let output = if args.inplace {
+        let mut output = if args.inplace {
             self.mark_dirty(input);
             input[0].clone()
         } else {
             input[0].copy()
         };
-        let output = if args.p > 0. && args.training {
+        if args.p > 0. && args.training {
             let noise = self.make_noise(&input[0])
                 .bernoulli_(&(1. - args.p).into())
                 .div_(&(1. - args.p).into())
                 .expand_as(&input[0]);
             self.save_for_backward(&vec![noise.clone()]);
-            output.mult_(&noise)
-        } else {
-            output
-        };
+            output.mult_(&noise);
+        }
         vec![output]
     }
     fn dropout_backward(&mut self,
@@ -54,13 +52,13 @@ trait Dropout: Noise + FuncIntf {
                         args: &DropoutArgs)
                         -> OptTensorKindList {
         match grad_output_[0] {
-            None => return grad_output_.clone(),
-            Some(ref grad_output) => {
+            None => return vec![None],
+            Some(ref mut grad_output) => {
                 if args.p > 0. && args.training {
                     let noise = &self.saved_tensors()[0];
-                    vec![Some(grad_output.clone().mult_(noise))]
+                    vec![Some(grad_output.mult_(noise).clone())]
                 } else {
-                    grad_output_.clone()
+                    vec![Some(grad_output.clone())]
                 }
             }
         }

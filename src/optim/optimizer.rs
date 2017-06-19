@@ -80,10 +80,10 @@ pub trait OptIntf<'a, T: Copy + 'a> {
             let mut opt_grad = p.v.grad();
             if let Some(ref mut grad) = opt_grad.clone() {
                 if grad.is_volatile() {
-                    grad.data().clone().zero_();
+                    grad.data().zero_();
                 } else {
                     let data = grad.data();
-                    *opt_grad = Some(Variable::new(data.new(()).zero_()));
+                    *opt_grad = Some(Variable::new(data.new(()).zero_().clone()));
                 }
             }
         }

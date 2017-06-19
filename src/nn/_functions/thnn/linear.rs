@@ -8,10 +8,10 @@ impl FuncIntf for LinearF {
         self.save_for_backward(input_list);
         let (input, weight) = (input_list.remove(0), input_list.remove(0));
         let mut output = input.new([input.size()[0], weight.size()[0]]);
-        output = output.addmm_(&0.into(), &1.into(), &input, &weight.t());
+        output.addmm_(&0.into(), &1.into(), &input, &weight.t());
         if input_list.len() != 0 {
-            let bias = input_list.remove(0);
-            output = output.clone().addt_(&1.into(), &bias.expand_as(&output));
+            let bias = input_list.remove(0).expand_as(&output);
+            output.addt_(&1.into(), &bias);
         }
 
         vec![output]
