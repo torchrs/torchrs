@@ -39,16 +39,14 @@ impl NumKind {
         use self::NumKind::{Float, Double, Long};
         match *self {
             Float(v) => v,
-            Double(v) => unimplemented!(),
-            Long(v) => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
     pub fn intoi64(&self) -> i64 {
         use self::NumKind::{Float, Double, Long};
         match *self {
-            Float(v) => unimplemented!(),
-            Double(v) => unimplemented!(),
             Long(v) => v,
+            _ => unimplemented!(),
         }
     }
 }
