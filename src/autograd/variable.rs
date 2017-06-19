@@ -237,7 +237,7 @@ pub struct VariableImpl<T> {
     pub data: Tensor<T>,
     // AKA Creator Id
     grad_fn: Option<Function>,
-    grad: Option<Tensor<T>>,
+    grad: Option<Variable<T>>,
     // version_counter etc ...
     dirty: bool,
     volatile: bool,
@@ -259,17 +259,8 @@ impl<T: Copy> VariableImpl<T> {
             requires_grad: args.requires_grad,
         }
     }
-    fn grad(&mut self) -> &mut Tensor<T> {
-        let output;
-        // XXX assert requires_grad
-        match self.grad {
-            Some(ref mut t) => t,
-            None => {
-                output = self.data.new(()).zero_();
-                self.grad = Some(output);
-                self.grad()
-            }
-        }
+    fn grad(&mut self) -> &mut Option<Variable<T>> {
+        &mut self.grad
     }
     fn _call_hooks(&self, grad_output: &Tensor<T>) {
         unimplemented!()
@@ -454,6 +445,9 @@ impl<T: Copy> Variable<T> {
             None => None,
         }
     }
+    pub fn grad(&mut self) -> &mut Option<Variable<T>> {
+        self.access().grad()
+    }
     pub fn data(&mut self) -> &mut Tensor<T> {
         &mut self.access().data
     }
@@ -497,7 +491,7 @@ impl<T: Copy> Variable<T> {
         inner._call_hooks(grad_output);
         // in place operations consume their input
         // grad returns a borrowed reference
-        inner.grad().clone().add_(grad_output[0]);
+        inner.grad().clone().unwrap().add_(grad_output[0]);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)
