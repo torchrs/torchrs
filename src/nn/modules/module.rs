@@ -53,37 +53,49 @@ impl<'a, T> Iterator for PtrIterMut<'a, T> {
     }
 }
 
-pub struct ModIter<'a, T: 'a + Copy> {
-    pub modules: IntoIter<*mut Module<T>>,
+pub struct ParamIter<'a, T: 'a + Copy> {
+    pub modules: Vec<*mut Module<T>>,
+    pub mod_iter: IntoIter<*mut Module<T>>,
     pub iter: PtrIterMut<'a, nn::Parameter<T>>,
 }
-fn mod_accum<TMod: Copy>(module: &mut Module<TMod>, arg: &mut Vec<*mut Module<TMod>>) {
+fn mod_accum<T: Copy>(module: &mut Module<T>, arg: &mut Vec<*mut Module<T>>) {
     arg.push((module));
 }
-impl<'a, TMod: 'a + Copy> ModIter<'a, TMod> {
-    pub fn new(root: &'a mut Module<TMod>) -> Self {
+impl<'a, T: 'a + Copy> ParamIter<'a, T> {
+    pub fn new(root: &'a mut Module<T>) -> Self {
         let mut mods = Vec::new();
         root.apply_arg(&mut mods, mod_accum);
-        // XXX assert is root
-        mods.pop();
-        ModIter {
-            modules: mods.into_iter(),
+        ParamIter {
+            modules: mods.clone(),
+            mod_iter: mods.into_iter(),
             iter: root.params_iter_mut(),
         }
     }
 }
 
-impl<'a, T: Copy> Iterator for ModIter<'a, T> {
+impl<'a, T: Copy> Iterator for ParamIter<'a, T> {
     type Item = &'a mut nn::Parameter<T>;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((_, t)) = self.iter.next() {
             Some(t)
-        } else if let Some(modulep) = self.modules.next() {
+        } else if let Some(modulep) = self.mod_iter.next() {
             let mut module = unsafe { &mut *modulep as &mut Module<T> };
             self.iter = module.params_iter_mut();
             self.next()
         } else {
             None
+        }
+    }
+}
+
+impl<'a, T: Copy> Clone for ParamIter<'a, T> {
+    fn clone(&self) -> Self {
+        let mut new_mod_list = self.modules.clone();
+        let param_iter = unsafe { &mut *new_mod_list[0] }.params_iter_mut();
+        ParamIter {
+            modules: new_mod_list,
+            mod_iter: self.modules.clone().into_iter(),
+            iter: param_iter,
         }
     }
 }
@@ -125,8 +137,8 @@ impl<T: Copy> Module<T> {
     pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {
         self._buffers.insert(String::from(name), tensor.clone());
     }
-    pub fn parameters(&mut self) -> ModIter<T> {
-        ModIter::new(self)
+    pub fn parameters(&mut self) -> ParamIter<T> {
+        ParamIter::new(self)
     }
     fn _apply(&mut self, callback: fn(&mut Tensor<T>)) {
         for (_, module) in self.modules_iter_mut() {
