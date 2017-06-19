@@ -7,8 +7,6 @@ use std::path::Path;
 use std::io;
 use std::io::{Write, Read, Error, ErrorKind};
 
-use tensor::TensorKind;
-
 pub fn save<P, T: Serialize>(path: P, arg: &Vec<T>) -> io::Result<usize>
     where P: AsRef<Path>
 {
