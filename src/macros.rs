@@ -75,3 +75,31 @@ impl FuncDelegate for $name {
     }
 }
 )}
+
+
+
+#[macro_export]
+macro_rules! map(
+    { $($key:expr => $value:expr),+ } => {
+        {
+            let mut m = ::std::collections::HashMap::new();
+            $(
+                m.insert($key, $value);
+            )+
+            m
+        }
+     };
+);
+
+#[macro_export]
+macro_rules! map_opt(
+    { $($key:expr => $value:expr),+ } => {
+        {
+            let mut m = ::std::collections::HashMap::<&'static str, OptimOpts>::new();
+            $(
+                m.insert($key, $value .into());
+            )+
+            m
+        }
+     };
+);
