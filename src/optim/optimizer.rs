@@ -14,12 +14,6 @@ pub enum OptimOpts {
     Float(f32),
     Required,
 }
-impl<T: Copy> From<T> for OptimOpts {
-    #[allow(unused_variables)]
-    default fn from(input: T) -> Self {
-        unreachable!()
-    }
-}
 impl From<f32> for OptimOpts {
     fn from(input: f32) -> Self {
         OptimOpts::Float(input)
@@ -35,6 +29,15 @@ impl From<bool> for OptimOpts {
         OptimOpts::Bool(input)
     }
 }
+impl From<OptimOpts> for bool {
+    fn from(input: OptimOpts) -> Self {
+        match input {
+            self::OptimOpts::Bool(x) => x.clone(),
+            _ => unimplemented!()
+        }
+    }
+}
+
 
 impl OptimOpts {
     pub fn intof32(&self) -> f32 {
