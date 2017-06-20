@@ -5,12 +5,11 @@ use torch;
 use ::*;
 
 pub type Batch<dT, tT> = (Tensor<dT>, Tensor<tT>);
-pub type BatchLoader<idT: 'static, itT: 'static, edT: 'static, etT: 'static> =
-    DataLoader<Batch<idT, itT>, Batch<edT, etT>>;
+pub type BatchLoader<dT: 'static, tT: 'static> = DataLoader<Batch<dT, tT>>;
 
 
-pub struct DataLoader<T: Clone + 'static, R: Clone + 'static> {
-    pub dataset: Dataset<T, R>,
+pub struct DataLoader<T: Clone + 'static> {
+    pub dataset: Dataset<T>,
     batch_size: usize,
     num_workers: usize,
     pin_memory: bool,
@@ -40,8 +39,8 @@ impl Default for DataLoaderArgs {
     }
 }
 
-impl<T: Clone + 'static, R: Clone + 'static> DataLoader<T, R> {
-    pub fn new(dataset: Dataset<T, R>, args: DataLoaderArgs) -> Self {
+impl<T: Clone + 'static> DataLoader<T> {
+    pub fn new(dataset: Dataset<T>, args: DataLoaderArgs) -> Self {
         let sampler = match args.sampler {
             Some(sampler) => sampler,
             None => {
@@ -61,7 +60,7 @@ impl<T: Clone + 'static, R: Clone + 'static> DataLoader<T, R> {
             sampler: sampler,
         }
     }
-    pub fn iter(&self) -> Box<Iterator<Item = R>> {
+    pub fn iter(&self) -> Box<Iterator<Item = T>> {
         unimplemented!();
         //self.dataset.iter()
     }

@@ -150,7 +150,7 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done(self, xfrm: Option<Xfrm>) -> Dataset<Sample, CollatedSample> {
+    pub fn done(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample> {
         let args = self.build().unwrap();
         Dataset::new(Rc::new(MNIST::new(&args, xfrm)))
     }
@@ -183,18 +183,7 @@ impl MNIST {
             transform: xfrm,
         }
     }
-}
-
-impl DatasetIntf for MNIST {
-    type Batch = CollatedSample;
-    type Sample = Sample;
-    fn len(&self) -> usize {
-        if self.train { 60000 } else { 10000 }
-    }
-    fn iter(&self) -> Box<Iterator<Item = Self::Sample>> {
-        unimplemented!();
-    }
-    fn index(&mut self, idx: usize) -> Self::Sample {
+    fn index(&mut self, idx: usize) -> Sample {
         let img = self.data.s(idx);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into())
@@ -203,7 +192,14 @@ impl DatasetIntf for MNIST {
         };
         (img, self.labels[idx] as i64)
     }
-    fn collate(&self, sample: Vec<&Sample>) -> Self::Batch {
+}
+
+impl DatasetIntf for MNIST {
+    type Batch = CollatedSample;
+    fn len(&self) -> usize {
+        if self.train { 60000 } else { 10000 }
+    }
+    fn collate(&self, sample: Vec<usize>) -> Self::Batch {
         unimplemented!()
     }
 }
