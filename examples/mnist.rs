@@ -73,13 +73,27 @@ fn parse_args() -> NetArgs {
          value_t!(matches.value_of("momentum"), f32),
          value_t!(matches.value_of("seed"), u32),
          value_t!(matches.value_of("log-interval"), u32));
-    if let Some(b_size) = b_size {args.batch_size = b_size}
-    if let Some(tb_size) = tb_size {args.test_batch_size = tb_size}
-    if let Some(epochs) = epochs {args.epochs = epochs}
-    if let Some(lr) = lr {args.lr = lr}
-    if let Some(momentum) = momentum {args.momentum = momentum}
-    if let Some(seed) = seed {args.seed = seed}
-    if let Some(log_int) = log_int {args.log_interval = log_int}
+    if let Some(b_size) = b_size {
+        args.batch_size = b_size
+    }
+    if let Some(tb_size) = tb_size {
+        args.test_batch_size = tb_size
+    }
+    if let Some(epochs) = epochs {
+        args.epochs = epochs
+    }
+    if let Some(lr) = lr {
+        args.lr = lr
+    }
+    if let Some(momentum) = momentum {
+        args.momentum = momentum
+    }
+    if let Some(seed) = seed {
+        args.seed = seed
+    }
+    if let Some(log_int) = log_int {
+        args.log_interval = log_int
+    }
     //XXX CUDA?
     args
 }
