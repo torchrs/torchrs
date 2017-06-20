@@ -1,29 +1,29 @@
 use utils::data::{Dataset, SamplerIntf, RandomSampler, SequentialSampler, Sampler};
 use std::slice;
 use tensor::Tensor;
+use torch;
+use ::*;
 
 pub type Batch<dT, tT> = (Tensor<dT>, Tensor<tT>);
-pub type BatchLoader<dT, tT> = DataLoader<Batch<dT, tT>>;
+pub type BatchLoader<idT: 'static, itT: 'static, edT: 'static, etT: 'static> =
+    DataLoader<Batch<idT, itT>, Batch<edT, etT>>;
 
 
-pub struct DataLoader<T: Clone> {
-    pub dataset: Dataset<T>,
+pub struct DataLoader<T: Clone + 'static, R: Clone + 'static> {
+    pub dataset: Dataset<T, R>,
     batch_size: usize,
     num_workers: usize,
-    collate_fn: fn(batch: T) -> T,
     pin_memory: bool,
     drop_last: bool,
-    sampler: Sampler<T>,
+    sampler: Sampler,
 }
 
 #[derive(Builder)]
-pub struct DataLoaderArgs<T> {
+pub struct DataLoaderArgs {
     #[builder(default="1")]
     pub batch_size: usize,
     #[builder(default="0")]
     pub num_workers: usize,
-    #[builder(default="default_collate")]
-    pub collate_fn: fn(batch: T) -> T,
     #[builder(default="false")]
     pub pin_memory: bool,
     #[builder(default="false")]
@@ -31,30 +31,24 @@ pub struct DataLoaderArgs<T> {
     #[builder(default="false")]
     pub shuffle: bool,
     #[builder(default="None")]
-    pub sampler: Option<Sampler<T>>,
+    pub sampler: Option<Sampler>,
 }
 
-impl<T: Default + Clone> Default for DataLoaderArgs<T> {
+impl Default for DataLoaderArgs {
     fn default() -> Self {
         DataLoaderArgsBuilder::default().build().unwrap()
     }
 }
 
-fn default_collate<T>(batch: T) -> T
-    where T: Clone
-{
-    batch.clone()
-}
-
-impl<T: Clone + 'static> DataLoader<T> {
-    pub fn new(dataset: Dataset<T>, args: DataLoaderArgs<T>) -> Self {
+impl<T: Clone + 'static, R: Clone + 'static> DataLoader<T, R> {
+    pub fn new(dataset: Dataset<T, R>, args: DataLoaderArgs) -> Self {
         let sampler = match args.sampler {
             Some(sampler) => sampler,
             None => {
                 if args.shuffle {
-                    RandomSampler::new(dataset.clone())
+                    RandomSampler::new(dataset.len())
                 } else {
-                    SequentialSampler::new(dataset.clone())
+                    SequentialSampler::new(dataset.len())
                 }
             }
         };
@@ -62,7 +56,6 @@ impl<T: Clone + 'static> DataLoader<T> {
             dataset: dataset,
             batch_size: args.batch_size,
             num_workers: args.num_workers,
-            collate_fn: args.collate_fn,
             pin_memory: args.pin_memory,
             drop_last: args.drop_last,
             sampler: sampler,

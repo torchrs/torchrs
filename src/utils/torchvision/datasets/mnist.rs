@@ -11,6 +11,8 @@ use tensor::{Tensor, TensorKind};
 use torch;
 
 type Sample = (TensorKind, i64);
+type CollatedSample = (TensorKind, Tensor<i64>);
+
 
 static URLS: [&str; 4] = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
                           "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
@@ -109,7 +111,7 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
         }
         images.push(img)
     }
-    Ok(torch::byte_tensor(images).view(&[-1, 28, 28]))
+    Ok(torch::byte_tensor_kind(images).view(&[-1, 28, 28]))
 }
 
 fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
@@ -125,7 +127,7 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     for i in 0..length {
         labels.push(data[8 + i])
     }
-    Ok(torch::byte_tensor(labels))
+    Ok(torch::byte_tensor_kind(labels))
 }
 
 pub struct MNIST {
@@ -148,7 +150,7 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done(self, xfrm: Option<Xfrm>) -> Dataset<Sample> {
+    pub fn done(self, xfrm: Option<Xfrm>) -> Dataset<Sample, CollatedSample> {
         let args = self.build().unwrap();
         Dataset::new(Rc::new(MNIST::new(&args, xfrm)))
     }
@@ -184,13 +186,14 @@ impl MNIST {
 }
 
 impl DatasetIntf<Sample> for MNIST {
+    type CollateOutput = CollatedSample;
     fn len(&self) -> usize {
         if self.train { 60000 } else { 10000 }
     }
-    fn iter(&self) -> Box<Iterator<Item = Sample>> {
+    fn iter(&self) -> Box<Iterator<Item = CollatedSample>> {
         unimplemented!();
     }
-    fn index(&mut self, idx: usize) -> (TensorKind, i64) {
+    fn index(&mut self, idx: usize) -> Sample {
         let img = self.data.s(idx);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into())
@@ -198,5 +201,8 @@ impl DatasetIntf<Sample> for MNIST {
             img.copy().into()
         };
         (img, self.labels[idx] as i64)
+    }
+    fn collate(&self, sample: &Vec<&Sample>) -> Self::CollateOutput {
+        unimplemented!()
     }
 }
