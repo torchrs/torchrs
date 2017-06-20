@@ -185,15 +185,16 @@ impl MNIST {
     }
 }
 
-impl DatasetIntf<Sample> for MNIST {
-    type CollateOutput = CollatedSample;
+impl DatasetIntf for MNIST {
+    type Batch = CollatedSample;
+    type Sample = Sample;
     fn len(&self) -> usize {
         if self.train { 60000 } else { 10000 }
     }
-    fn iter(&self) -> Box<Iterator<Item = CollatedSample>> {
+    fn iter(&self) -> Box<Iterator<Item = Self::Sample>> {
         unimplemented!();
     }
-    fn index(&mut self, idx: usize) -> Sample {
+    fn index(&mut self, idx: usize) -> Self::Sample {
         let img = self.data.s(idx);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into())
@@ -202,7 +203,7 @@ impl DatasetIntf<Sample> for MNIST {
         };
         (img, self.labels[idx] as i64)
     }
-    fn collate(&self, sample: &Vec<&Sample>) -> Self::CollateOutput {
+    fn collate(&self, sample: Vec<&Sample>) -> Self::Batch {
         unimplemented!()
     }
 }
