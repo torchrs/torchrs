@@ -5,6 +5,7 @@ pub use tensor::{Tensor, TensorKind, NewSelf};
 use std::cell::RefCell;
 use std::hash::Hash;
 use std::ops::{Index, IndexMut};
+use std::fmt::Debug;
 
 pub struct MutMap<K, V: Default> {
     map: HashMap<K, RefCell<V>>,
@@ -16,22 +17,22 @@ impl<K: Eq + Hash, V: Default> MutMap<K, V> {
     }
 }
 
-impl<K: Hash + Eq, V: Default> Index<K> for MutMap<K, V> {
+impl<K: Hash + Eq + Clone + Debug, V: Default> Index<K> for MutMap<K, V> {
     type Output = V;
     fn index(&self, idx: K) -> &Self::Output {
-        let map = &mut self.map;
+        let map = &self.map;
         if !map.contains_key(&idx) {
-            map.insert(idx, RefCell::new(V::default()));
+            panic!("{:?} not found", idx)
         }
         let cntp = map[&idx].as_ptr();
         unsafe { &*cntp }
     }
 }
-impl<K: Hash + Eq, V: Default> IndexMut<K> for MutMap<K, V> {
+impl<K: Hash + Eq + Clone + Debug, V: Default> IndexMut<K> for MutMap<K, V> {
     fn index_mut(&mut self, idx: K) -> &mut Self::Output {
         let map = &mut self.map;
         if !map.contains_key(&idx) {
-            map.insert(idx, RefCell::new(V::default()));
+            map.insert(idx.clone(), RefCell::new(V::default()));
         }
         let cntp = map[&idx].as_ptr();
         unsafe { &mut *cntp }
@@ -97,16 +98,13 @@ impl<T> From<OptimVal> for Tensor<T> {
 }
 
 pub type ParamState = HashMap<&'static str, OptimVal>;
-pub fn param_state() -> ParamState {
-    RefCell::new(HashMap::new())
-}
 
 impl<'a, T: Copy + 'a> Optimizer<'a, T> {
     pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimVal>) -> Self {
         Optimizer {
             params: params,
             defaults: defaults,
-            state: HashMap::new(),
+            state: MutMap::new(),
         }
     }
 }
