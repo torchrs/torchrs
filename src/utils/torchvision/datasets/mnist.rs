@@ -183,7 +183,7 @@ impl MNIST {
             transform: xfrm,
         }
     }
-    fn index(&mut self, idx: usize) -> Sample {
+    fn index(&self, idx: usize) -> Sample {
         let img = self.data.s(idx);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into())
@@ -200,6 +200,12 @@ impl DatasetIntf for MNIST {
         if self.train { 60000 } else { 10000 }
     }
     fn collate(&self, sample: Vec<usize>) -> Self::Batch {
-        unimplemented!()
+        let v: Vec<Sample> = sample.into_iter().map(|i| self.index(i)).collect();
+        let labels: Vec<i64> = v.iter().map(|&(_, ref t)| *t).collect();
+        let imgs: Vec<TensorKind> = v.into_iter().map(|(d, _)| d).collect();
+        // XXX should check for case of double
+        let img_batch = torch::float_tensor_kind(imgs);
+        let label_batch = torch::long_tensor(labels);
+        (img_batch, label_batch)
     }
 }

@@ -4,6 +4,9 @@ use tensor::{Tensor, TensorKind};
 pub fn byte_tensor_kind<T>(arg: T) -> TensorKind {
     unimplemented!()
 }
+pub fn float_tensor_kind<T>(arg: T) -> TensorKind {
+    unimplemented!()
+}
 pub fn long_tensor_kind<T>(arg: T) -> TensorKind {
     unimplemented!()
 }
