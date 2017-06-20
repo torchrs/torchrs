@@ -61,7 +61,7 @@ impl<T: Clone + 'static, R: Clone + 'static> DataLoader<T, R> {
             sampler: sampler,
         }
     }
-    pub fn iter(&self) -> Box<Iterator<Item = T>> {
+    pub fn iter(&self) -> Box<Iterator<Item = R>> {
         self.dataset.iter()
     }
     pub fn len(&self) -> usize {
