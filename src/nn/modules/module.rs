@@ -6,6 +6,8 @@ use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use nn;
 
+pub type Parameters<T> = Box<Iterator<Item = ModRefMut<'static, nn::Parameter<T>>>>;
+
 pub trait ModuleStruct {
     fn init_module(self) -> Self;
 }
@@ -88,36 +90,38 @@ impl<'a, T> Iterator for PtrIterMut<'a, T> {
     }
 }
 
-pub struct ParamIter<T: Copy> {
+pub struct ParamIter<'a, T: Copy + 'a> {
     pub modules: Vec<*mut Module<T>>,
     pub mod_iter: IntoIter<*mut Module<T>>,
     pub iter: Box<Iterator<Item = *mut nn::Parameter<T>>>,
+    phantom: PhantomData<&'a T>,
 }
 fn mod_accum<T: Copy>(module: &mut Module<T>, arg: &mut Vec<*mut Module<T>>) {
     arg.push((module));
 }
-impl<'a, T: 'static + Copy> ParamIter<T> {
-    pub fn new(root: &'a mut Module<T>) -> Self {
+impl<'a, T: 'static + Copy> ParamIter<'a, T> {
+    pub fn new(root: &mut Module<T>) -> Self {
         let mut mods = Vec::new();
         root.apply_arg(&mut mods, mod_accum);
         let mut module = unsafe { &mut *mods[0] as &mut Module<T> };
         ParamIter {
             modules: mods.clone(),
             mod_iter: mods.into_iter(),
-            iter: Box::new(module._params.iter_mut().map(|(s, d)| *d)),
+            iter: Box::new(module._params.iter_mut().map(|(_, d)| *d)),
+            phantom: PhantomData,
         }
     }
 }
 
 
-impl<T: Copy + 'static> Iterator for ParamIter<T> {
-    type Item = ModRefMut<'static, nn::Parameter<T>>;
+impl<'a, T: Copy + 'static> Iterator for ParamIter<'a, T> {
+    type Item = ModRefMut<'a, nn::Parameter<T>>;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(t) = self.iter.next() {
             Some(ModRefMut::new(t))
         } else if let Some(modulep) = self.mod_iter.next() {
             let mut module = unsafe { &mut *modulep as &mut Module<T> };
-            self.iter = Box::new(module._params.iter_mut().map(|(s, d)| *d));
+            self.iter = Box::new(module._params.iter_mut().map(|(_, d)| *d));
             self.next()
         } else {
             None
@@ -125,17 +129,18 @@ impl<T: Copy + 'static> Iterator for ParamIter<T> {
     }
 }
 
-impl<T: Copy + 'static> Clone for Box<ParamIter<T>> {
+impl<'a, T: Copy + 'static> Clone for Box<ParamIter<'a, T>> {
     fn clone(&self) -> Self {
         let mut new_mod_list = self.modules.clone();
         let param_iter = Box::new(unsafe { &mut *new_mod_list[0] }
                                       ._params
                                       .iter_mut()
-                                      .map(|(s, d)| *d));
+                                      .map(|(_, d)| *d));
         Box::new(ParamIter {
                      modules: new_mod_list,
                      mod_iter: self.modules.clone().into_iter(),
                      iter: param_iter,
+                     phantom: PhantomData,
                  })
     }
 }
@@ -160,8 +165,7 @@ impl<T: Copy> Module<T> {
 
     }
     pub fn add_param(&mut self, name: &str, param: &mut nn::Parameter<T>) {
-        let s = String::from(name);
-        self._params.insert(s, param.as_mut_ptr());
+        self._params.insert(name.into(), param.as_mut_ptr());
 
     }
     pub fn modules_iter_mut(&mut self) -> PtrIterMut<Module<T>> {
@@ -176,11 +180,8 @@ impl<T: Copy> Module<T> {
     pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {
         self._buffers.insert(String::from(name), tensor.clone());
     }
-    pub fn parameters(&mut self) -> Box<Iterator<Item = ModRefMut<'static, nn::Parameter<T>>>> {
+    pub fn parameters(&mut self) -> Parameters<T> {
         Box::new(ParamIter::new(self))
-    }
-    pub fn as_ref_mut(&mut self) -> ModRefMut<'static, Module<T>> {
-        ModRefMut::new(self as *mut Module<T>)
     }
     fn _apply(&mut self, callback: fn(&mut Tensor<T>)) {
         for (_, module) in self.modules_iter_mut() {
@@ -226,7 +227,6 @@ impl<T: Copy> Module<T> {
         for (_, module) in self.modules_iter_mut() {
             module.train(mode)
         }
-
     }
 }
 
