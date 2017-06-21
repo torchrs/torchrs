@@ -149,7 +149,7 @@ fn train<'a>(model: &mut Net<f32>,
              args: &NetArgs,
              train_loader: &D::BatchLoader<f32, i64>,
              epoch: u32,
-             optimizer: &mut optim::OptIntf<Net<f32>, f32>) {
+             optimizer: &mut optim::OptIntf<f32>) {
     model.train();
     for (batch_idx, (ref data, ref target)) in train_loader.iter().enumerate() {
         let (mut data, target) = if args.cuda {
@@ -157,11 +157,11 @@ fn train<'a>(model: &mut Net<f32>,
         } else {
             (Variable::new(data.clone()), Variable::new(target.clone()))
         };
-        optimizer.zero_grad();
+        optimizer.zero_grad(model.parameters());
         let output = model.f(&mut data);
         let mut loss = F::nll_loss(&output, &target, &F::NLLLossArgs::default());
         loss.backward();
-        optimizer.step();
+        optimizer.step(model.parameters());
         if batch_idx % args.log_interval == 0 {
             println!("Train Epoch: {} [{}/{} ({:.0}%)]\tLoss: {:.6}",
                      epoch,
@@ -214,13 +214,7 @@ fn main() {
                            D::DataLoaderArgs::default());
     let args = parse_args();
     let mut model = Net::new();
-    let refmut: ModRefMut<Net<f32>>;
-    {
-        let p = &mut model as *mut Net<f32>;
-        refmut = p.into();
-    }
-    let mut optimizer = optim::SGD::new(refmut,
-                                        map_opt!{"lr" => args.lr, "momentum" => args.momentum});
+    let mut optimizer = optim::SGD::new(map_opt!{"lr" => args.lr, "momentum" => args.momentum});
     for epoch in 1..args.epochs + 1 {
         train(&mut model, &args, &train_loader, epoch, &mut optimizer);
         test(&mut model, &args, &test_loader);
