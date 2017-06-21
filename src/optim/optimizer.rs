@@ -1,11 +1,13 @@
 pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
-pub use nn::ParamIter;
+pub use nn::{ParamIter, ModIntf};
 pub use tensor::{Tensor, TensorKind, NewSelf};
 use std::cell::RefCell;
 use std::hash::Hash;
 use std::ops::{Index, IndexMut};
 use std::fmt::Debug;
+use nn::{Parameter, ModRefMut};
+use std::marker::PhantomData;
 
 pub struct MutMap<K, V: Default> {
     map: HashMap<K, RefCell<V>>,
@@ -39,10 +41,11 @@ impl<K: Hash + Eq + Clone + Debug, V: Default> IndexMut<K> for MutMap<K, V> {
     }
 }
 
-pub struct Optimizer<'a, T: Copy + 'a> {
-    pub params: ParamIter<'a, T>,
+pub struct Optimizer<'a, M: 'a, T: 'a + Copy> {
+    pub model: ModRefMut<'a, M>,
     pub defaults: HashMap<&'static str, OptimVal>,
     pub state: MutMap<VarId, ParamState>,
+    phantom: PhantomData<&'a T>,
 }
 
 #[derive(Clone)]
@@ -87,6 +90,14 @@ impl From<OptimVal> for bool {
         }
     }
 }
+impl From<OptimVal> for f32 {
+    fn from(input: OptimVal) -> Self {
+        match input {
+            self::OptimVal::Float(x) => x.clone(),
+            _ => unimplemented!(),
+        }
+    }
+}
 
 impl<T> From<OptimVal> for Tensor<T> {
     fn from(input: OptimVal) -> Self {
@@ -99,23 +110,23 @@ impl<T> From<OptimVal> for Tensor<T> {
 
 pub type ParamState = HashMap<&'static str, OptimVal>;
 
-impl<'a, T: Copy + 'a> Optimizer<'a, T> {
-    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimVal>) -> Self {
+impl<'a, T: 'static + Copy, M: 'a + ModIntf<T>> Optimizer<'a, M, T> {
+    pub fn new(model: ModRefMut<'a, M>, defaults: HashMap<&'static str, OptimVal>) -> Self {
         Optimizer {
-            params: params,
+            model: model,
             defaults: defaults,
             state: MutMap::new(),
+            phantom: PhantomData,
         }
     }
 }
 
-pub trait OptIntf<'a, T: Copy + 'a> {
-    fn optimizer(&mut self) -> &mut Optimizer<'a, T>;
+pub trait OptIntf<'a, M: ModIntf<T> + 'a, T: Copy + 'static> {
+    fn optimizer(&mut self) -> &mut Optimizer<'a, M, T>;
     fn zero_grad(&mut self) {
-        let opt = self.optimizer();
-        let params = opt.params.clone();
+        let params = self.optimizer().model.parameters();
         // XXX figure out point of parameter groups
-        for p in params {
+        for mut p in params {
             let mut opt_grad = p.v.grad();
             // XXX where is this first allocated?
             if let Some(ref mut grad) = opt_grad.clone() {

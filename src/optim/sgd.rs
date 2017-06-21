@@ -1,13 +1,15 @@
 use optim::*;
 use std::ops::Neg;
+use std::marker::PhantomData;
+use nn::{ModRefMut, ModIntf};
 use num;
 
-pub struct SGD<'a, T: Copy + 'a> {
-    optimizer: Optimizer<'a, T>,
+pub struct SGD<'a, M: 'a, T: Copy + 'static> {
+    optimizer: Optimizer<'a, M, T>,
 }
 
-impl<'a, T: Copy + 'a> SGD<'a, T> {
-    pub fn new(params: ParamIter<'a, T>, defaults: HashMap<&'static str, OptimVal>) -> Self {
+impl<'a, T: Copy, M: ModIntf<T> + 'a> SGD<'a, M, T> {
+    pub fn new(model: ModRefMut<'a, M>, defaults: HashMap<&'static str, OptimVal>) -> Self {
         let mut sgd_defaults = map_opt!{"lr" => OptimVal::Required, "momentum" => 0.0, "dampening" => 0.0,
                  "weight_decay"=> 0.0, "nesterov"=>false};
 
@@ -15,25 +17,24 @@ impl<'a, T: Copy + 'a> SGD<'a, T> {
             let cloned = value.clone();
             sgd_defaults.insert(key, cloned);
         }
-        SGD { optimizer: Optimizer::new(params, sgd_defaults) }
+        SGD { optimizer: Optimizer::new(model, sgd_defaults) }
     }
 }
 
-
-impl<'a, T : 'a + Copy + From<OptimVal> + num::Num + num::Float + Neg<Output=T>> OptIntf<'a, T> for SGD<'a, T> {
-    fn optimizer(&mut self) -> &mut Optimizer<'a, T> {
+impl<'a, T : Copy + From<OptimVal> + num::Num + num::Float + Neg<Output=T>, M: ModIntf<T> + 'a> OptIntf<'a, M, T> for SGD<'a, M, T> {
+    fn optimizer(&mut self) -> &mut Optimizer<'a, M, T> {
         &mut self.optimizer
     }
     fn step(&mut self) {
         let group = &self.optimizer.defaults;
-        let params = self.optimizer.params.clone();
+        let params = (*self.optimizer.model).parameters();
         let weight_decay : T = group["weight_decay"].clone().into();
         let momentum : T = group["momentum"].clone().into();
         let dampening : T = group["dampening"].clone().into();
         let nesterov : bool = group["nesterov"].clone().into();
         let lr : T = group["lr"].clone().into();
 
-        for p in params {
+        for mut p in params {
             let mut v = &mut p.v;
             let mut d_p = if let Some(ref mut grad) = *v.grad() {
                 grad.data().clone() as ::tensor::Tensor<T>
