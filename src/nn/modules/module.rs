@@ -188,12 +188,10 @@ impl<T: Copy> Module<T> {
             module._apply(callback)
         }
         for (_, param) in self.params_iter_mut() {
-            param.apply(callback)
-            /*
-			if let Some(g) = p._grad {
-					callback(g.data)
-			}
-			*/
+            param.apply(callback);
+            if let &mut Some(ref mut g) = param.v.grad() {
+                g.apply(callback)
+            }
             /* see also _buffers */
         }
     }
