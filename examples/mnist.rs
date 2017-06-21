@@ -12,8 +12,9 @@ extern crate clap;
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::tensor::Tensor;
 use torchrs::optim;
+use torchrs::optim::OptimVal;
 use torchrs::nn;
-use torchrs::nn::{ModuleStruct, ModIntf, ModDelegate, Module};
+use torchrs::nn::{ModuleStruct, ModIntf, ModDelegate, Module, ModRefMut};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
 use torchrs::utils::torchvision::{datasets, transforms};
@@ -65,14 +66,14 @@ fn parse_args() -> NetArgs {
         .arg(Arg::with_name("seed").takes_value(true))
         .arg(Arg::with_name("log-interval").takes_value(true))
         .get_matches();
-    let (b_size, tb_size, epochs, lr, seed, momentum, log_int) =
-        (value_t!(matches.value_of("batch-size"), usize),
-         value_t!(matches.value_of("test-batch-size"), usize),
-         value_t!(matches.value_of("epochs"), u32),
-         value_t!(matches.value_of("lr"), f32),
-         value_t!(matches.value_of("momentum"), f32),
-         value_t!(matches.value_of("seed"), u32),
-         value_t!(matches.value_of("log-interval"), u32));
+    let (b_size, tb_size, epochs, lr, momentum, seed, log_int) =
+        (value_t!(matches.value_of("batch-size"), usize).ok(),
+         value_t!(matches.value_of("test-batch-size"), usize).ok(),
+         value_t!(matches.value_of("epochs"), u32).ok(),
+         value_t!(matches.value_of("lr"), f32).ok(),
+         value_t!(matches.value_of("momentum"), f32).ok(),
+         value_t!(matches.value_of("seed"), usize).ok(),
+         value_t!(matches.value_of("log-interval"), usize).ok());
     if let Some(b_size) = b_size {
         args.batch_size = b_size
     }
@@ -127,8 +128,8 @@ impl_mod_delegate!(Net);
 // idiomatic to Rust method chaining.
 
 // a) as a near verbatim implementation of the python version
-impl ModIntf<f32> for Net<f32> {
-    fn forward(&mut self, args: &mut Variable<f32>) -> Variable<f32> {
+impl<T: Copy + Default + 'static> ModIntf<T> for Net<T> {
+    fn forward(&mut self, args: &mut Variable<T>) -> Variable<T> {
         let pool_val = F::MaxPool2dArgs::default();
         let mut dropout_val = F::DropoutArgs::default();
         dropout_val.training = self.delegate.training;
@@ -144,11 +145,11 @@ impl ModIntf<f32> for Net<f32> {
     }
 }
 
-fn train(model: &mut Net<f32>,
-         args: &NetArgs,
-         train_loader: &D::BatchLoader<f32, i64>,
-         epoch: u32,
-         optimizer: &mut optim::OptIntf) {
+fn train<'a>(model: &mut Net<f32>,
+             args: &NetArgs,
+             train_loader: &D::BatchLoader<f32, i64>,
+             epoch: u32,
+             optimizer: &mut optim::OptIntf<Net<f32>, f32>) {
     model.train();
     for (batch_idx, (ref data, ref target)) in train_loader.iter().enumerate() {
         let (mut data, target) = if args.cuda {
@@ -205,15 +206,21 @@ fn main() {
     // no data loaders yet so demonstrate with Vec placeholder
 
     let train_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::build("../data").done(),
+        D::DataLoader::new(datasets::MNIST::<f32>::build("../data").done(None),
                            D::DataLoaderArgs::default());
+
     let test_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::build("../data").done(),
+        D::DataLoader::new(datasets::MNIST::<f32>::build("../data").done(None),
                            D::DataLoaderArgs::default());
     let args = parse_args();
-    let mut optimizer = optim::SGD::new();
-
     let mut model = Net::new();
+    let refmut: ModRefMut<Net<f32>>;
+    {
+        let p = &mut model as *mut Net<f32>;
+        refmut = p.into();
+    }
+    let mut optimizer = optim::SGD::new(refmut,
+                                        map_opt!{"lr" => args.lr, "momentum" => args.momentum});
     for epoch in 1..args.epochs + 1 {
         train(&mut model, &args, &train_loader, epoch, &mut optimizer);
         test(&mut model, &args, &test_loader);
