@@ -1,18 +1,18 @@
-use std::marker::PhantomData;
-use utils::data::Dataset;
-use std::slice;
 use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Sampler {
     value: Rc<SamplerIntf>,
+    batch_size: usize,
 }
+
 impl Sampler {
-    pub fn iter(&self) -> slice::Iter<usize> {
-        self.value.iter()
-    }
-    pub fn len(&self) -> usize {
-        self.value.len()
+    pub fn data(&self) -> Vec<Vec<usize>> {
+        self.value
+            .data()
+            .chunks(self.batch_size)
+            .map(|v| v.to_vec())
+            .collect()
     }
 }
 
@@ -22,8 +22,7 @@ fn indices(len: usize) -> Vec<usize> {
 }
 
 pub trait SamplerIntf {
-    fn iter<'a>(&self) -> slice::Iter<usize>;
-    fn len(&self) -> usize;
+    fn data(&self) -> Vec<usize>;
 }
 
 pub struct SequentialSampler {
@@ -31,18 +30,17 @@ pub struct SequentialSampler {
 }
 
 impl SequentialSampler {
-    pub fn new(len: usize) -> Sampler {
-        Sampler { value: Rc::new(SequentialSampler { indices: indices(len) }) }
+    pub fn new(len: usize, batch_size: usize) -> Sampler {
+        Sampler {
+            value: Rc::new(SequentialSampler { indices: indices(len) }),
+            batch_size: batch_size,
+        }
     }
 }
 
 impl SamplerIntf for SequentialSampler {
-    fn iter(&self) -> slice::Iter<usize> {
-        unimplemented!()
-    }
-
-    fn len(&self) -> usize {
-        unimplemented!()
+    fn data(&self) -> Vec<usize> {
+        self.indices.clone()
     }
 }
 
@@ -51,30 +49,31 @@ pub struct RandomSampler {
 }
 
 impl SamplerIntf for RandomSampler {
-    fn iter(&self) -> slice::Iter<usize> {
-        self.indices.iter()
+    fn data(&self) -> Vec<usize> {
+        self.randomize()
     }
-
-    fn len(&self) -> usize {
-        unimplemented!()
-    }
-}
-
-fn randidx(len: usize) -> usize {
-    ::rand::random::<usize>() % len
 }
 
 impl RandomSampler {
-    pub fn new(len: usize) -> Sampler {
-        let mut indices = indices(len);
+    fn randidx(len: usize) -> usize {
+        ::rand::random::<usize>() % len
+    }
+    fn randomize(&self) -> Vec<usize> {
+        let (len, mut indices) = (self.indices.len(), self.indices.clone());
         for _ in 0..len {
-            let (a, b) = (randidx(len), randidx(len));
+            let (a, b) = (Self::randidx(len), Self::randidx(len));
             let tmp = indices[a];
             indices[a] = indices[b];
             indices[b] = tmp;
         }
+        indices
+    }
 
-        Sampler { value: Rc::new(RandomSampler { indices: indices }) }
+    pub fn new(len: usize, batch_size: usize) -> Sampler {
+        Sampler {
+            value: Rc::new(RandomSampler { indices: indices(len) }),
+            batch_size: batch_size,
+        }
     }
 }
 

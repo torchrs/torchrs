@@ -9,9 +9,10 @@ use utils::data::{Dataset, DatasetIntf};
 use std::rc::Rc;
 use tensor::{Tensor, TensorKind};
 use torch;
+use std::marker::PhantomData;
 
-type Sample = (TensorKind, i64);
-type CollatedSample = (TensorKind, Tensor<i64>);
+type Sample<T> = (Tensor<T>, i64);
+type CollatedSample<T> = (Tensor<T>, Tensor<i64>);
 
 
 static URLS: [&str; 4] = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
@@ -130,12 +131,13 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     Ok(torch::byte_tensor_kind(labels))
 }
 
-pub struct MNIST {
+pub struct MNIST<T> {
     pub root: String,
     pub train: bool,
     pub data: Tensor<u8>,
     pub labels: Tensor<u8>,
     pub transform: Option<Xfrm>,
+    phantom: PhantomData<T>,
 }
 
 #[builder(pattern="owned")]
@@ -150,13 +152,13 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample> {
+    pub fn done<T>(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample<T>> {
         let args = self.build().unwrap();
         Dataset::new(Rc::new(MNIST::new(&args, xfrm)))
     }
 }
 
-impl MNIST {
+impl<T> MNIST<T> {
     pub fn build(root: &str) -> MNISTArgsBuilder {
         MNISTArgsBuilder::default().root(root.into())
     }
@@ -181,30 +183,31 @@ impl MNIST {
             data: data.into(),
             labels: labels.into(),
             transform: xfrm,
+            phantom: PhantomData,
         }
     }
-    fn index(&self, idx: usize) -> Sample {
+    fn index(&self, idx: usize) -> Sample<T> {
         let img = self.data.s(idx);
         let img = if let Some(ref transform) = self.transform {
-            transform(&img.into())
+            transform(&img.into()).into()
         } else {
-            img.copy().into()
+            img.copy().cast::<T>()
         };
         (img, self.labels[idx] as i64)
     }
 }
 
-impl DatasetIntf for MNIST {
-    type Batch = CollatedSample;
+impl<T> DatasetIntf for MNIST<T> {
+    type Batch = CollatedSample<T>;
     fn len(&self) -> usize {
         if self.train { 60000 } else { 10000 }
     }
     fn collate(&self, sample: Vec<usize>) -> Self::Batch {
-        let v: Vec<Sample> = sample.into_iter().map(|i| self.index(i)).collect();
+        let v: Vec<Sample<T>> = sample.into_iter().map(|i| self.index(i)).collect();
         let labels: Vec<i64> = v.iter().map(|&(_, ref t)| *t).collect();
-        let imgs: Vec<TensorKind> = v.into_iter().map(|(d, _)| d).collect();
+        let imgs: Vec<Tensor<T>> = v.into_iter().map(|(d, _)| d).collect();
         // XXX should check for case of double
-        let img_batch = torch::float_tensor_kind(imgs);
+        let img_batch = torch::tensor(imgs);
         let label_batch = torch::long_tensor(labels);
         (img_batch, label_batch)
     }

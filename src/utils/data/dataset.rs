@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use std::marker::PhantomData;
 
 #[derive(Clone)]
 pub struct Dataset<T: Clone + 'static> {
@@ -11,6 +10,9 @@ impl<T: Clone + 'static> Dataset<T> {
     }
     pub fn len(&self) -> usize {
         self.value.len()
+    }
+    pub fn collate(&self, sample: Vec<usize>) -> T {
+        self.value.collate(sample)
     }
 }
 
