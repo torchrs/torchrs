@@ -288,7 +288,7 @@ impl<T> Tensor<T> {
     pub fn s(&self, dim: usize) -> Self {
         unimplemented!()
     }
-    pub fn cast<D>&self) -> Tensor<D> {
+    pub fn cast<D>(&self) -> Tensor<D> {
         unimplemented!()
     }
 }
