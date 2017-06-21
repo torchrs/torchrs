@@ -2,23 +2,58 @@ use std::collections::{HashMap, hash_map};
 use tensor::Tensor;
 use autograd::Variable;
 use std::vec::IntoIter;
+use std::ops::{Deref, DerefMut};
+use std::marker::PhantomData;
 use nn;
-
-// placeholder
-struct TorchBackend {}
 
 pub trait ModuleStruct {
     fn init_module(self) -> Self;
 }
+pub struct ModRefMut<'a, T: 'a + ?Sized> {
+    value: *mut T,
+    phantom: PhantomData<&'a T>,
+}
+
+impl<'a, T> ModRefMut<'a, T> {
+    pub fn new(value: *mut T) -> Self {
+        ModRefMut {
+            value: value,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a, T> From<&'a mut T> for ModRefMut<'a, T> {
+    fn from(value: &mut T) -> Self {
+        ModRefMut::new(value as *mut T)
+    }
+}
+impl<'a, T> From<*mut T> for ModRefMut<'a, T> {
+    fn from(value: *mut T) -> Self {
+        ModRefMut::new(value)
+    }
+}
+
+impl<'a, T> Deref for ModRefMut<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        unsafe { &*self.value as &T }
+    }
+}
+impl<'a, T> DerefMut for ModRefMut<'a, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.value as &mut T }
+    }
+}
+
 
 pub struct Module<T: Copy> {
     pub _name: String,
     pub training: bool,
-    _backend: TorchBackend,
-
-    _buffers: HashMap<String, Tensor<T>>,
+    //_backend: TorchBackend,
     //	_backward_hooks:
     //	_forward_hooks:
+    _buffers: HashMap<String, Tensor<T>>,
     _params: HashMap<String, *mut nn::Parameter<T>>,
     _modules: HashMap<String, *mut Module<T>>,
 }
@@ -53,34 +88,36 @@ impl<'a, T> Iterator for PtrIterMut<'a, T> {
     }
 }
 
-pub struct ParamIter<'a, T: 'a + Copy> {
+pub struct ParamIter<T: Copy> {
     pub modules: Vec<*mut Module<T>>,
     pub mod_iter: IntoIter<*mut Module<T>>,
-    pub iter: PtrIterMut<'a, nn::Parameter<T>>,
+    pub iter: Box<Iterator<Item = *mut nn::Parameter<T>>>,
 }
 fn mod_accum<T: Copy>(module: &mut Module<T>, arg: &mut Vec<*mut Module<T>>) {
     arg.push((module));
 }
-impl<'a, T: 'a + Copy> ParamIter<'a, T> {
+impl<'a, T: 'static + Copy> ParamIter<T> {
     pub fn new(root: &'a mut Module<T>) -> Self {
         let mut mods = Vec::new();
         root.apply_arg(&mut mods, mod_accum);
+        let mut module = unsafe { &mut *mods[0] as &mut Module<T> };
         ParamIter {
             modules: mods.clone(),
             mod_iter: mods.into_iter(),
-            iter: root.params_iter_mut(),
+            iter: Box::new(module._params.iter_mut().map(|(s, d)| *d)),
         }
     }
 }
 
-impl<'a, T: Copy> Iterator for ParamIter<'a, T> {
-    type Item = &'a mut nn::Parameter<T>;
+
+impl<T: Copy + 'static> Iterator for ParamIter<T> {
+    type Item = ModRefMut<'static, nn::Parameter<T>>;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some((_, t)) = self.iter.next() {
-            Some(t)
+        if let Some(t) = self.iter.next() {
+            Some(ModRefMut::new(t))
         } else if let Some(modulep) = self.mod_iter.next() {
             let mut module = unsafe { &mut *modulep as &mut Module<T> };
-            self.iter = module.params_iter_mut();
+            self.iter = Box::new(module._params.iter_mut().map(|(s, d)| *d));
             self.next()
         } else {
             None
@@ -88,15 +125,18 @@ impl<'a, T: Copy> Iterator for ParamIter<'a, T> {
     }
 }
 
-impl<'a, T: Copy> Clone for ParamIter<'a, T> {
+impl<T: Copy + 'static> Clone for Box<ParamIter<T>> {
     fn clone(&self) -> Self {
         let mut new_mod_list = self.modules.clone();
-        let param_iter = unsafe { &mut *new_mod_list[0] }.params_iter_mut();
-        ParamIter {
-            modules: new_mod_list,
-            mod_iter: self.modules.clone().into_iter(),
-            iter: param_iter,
-        }
+        let param_iter = Box::new(unsafe { &mut *new_mod_list[0] }
+                                      ._params
+                                      .iter_mut()
+                                      .map(|(s, d)| *d));
+        Box::new(ParamIter {
+                     modules: new_mod_list,
+                     mod_iter: self.modules.clone().into_iter(),
+                     iter: param_iter,
+                 })
     }
 }
 
@@ -104,7 +144,6 @@ impl<T: Copy> Module<T> {
     pub fn new() -> Module<T> {
         Module {
             _name: String::from(""),
-            _backend: TorchBackend {},
             _buffers: HashMap::new(),
             _params: HashMap::new(),
             _modules: HashMap::new(),
@@ -137,8 +176,11 @@ impl<T: Copy> Module<T> {
     pub fn register_buffer(&mut self, name: &str, tensor: &mut Tensor<T>) {
         self._buffers.insert(String::from(name), tensor.clone());
     }
-    pub fn parameters(&mut self) -> ParamIter<T> {
-        ParamIter::new(self)
+    pub fn parameters(&mut self) -> Box<Iterator<Item = ModRefMut<'static, nn::Parameter<T>>>> {
+        Box::new(ParamIter::new(self))
+    }
+    pub fn as_ref_mut(&mut self) -> ModRefMut<'static, Module<T>> {
+        ModRefMut::new(self as *mut Module<T>)
     }
     fn _apply(&mut self, callback: fn(&mut Tensor<T>)) {
         for (_, module) in self.modules_iter_mut() {
@@ -211,6 +253,9 @@ pub trait ModIntf<T: Copy>: ModDelegate<T> {
     }
     fn eval(&mut self) {
         self.delegate().train(false)
+    }
+    fn parameters(&mut self) -> Box<Iterator<Item = ModRefMut<'static, nn::Parameter<T>>>> {
+        self.delegate().parameters()
     }
 }
 
