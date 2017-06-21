@@ -6,8 +6,10 @@ use std::cell::RefCell;
 use std::hash::Hash;
 use std::ops::{Index, IndexMut};
 use std::fmt::Debug;
-use nn::{Parameter, ModRefMut};
+use nn::{Parameter, Parameters};
 use std::marker::PhantomData;
+use std::ops::Neg;
+use num;
 
 pub struct MutMap<K, V: Default> {
     map: HashMap<K, RefCell<V>>,
@@ -41,11 +43,9 @@ impl<K: Hash + Eq + Clone + Debug, V: Default> IndexMut<K> for MutMap<K, V> {
     }
 }
 
-pub struct Optimizer<'a, M: 'a, T: 'a + Copy> {
-    pub model: ModRefMut<'a, M>,
+pub struct Optimizer {
     pub defaults: HashMap<&'static str, OptimVal>,
     pub state: MutMap<VarId, ParamState>,
-    phantom: PhantomData<&'a T>,
 }
 
 #[derive(Clone)]
@@ -110,21 +110,19 @@ impl<T> From<OptimVal> for Tensor<T> {
 
 pub type ParamState = HashMap<&'static str, OptimVal>;
 
-impl<'a, T: 'static + Copy, M: 'a + ModIntf<T>> Optimizer<'a, M, T> {
-    pub fn new(model: ModRefMut<'a, M>, defaults: HashMap<&'static str, OptimVal>) -> Self {
+impl Optimizer {
+    pub fn new(defaults: HashMap<&'static str, OptimVal>) -> Self {
         Optimizer {
-            model: model,
             defaults: defaults,
             state: MutMap::new(),
-            phantom: PhantomData,
         }
     }
 }
 
-pub trait OptIntf<'a, M: ModIntf<T> + 'a, T: Copy + 'static> {
-    fn optimizer(&mut self) -> &mut Optimizer<'a, M, T>;
-    fn zero_grad(&mut self) {
-        let params = self.optimizer().model.parameters();
+pub trait OptIntf<T: Copy + From<OptimVal> + num::Num + num::Float + Neg<Output = T>>
+     {
+    fn optimizer(&mut self) -> &mut Optimizer;
+    fn zero_grad(&mut self, params: Parameters<T>) {
         // XXX figure out point of parameter groups
         for mut p in params {
             let mut opt_grad = p.v.grad();
@@ -140,5 +138,5 @@ pub trait OptIntf<'a, M: ModIntf<T> + 'a, T: Copy + 'static> {
         }
     }
     /* ignore largely unused closure arg to start */
-    fn step(&mut self);
+    fn step(&mut self, model: Parameters<T>);
 }
