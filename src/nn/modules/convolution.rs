@@ -1,4 +1,4 @@
-use nn::{Module, ModuleStruct, ModDelegate, ModIntf, Parameter};
+use nn::{Module, InitModuleStruct, GetFieldStruct, ModDelegate, ModIntf, Parameter, ModRefMut};
 use autograd::Variable;
 use nn::_functions::Conv2dFArgs;
 use std::marker::PhantomData;
@@ -32,7 +32,7 @@ impl<T: Default + Copy> Conv2dArgsBuilder<T> {
 }
 
 #[derive(ModParse)]
-pub struct Conv2d<T: Default + Copy> {
+pub struct Conv2d<T: Default + Copy + 'static> {
     delegate: Module<T>,
     weight: Parameter<T>,
     bias: Option<Parameter<T>>,
@@ -40,7 +40,7 @@ pub struct Conv2d<T: Default + Copy> {
     args: Conv2dFArgs,
 }
 
-impl<T: Default + Copy> Conv2d<T> {
+impl<T: Default + Copy + 'static> Conv2d<T> {
     pub fn build(in_features: usize,
                  out_features: usize,
                  kernel_size: (usize, usize))
@@ -74,7 +74,7 @@ impl<T: Default + Copy> Conv2d<T> {
 }
 impl_mod_delegate!(Conv2d);
 
-impl<T: Default + Copy> ModIntf<T> for Conv2d<T> {
+impl<T: Default + Copy + 'static> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         let bias = if let Some(ref mut biasp) = self.bias {
             Some(&mut biasp.v)

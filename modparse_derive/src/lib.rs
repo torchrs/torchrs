@@ -82,37 +82,89 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
             if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
                 is_type(& field.ty, "Module")
             { return None;}
-        	let field_name = field.ident.as_ref().clone();
+            let field_name = field.ident.as_ref().clone();
             let is_option = is_type(&field.ty, "Option");
             get_type(&field.ty);
             match get_type(&field.ty) {
                 Kind::Parameter if is_option => 
                     Some( quote! { 
                         if let Some(ref mut param) = self. #field_name {
-                            self.delegate.add_param(stringify!(#field_name), param);
+                            self.delegate.add_param(stringify!(#field_name));
                         };
                     } ),
                 Kind::Parameter => 
-                    Some( quote! { self.delegate.add_param(stringify!(#field_name), &mut self. #field_name)  } ),
+                    Some( quote! { self.delegate.add_param(stringify!(#field_name))  } ),
                 Kind::ModIntf if is_option => 
                 Some ( quote! {
                     if let Some(ref module) = self. #field_name {
-                        self.delegate.add_module(&mut module ); 
+                        self.delegate.add_module(stringify!(#field_name)); 
                     };
                 } ),
                 Kind::ModIntf => 
-                    Some ( quote! { self.delegate.add_module(&mut self. #field_name ); } ),
+                    Some ( quote! { self.delegate.add_module(stringify!(#field_name) ); } ),
                 _ => panic!("bad match {:?}", field.ty),
-        	}
+            }
+        });
+    let param_match = variants.iter()
+        .filter_map(|field| {
+            if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
+                is_type(& field.ty, "Module")
+            { return None;}
+            let field_name = field.ident.as_ref().clone();
+            let is_option = is_type(&field.ty, "Option");
+            get_type(&field.ty);
+            match get_type(&field.ty) {
+                Kind::Parameter if is_option => 
+                    Some( quote! { 
+                        stringify!(#field_name) => {
+                        if let Some(ref mut param) = self. #field_name {
+                            Some((param as *mut Parameter<T>).into())
+                        } else { None }}, 
+                    } ),
+                Kind::Parameter => 
+                    Some( quote! { stringify!(#field_name) => Some((&mut self. #field_name as *mut Parameter<T>).into()),  } ),
+                Kind::ModIntf =>  None,
+                _ => panic!("bad match {:?}", field.ty),
+            }
+
+        });
+    let module_match =  variants.iter()
+        .filter_map(|field| {
+            if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
+                is_type(& field.ty, "Module")
+            { return None;}
+            let field_name = field.ident.as_ref().clone();
+            get_type(&field.ty);
+            match get_type(&field.ty) {
+                Kind::Parameter => None,
+                Kind::ModIntf => 
+                    Some( quote! { stringify!(#field_name) => (self. #field_name .delegate() as *mut Module<T>).into(),  } ),
+                _ => panic!("bad match {:?}", field.ty),
+            }
         });
     let foo = quote! {
-        impl #impl_generics ModuleStruct for #name  #ty_generics  #where_clause {
+        impl #impl_generics InitModuleStruct for #name  #ty_generics  #where_clause {
             fn init_module(mut self) -> Self {
-            	self.delegate._name = String::from(stringify!(#name));
+            	self.delegate()._name = stringify!(#name).into();
+                self.delegate()._owner = Some(&mut self as *mut Self);
 				#(#atmatch);* 
 				;
                 self
             }
+        }
+        impl #impl_generics GetFieldStruct<T> for #name  #ty_generics  #where_clause {
+            fn get_param(&mut self, name: &str) -> Option<ModRefMut<'static, Parameter<T>>> {
+                match name {
+                    #(#param_match)*
+                    _ => panic!("unknown Parameter {}", name),
+                }
+            } 
+            fn get_module(&mut self, name: &str) -> ModRefMut<'static, Module<T>> {
+                match name {
+                    #(#module_match)*
+                    _ => panic!("unknown Module {}", name),
+                }
+            } 
         }
     };
     println!("parse is {}", foo);

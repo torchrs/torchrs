@@ -14,7 +14,8 @@ use torchrs::tensor::Tensor;
 use torchrs::optim;
 use torchrs::optim::OptimVal;
 use torchrs::nn;
-use torchrs::nn::{ModuleStruct, ModIntf, ModDelegate, Module, ModRefMut};
+use torchrs::nn::{InitModuleStruct, GetFieldStruct, Parameter, ModIntf, ModDelegate, Module,
+                  ModRefMut};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
 use torchrs::utils::torchvision::{datasets, transforms};
@@ -50,7 +51,6 @@ impl Default for NetArgs {
 }
 
 fn parse_args() -> NetArgs {
-    unimplemented!();
     let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let matches = App::new("Torch.rs MNIST Example")
@@ -100,7 +100,7 @@ fn parse_args() -> NetArgs {
 }
 
 #[derive(ModParse)]
-struct Net<T: Default + Copy> {
+struct Net<T: Default + Copy + 'static> {
     delegate: nn::Module<T>,
     conv1: nn::Conv2d<T>,
     conv2: nn::Conv2d<T>,
@@ -108,7 +108,7 @@ struct Net<T: Default + Copy> {
     fc2: nn::Linear<T>,
 }
 
-impl<T: Default + Copy> Net<T> {
+impl<T: Default + Copy + 'static> Net<T> {
     pub fn new() -> Net<T> {
         Net {
                 delegate: nn::Module::new(),
