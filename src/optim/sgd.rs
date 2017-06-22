@@ -9,8 +9,9 @@ pub struct SGD {
 
 impl SGD {
     pub fn new(defaults: HashMap<&'static str, OptimVal>) -> Self {
-        let mut sgd_defaults = map_opt!{"lr" => OptimVal::Required, "momentum" => 0.0, "dampening" => 0.0,
-                 "weight_decay"=> 0.0, "nesterov"=>false};
+        let mut sgd_defaults = map_opt!{"lr" => OptimVal::Required,
+            "momentum" => 0.0, "dampening" => 0.0,
+            "weight_decay"=> 0.0, "nesterov"=>false};
 
         for (ref key, ref value) in defaults {
             let cloned = value.clone();
