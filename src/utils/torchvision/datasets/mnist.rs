@@ -152,13 +152,13 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done<T: Clone>(self, xfrm: Option<Xfrm>) -> DatasetIntfRef<CollatedSample<T>> {
+    pub fn done<T: Clone + 'static>(self, xfrm: Option<Xfrm>) -> DatasetIntfRef<CollatedSample<T>> {
         let args = self.build().unwrap();
         Rc::new(MNIST::new(args, xfrm))
     }
 }
 
-impl<T: 'static> MNIST<T> {
+impl<T> MNIST<T> {
     pub fn build(root: &str) -> MNISTArgsBuilder {
         MNISTArgsBuilder::default().root(root.into())
     }
