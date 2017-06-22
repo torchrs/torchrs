@@ -15,43 +15,6 @@ pub trait GetFieldStruct<T: Copy + Default> {
     fn get_module(&mut self, name: &str) -> &mut ModIntf<T>;
 }
 
-pub struct ModRefMut<'a, T: 'a + ?Sized> {
-    value: *mut T,
-    phantom: PhantomData<&'a T>,
-}
-
-impl<'a, T> ModRefMut<'a, T> {
-    pub fn new(value: *mut T) -> Self {
-        ModRefMut {
-            value: value,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<'a, T> From<&'a mut T> for ModRefMut<'a, T> {
-    fn from(value: &mut T) -> Self {
-        ModRefMut::new(value as *mut T)
-    }
-}
-impl<'a, T> From<*mut T> for ModRefMut<'a, T> {
-    fn from(value: *mut T) -> Self {
-        ModRefMut::new(value)
-    }
-}
-
-impl<'a, T> Deref for ModRefMut<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &T {
-        unsafe { &*self.value as &T }
-    }
-}
-impl<'a, T> DerefMut for ModRefMut<'a, T> {
-    fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.value as &mut T }
-    }
-}
-
 pub struct Module<T: Copy> {
     pub _name: String,
     pub training: bool,

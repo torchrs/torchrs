@@ -1,4 +1,4 @@
-use nn::{Module, InitModuleStruct, GetFieldStruct, ModDelegate, ModIntf, Parameter, ModRefMut};
+use nn::{Module, InitModuleStruct, GetFieldStruct, ModDelegate, ModIntf, Parameter};
 use nn::functional as F;
 use autograd::Variable;
 use std::marker::PhantomData;
