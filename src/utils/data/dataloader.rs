@@ -1,4 +1,4 @@
-use utils::data::{Dataset, RandomSampler, SequentialSampler, Sampler};
+use utils::data::{DatasetIntfRef, RandomSampler, SequentialSampler, Sampler};
 use std::vec;
 use tensor::Tensor;
 
@@ -7,7 +7,7 @@ pub type BatchLoader<Dt, Tt> = DataLoader<Batch<Dt, Tt>>;
 
 
 pub struct DataLoader<T: Clone> {
-    pub dataset: Dataset<T>,
+    pub dataset: DatasetIntfRef<T>,
     pub batch_size: usize,
     pub num_workers: usize,
     pub pin_memory: bool,
@@ -39,7 +39,7 @@ impl Default for DataLoaderArgs {
 }
 
 pub struct DataLoaderIter<T: Clone> {
-    dataset: Dataset<T>,
+    dataset: DatasetIntfRef<T>,
     batch_size: usize,
     chunk_iter: vec::IntoIter<Vec<usize>>,
 }
@@ -65,7 +65,7 @@ impl<T: Clone> Iterator for DataLoaderIter<T> {
 }
 
 impl<T: Clone + 'static> DataLoader<T> {
-    pub fn new(dataset: Dataset<T>, args: DataLoaderArgs) -> Self {
+    pub fn new(dataset: DatasetIntfRef<T>, args: DataLoaderArgs) -> Self {
         let sampler = match args.sampler {
             Some(sampler) => sampler,
             None => {

@@ -5,7 +5,7 @@ use curl::easy::Easy;
 use memmap::{Mmap, Protection};
 use flate2::{Flush, Decompress};
 use std::io::Write;
-use utils::data::{Dataset, DatasetIntf};
+use utils::data::{DatasetIntfRef, DatasetIntf};
 use std::rc::Rc;
 use tensor::{Tensor, TensorKind};
 use torch;
@@ -152,17 +152,17 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done<T: 'static>(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample<T>> {
+    pub fn done<T: Clone>(self, xfrm: Option<Xfrm>) -> DatasetIntfRef<CollatedSample<T>> {
         let args = self.build().unwrap();
-        Dataset::new(Rc::new(MNIST::new(&args, xfrm)))
+        Rc::new(MNIST::new(args, xfrm))
     }
 }
 
-impl<T> MNIST<T> {
+impl<T: 'static> MNIST<T> {
     pub fn build(root: &str) -> MNISTArgsBuilder {
         MNISTArgsBuilder::default().root(root.into())
     }
-    pub fn new(args: &MNISTArgs, xfrm: Option<Xfrm>) -> Self {
+    pub fn new(args: MNISTArgs, xfrm: Option<Xfrm>) -> Self {
         if args.download {
             download(&args.root).expect("download failed");
         }
