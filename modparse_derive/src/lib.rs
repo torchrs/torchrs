@@ -118,17 +118,17 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
                     Some( quote! { 
                         stringify!(#field_name) => {
                         if let Some(ref mut param) = self. #field_name {
-                            Some((param as *mut Parameter<T>).into())
+                            Some(param.v.id)
                         } else { None }}, 
                     } ),
                 Kind::Parameter => 
-                    Some( quote! { stringify!(#field_name) => Some((&mut self. #field_name as *mut Parameter<T>).into()),  } ),
+                    Some( quote! { stringify!(#field_name) => Some(self. #field_name . v.id), } ),
                 Kind::ModIntf =>  None,
                 _ => panic!("bad match {:?}", field.ty),
             }
 
         });
-    let module_match =  variants.iter()
+    let mut module_match =  variants.iter()
         .filter_map(|field| {
             if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
                 is_type(& field.ty, "Module")
@@ -138,34 +138,59 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
             match get_type(&field.ty) {
                 Kind::Parameter => None,
                 Kind::ModIntf => 
-                    Some( quote! { stringify!(#field_name) => (self. #field_name .delegate() as *mut Module<T>).into(),  } ),
+                    Some( quote! { stringify!(#field_name) => &mut self. #field_name,  } ),
                 _ => panic!("bad match {:?}", field.ty),
             }
         });
-    let foo = quote! {
+    let foo = if module_match.any(|_| true) == false {
+
+    quote! {
         impl #impl_generics InitModuleStruct for #name  #ty_generics  #where_clause {
             fn init_module(mut self) -> Self {
-            	self.delegate()._name = stringify!(#name).into();
-                self.delegate()._owner = Some(&mut self as *mut Self);
-				#(#atmatch);* 
-				;
+                self.delegate()._name = stringify!(#name).into();
+                #(#atmatch);* 
+                ;
                 self
             }
         }
         impl #impl_generics GetFieldStruct<T> for #name  #ty_generics  #where_clause {
-            fn get_param(&mut self, name: &str) -> Option<ModRefMut<'static, Parameter<T>>> {
+            fn get_param(&mut self, name: &str) -> Option<i32> {
                 match name {
                     #(#param_match)*
                     _ => panic!("unknown Parameter {}", name),
                 }
             } 
-            fn get_module(&mut self, name: &str) -> ModRefMut<'static, Module<T>> {
+            fn get_module(&mut self, name: &str) -> &mut ModIntf<T> {
+                unreachable!()
+            } 
+        }
+    }
+    } else {
+    quote! {
+        impl #impl_generics InitModuleStruct for #name  #ty_generics  #where_clause {
+            fn init_module(mut self) -> Self {
+                self.delegate()._name = stringify!(#name).into();
+                #(#atmatch);* 
+                ;
+                self
+            }
+        }
+        impl #impl_generics GetFieldStruct<T> for #name  #ty_generics  #where_clause {
+            fn get_param(&mut self, name: &str) -> Option<i32> {
+                match name {
+                    #(#param_match)*
+                    _ => panic!("unknown Parameter {}", name),
+                }
+            } 
+            fn get_module(&mut self, name: &str) -> &mut ModIntf<T> {
                 match name {
                     #(#module_match)*
-                    _ => panic!("unknown Module {}", name),
+                    _ => {panic!("not found {}", name); },
                 }
             } 
         }
+    }
+
     };
     println!("parse is {}", foo);
     foo

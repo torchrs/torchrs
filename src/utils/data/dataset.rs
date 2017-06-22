@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct Dataset<T: Clone + 'static> {
+pub struct Dataset<T: Clone> {
     value: Rc<DatasetIntf<Batch = T>>,
 }
-impl<T: Clone + 'static> Dataset<T> {
+impl<T: Clone> Dataset<T> {
     pub fn new(arg: Rc<DatasetIntf<Batch = T>>) -> Self {
         Dataset { value: arg }
     }

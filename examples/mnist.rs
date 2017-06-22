@@ -10,20 +10,16 @@ extern crate clap;
 
 
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
-use torchrs::tensor::Tensor;
 use torchrs::optim;
 use torchrs::optim::OptimVal;
 use torchrs::nn;
-use torchrs::nn::{InitModuleStruct, GetFieldStruct, Parameter, ModIntf, ModDelegate, Module,
-                  ModRefMut};
+use torchrs::nn::{InitModuleStruct, GetFieldStruct, ModIntf, ModDelegate, Module};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
 use torchrs::utils::torchvision::{datasets, transforms};
+use torchrs::tensor;
 
-use clap::{Arg, App, SubCommand};
-
-use std::env;
-
+use clap::{Arg, App};
 #[derive(Clone, Builder)]
 struct NetArgs {
     #[builder(default="64")]
@@ -51,7 +47,6 @@ impl Default for NetArgs {
 }
 
 fn parse_args() -> NetArgs {
-    let cmd_args: Vec<String> = env::args().collect();
     let mut args = NetArgs::default();
     let matches = App::new("Torch.rs MNIST Example")
         .version("0.1")
@@ -128,7 +123,7 @@ impl_mod_delegate!(Net);
 // idiomatic to Rust method chaining.
 
 // a) as a near verbatim implementation of the python version
-impl<T: Copy + Default + 'static> ModIntf<T> for Net<T> {
+impl<T: Copy + Default> ModIntf<T> for Net<T> {
     fn forward(&mut self, args: &mut Variable<T>) -> Variable<T> {
         let pool_val = F::MaxPool2dArgs::default();
         let mut dropout_val = F::DropoutArgs::default();
@@ -157,11 +152,11 @@ fn train<'a>(model: &mut Net<f32>,
         } else {
             (Variable::new(data.clone()), Variable::new(target.clone()))
         };
-        optimizer.zero_grad(model.parameters());
+        optimizer.zero_grad(model);
         let output = model.f(&mut data);
         let mut loss = F::nll_loss(&output, &target, &F::NLLLossArgs::default());
         loss.backward();
-        optimizer.step(model.parameters());
+        optimizer.step(model);
         if batch_idx % args.log_interval == 0 {
             println!("Train Epoch: {} [{}/{} ({:.0}%)]\tLoss: {:.6}",
                      epoch,

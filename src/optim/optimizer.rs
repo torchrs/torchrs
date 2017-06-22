@@ -1,12 +1,12 @@
 pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
-pub use nn::{ParamIter, ModIntf};
+pub use nn::ModIntf;
 pub use tensor::{Tensor, TensorKind, NewSelf};
 use std::cell::RefCell;
 use std::hash::Hash;
 use std::ops::{Index, IndexMut};
 use std::fmt::Debug;
-use nn::{Parameter, Parameters};
+use nn::Parameter;
 use std::marker::PhantomData;
 use std::ops::Neg;
 use num;
@@ -119,13 +119,13 @@ impl Optimizer {
     }
 }
 
-pub trait OptIntf<T: Copy + From<OptimVal> + num::Num + num::Float + Neg<Output = T>>
+pub trait OptIntf<T: Copy + Default + From<OptimVal> + num::Num + num::Float + Neg<Output = T>>
      {
     fn optimizer(&mut self) -> &mut Optimizer;
-    fn zero_grad(&mut self, params: Parameters<T>) {
+    fn zero_grad(&mut self, model: &mut ModIntf<T>) {
         // XXX figure out point of parameter groups
-        for mut p in params {
-            let mut opt_grad = p.v.grad();
+        model.apply_parameters(&mut |p| {
+            let mut opt_grad = p.grad();
             // XXX where is this first allocated?
             if let Some(ref mut grad) = opt_grad.clone() {
                 if grad.is_volatile() {
@@ -135,8 +135,8 @@ pub trait OptIntf<T: Copy + From<OptimVal> + num::Num + num::Float + Neg<Output 
                     *opt_grad = Some(Variable::new(data.new(()).zero_().clone()));
                 }
             }
-        }
+        });
     }
     /* ignore largely unused closure arg to start */
-    fn step(&mut self, model: Parameters<T>);
+    fn step(&mut self, model: &mut ModIntf<T>);
 }

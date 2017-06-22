@@ -1,5 +1,4 @@
 use optim::*;
-use nn::Parameters;
 use std::ops::Neg;
 use num;
 
@@ -21,30 +20,30 @@ impl SGD {
     }
 }
 
-impl<T: Copy + From<OptimVal> + num::Num + num::Float + Neg<Output = T>> OptIntf<T> for SGD {
+impl<T: Copy + Default + From<OptimVal> + num::Num + num::Float + Neg<Output = T>> OptIntf<T>
+    for SGD {
     fn optimizer(&mut self) -> &mut Optimizer {
         &mut self.optimizer
     }
-    fn step(&mut self, params: Parameters<T>) {
-        let group = &self.optimizer.defaults;
+    fn step(&mut self, model: &mut ModIntf<T>) {
+        let (group, states) = (&self.optimizer.defaults, &mut self.optimizer.state);
         let weight_decay: T = group["weight_decay"].clone().into();
         let momentum: T = group["momentum"].clone().into();
         let dampening: T = group["dampening"].clone().into();
         let nesterov: bool = group["nesterov"].clone().into();
         let lr: T = group["lr"].clone().into();
 
-        for mut p in params {
-            let mut v = &mut p.v;
+        model.apply_parameters(&mut |v| {
             let mut d_p = if let Some(ref mut grad) = *v.grad() {
                 grad.data().clone() as ::tensor::Tensor<T>
             } else {
-                continue;
+                return;
             };
             if !weight_decay.is_zero() {
                 d_p.addt_(weight_decay, v.data());
             }
             if !momentum.is_zero() {
-                let mut state = &mut self.optimizer.state[v.id];
+                let mut state = &mut states[v.id];
                 let mut buf: Tensor<T>;
                 if !state.contains_key("momentum_buffer") {
                     buf = d_p.copy();
@@ -61,6 +60,6 @@ impl<T: Copy + From<OptimVal> + num::Num + num::Float + Neg<Output = T>> OptIntf
 
             }
             v.data().addt_(-lr, &d_p);
-        }
+        });
     }
 }

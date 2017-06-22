@@ -152,7 +152,7 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done<T>(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample<T>> {
+    pub fn done<T: 'static>(self, xfrm: Option<Xfrm>) -> Dataset<CollatedSample<T>> {
         let args = self.build().unwrap();
         Dataset::new(Rc::new(MNIST::new(&args, xfrm)))
     }
@@ -193,7 +193,7 @@ impl<T> MNIST<T> {
         } else {
             img.copy().cast::<T>()
         };
-        (img, self.labels[idx] as i64)
+        (img, self.labels[idx].clone() as i64)
     }
 }
 

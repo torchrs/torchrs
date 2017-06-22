@@ -3,10 +3,10 @@ use std::vec;
 use tensor::Tensor;
 
 pub type Batch<Dt, Tt> = (Tensor<Dt>, Tensor<Tt>);
-pub type BatchLoader<Dt: 'static, Tt: 'static> = DataLoader<Batch<Dt, Tt>>;
+pub type BatchLoader<Dt, Tt> = DataLoader<Batch<Dt, Tt>>;
 
 
-pub struct DataLoader<T: Clone + 'static> {
+pub struct DataLoader<T: Clone> {
     pub dataset: Dataset<T>,
     pub batch_size: usize,
     pub num_workers: usize,
@@ -38,13 +38,13 @@ impl Default for DataLoaderArgs {
     }
 }
 
-pub struct DataLoaderIter<T: Clone + 'static> {
+pub struct DataLoaderIter<T: Clone> {
     dataset: Dataset<T>,
     batch_size: usize,
     chunk_iter: vec::IntoIter<Vec<usize>>,
 }
 
-impl<T: Clone + 'static> DataLoaderIter<T> {
+impl<T: Clone> DataLoaderIter<T> {
     pub fn new(loader: &DataLoader<T>) -> Self {
         DataLoaderIter {
             dataset: loader.dataset.clone(),
@@ -54,7 +54,7 @@ impl<T: Clone + 'static> DataLoaderIter<T> {
     }
 }
 
-impl<T: Clone + 'static> Iterator for DataLoaderIter<T> {
+impl<T: Clone> Iterator for DataLoaderIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         match self.chunk_iter.next() {
