@@ -2,46 +2,11 @@ pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ModIntf;
 pub use tensor::{Tensor, TensorKind, NewSelf};
-use std::cell::RefCell;
-use std::hash::Hash;
-use std::ops::{Index, IndexMut};
-use std::fmt::Debug;
 use nn::Parameter;
-use std::marker::PhantomData;
 use std::ops::Neg;
+use utils::unsafe_lib::MutMap;
 use num;
 
-pub struct MutMap<K, V: Default> {
-    map: HashMap<K, RefCell<V>>,
-}
-
-impl<K: Eq + Hash, V: Default> MutMap<K, V> {
-    fn new() -> Self {
-        MutMap { map: HashMap::new() }
-    }
-}
-
-impl<K: Hash + Eq + Clone + Debug, V: Default> Index<K> for MutMap<K, V> {
-    type Output = V;
-    fn index(&self, idx: K) -> &Self::Output {
-        let map = &self.map;
-        if !map.contains_key(&idx) {
-            panic!("{:?} not found", idx)
-        }
-        let cntp = map[&idx].as_ptr();
-        unsafe { &*cntp }
-    }
-}
-impl<K: Hash + Eq + Clone + Debug, V: Default> IndexMut<K> for MutMap<K, V> {
-    fn index_mut(&mut self, idx: K) -> &mut Self::Output {
-        let map = &mut self.map;
-        if !map.contains_key(&idx) {
-            map.insert(idx.clone(), RefCell::new(V::default()));
-        }
-        let cntp = map[&idx].as_ptr();
-        unsafe { &mut *cntp }
-    }
-}
 
 pub struct Optimizer {
     pub defaults: HashMap<&'static str, OptimVal>,

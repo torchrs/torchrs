@@ -1,51 +1,4 @@
 use std::collections::HashMap;
-use std::hash::Hash;
-use std::cell::Cell;
-use std::ops::{Index, IndexMut};
-
-// Pythonesque Counter implementation
-// XXX Move to a separate module
-static ZERO: usize = 0;
-pub struct Counter<T: Hash + Eq + Clone> {
-    pub map: HashMap<T, Cell<usize>>,
-}
-impl<T: Hash + Eq + Clone> Counter<T> {
-    pub fn new() -> Self {
-        Counter { map: HashMap::new() }
-    }
-    pub fn len(&self) -> usize {
-        self.map.len()
-    }
-    pub fn remove(&mut self, idx: &T) {
-        self.map.remove(idx);
-    }
-}
-impl<T: Hash + Eq + Clone> Index<T> for Counter<T> {
-    type Output = usize;
-    fn index(&self, idx: T) -> &Self::Output {
-        if self.map.contains_key(&idx) {
-            let cntp = self.map[&idx].as_ptr();
-            unsafe { &*cntp }
-        } else {
-            //map.insert(idx, Cell::new(0));
-            //let mut cntp = map[&idx].as_ptr();
-            //unsafe {& *cntp}
-            &ZERO
-        }
-    }
-}
-impl<T: Hash + Eq + Clone> IndexMut<T> for Counter<T> {
-    fn index_mut(&mut self, idx: T) -> &mut Self::Output {
-        if self.map.contains_key(&idx) {
-            let cntp = self.map[&idx].as_ptr();
-            unsafe { &mut *cntp }
-        } else {
-            self.map.insert(idx.clone(), Cell::new(0));
-            let cntp = self.map[&idx].as_ptr();
-            unsafe { &mut *cntp }
-        }
-    }
-}
 
 
 #[allow(non_snake_case)]
@@ -55,7 +8,7 @@ pub mod ExecutionEngine {
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
-    use super::Counter;
+    use utils::unsafe_lib::Counter;
 
     type FnRefs = RefCell<Vec<Counter<FuncId>>>;
     type FnDependencies = HashMap<FuncId, FnRefs>;
