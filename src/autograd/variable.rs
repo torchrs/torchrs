@@ -11,6 +11,8 @@ thread_local! {
 }
 pub type VarList<T> = Vec<Variable<T>>;
 pub type VarKindList = Vec<VarKind>;
+pub type OptVarKind = Option<VarKind>;
+pub type OptVarKindList = Vec<OptVarKind>;
 pub type RefVarKindList<'a> = Vec<&'a VarKind>;
 pub type VarId = i32;
 pub enum VarKind {
@@ -77,6 +79,29 @@ impl From<Variable<i64>> for VarKind {
         VarKind::LongVariable(input)
     }
 }
+impl From<VarKind> for TensorKind {
+    fn from(input: VarKind) -> Self {
+        input.clone().data().clone()
+    }
+}
+impl<T> From<VarKind> for Tensor<T> {
+    fn from(input: VarKind) -> Self {
+        let t: TensorKind = input.into();
+        t.into()
+    }
+}
+impl<T> From<Tensor<T>> for VarKind {
+    fn from(input: Tensor<T>) -> Self {
+        let t: TensorKind = input.into();
+        t.into()
+    }
+}
+impl From<TensorKind> for VarKind {
+    fn from(input: TensorKind) -> Self {
+        VarKind::new_args(input, &VariableArgs::default())
+    }
+}
+
 
 impl From<VarId> for VarKind {
     fn from(id: VarId) -> VarKind {

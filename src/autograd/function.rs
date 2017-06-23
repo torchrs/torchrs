@@ -178,9 +178,35 @@ pub trait FuncDelegate {
     fn delegate(&mut self) -> &mut Function;
 }
 
+fn ovkl2otkl(input: &mut OptVarKindList) -> OptTensorKindList {
+    input
+        .iter_mut()
+        .map(|ov| match *ov {
+                 Some(ref mut v) => Some(v.data().clone()),
+                 None => None,
+             })
+        .collect()
+}
+fn otkl2ovkl(input: &mut OptTensorKindList) -> OptVarKindList {
+    input
+        .iter()
+        .map(|ov| match ov {
+                 &Some(ref v) => Some(v.clone().into()),
+                 &None => None,
+             })
+        .collect()
+}
+
 pub trait FuncIntf: FuncDelegate {
     fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList;
     fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList;
+
+    fn backward_var(&mut self, input: &mut OptVarKindList) -> OptVarKindList {
+        let mut input = ovkl2otkl(input);
+        let mut output = self.backward(&mut input);
+        otkl2ovkl(&mut output)
+    }
+
     fn save_for_backward(&mut self, input: &TensorKindList) {
         self.delegate().save_for_backward(input)
     }

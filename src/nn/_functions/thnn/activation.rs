@@ -1,4 +1,4 @@
-use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
+use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList};
 use tensor::{TensorKindList, OptTensorKindList, NewSelf};
 
 pub struct Threshold {
@@ -47,6 +47,9 @@ impl FuncIntf for Threshold {
     }
     fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
         /* Why are they doing backprop on a volatile variable? */
+        unimplemented!()
+    }
+    fn backward_var(&mut self, input: &mut OptVarKindList) -> OptVarKindList {
         unimplemented!()
     }
 }
