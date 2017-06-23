@@ -155,9 +155,9 @@ impl Function {
         self.access().to_save = input.iter().map(|t| t.id()).collect();
     }
     pub fn _do_backward(&mut self,
-                        grad_output: &mut OptTensorKindList,
+                        grad_output: &mut OptVarKindList,
                         retain_variables: bool)
-                        -> OptTensorKindList {
+                        -> OptVarKindList {
         let inner = self.access();
         if inner.saved_variables.is_empty() {
             panic!("Trying to backward through the graph second \
@@ -165,7 +165,7 @@ impl Function {
                     specify retain_variables=True when calling backward for \
                     the first time.");
         };
-        let grad_input = inner.owner.borrow_mut().backward(grad_output);
+        let grad_input = inner.owner.borrow_mut().backward_var(grad_output);
         //inner._call_hooks(&grad_input, grad_output);
         if !retain_variables {
             inner.saved_variables.clear();

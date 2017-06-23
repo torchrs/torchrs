@@ -3,12 +3,14 @@ use std::collections::HashMap;
 
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
-    use autograd::{Variable, Function, FuncId, RootKind};
+    use autograd::{Variable, Function, FuncId, RootKind, VarKind};
     use tensor::{Tensor, TensorKind, OptTensorKindList};
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
     use utils::unsafe_lib::Counter;
+    use std::ops::Neg;
+    use num;
 
     type FnRefs = RefCell<Vec<Counter<FuncId>>>;
     type FnDependencies = HashMap<FuncId, FnRefs>;
@@ -70,10 +72,12 @@ pub mod ExecutionEngine {
         }
         return true;
     }
-    fn _add_grad(need_copy: &mut HashSet<TensorKind>,
-                 prev_grad: &mut Vec<Option<TensorKind>>,
-                 output_nr: usize,
-                 d_prev_func: &TensorKind) {
+    fn _add_grad<T>(need_copy: &mut HashSet<VarKind>,
+                    prev_grad: &mut Vec<Option<VarKind>>,
+                    output_nr: usize,
+                    d_prev_func: &VarKind)
+        where T: Copy + Default + num::Num
+    {
         // We can't match and operate on the vector at
         // the same time because that would be performing
         // a mutable borrow in the middle of an immutable
@@ -87,10 +91,10 @@ pub mod ExecutionEngine {
                 // in order to avoid an extra clone since
                 // creation of the Option and subsequent
                 // assignment moves the grad_tensor
-                grad_tensor.addt_(&1.into(), &d_prev_func);
-                prev_grad[output_nr] = Some(grad_tensor);
+                grad_tensor.addt_::<T>(T::one(), &d_prev_func);
+                prev_grad[output_nr] = Some(grad_tensor.clone());
             } else {
-                grad_tensor.addt_(&1.into(), &d_prev_func);
+                grad_tensor.addt_::<T>(T::one(), &d_prev_func);
             }
         } else {
             // We need to clone twice here as the compiler
@@ -101,20 +105,21 @@ pub mod ExecutionEngine {
         }
 
     }
-    pub fn run_backward<T: Copy>(var: &mut Variable<T>, grad: TensorKind, retain_variables: bool) {
+    pub fn run_backward<T: Copy + Default + num::Num>(var: &mut Variable<T>,
+                                                      grad: VarKind,
+                                                      retain_variables: bool) {
         let grad_fn;
         match var.grad_fn() {
             Some(v) => grad_fn = v,
             None => {
-                let mut grad_tensor = Tensor::<T>::from(grad);
-                var._do_backward(&mut grad_tensor);
+                var._do_backward(&mut grad.into());
                 return;
             }
         }
         let mut ready = VecDeque::new();
         ready.push_back((grad_fn.clone(), vec![Some(grad)]));
-        let mut need_copy: HashSet<TensorKind> = HashSet::new();
-        let mut not_ready: HashMap<FuncId, Vec<Option<TensorKind>>> = HashMap::new();
+        let mut need_copy: HashSet<VarKind> = HashSet::new();
+        let mut not_ready: HashMap<FuncId, Vec<Option<VarKind>>> = HashMap::new();
 
         let dependencies = _compute_dependencies(&grad_fn);
         while !ready.is_empty() {
@@ -131,7 +136,7 @@ pub mod ExecutionEngine {
                 };
                 let prev_func = match prev_func_ {
                     &RootKind::RootVar(ref v) => {
-                        v.clone()._do_backward(&Some(d_prev_func.clone()));
+                        v.clone()._do_backward(&mut Some(d_prev_func.clone()));
                         return;
                     }
                     &RootKind::RootFunc(ref f) => f,
@@ -141,7 +146,7 @@ pub mod ExecutionEngine {
                 if is_ready {
                     let prev_grad = if not_ready.contains_key(&prev_func.id) {
                         let mut prev_grad = not_ready[&prev_func.id].clone();
-                        _add_grad(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
+                        _add_grad::<T>(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
                         prev_grad
                     } else {
                         vec![Some(d_prev_func.clone())]
@@ -153,7 +158,7 @@ pub mod ExecutionEngine {
                     } else {
                         prev_func.output_ids().iter().map(|_| None).collect()
                     };
-                    _add_grad(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
+                    _add_grad::<T>(&mut need_copy, &mut prev_grad, output_nr, &d_prev_func);
                     not_ready.insert(prev_func.id, prev_grad.clone());
                 }
             }

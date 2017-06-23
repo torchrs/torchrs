@@ -3,6 +3,8 @@ use tensor::{Tensor, NewSelf};
 use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
+use std::hash::{Hash, Hasher};
+use num;
 use tensor::*;
 use ::*;
 
@@ -96,6 +98,7 @@ impl<T> From<Tensor<T>> for VarKind {
         t.into()
     }
 }
+
 impl From<TensorKind> for VarKind {
     fn from(input: TensorKind) -> Self {
         VarKind::new_args(input, &VariableArgs::default())
@@ -160,6 +163,24 @@ impl<'a> From<&'a VarKind> for &'a Variable<i64> {
         }
     }
 }
+
+impl PartialEq for VarKind {
+    fn eq(&self, other: &Self) -> bool {
+        use self::VarKind::{FloatVariable, LongVariable};
+        match (self, other) {
+            (&FloatVariable(ref t1), &FloatVariable(ref t2)) => t1.id() == t2.id(),
+            (&LongVariable(ref t1), &LongVariable(ref t2)) => t1.id() == t2.id(),
+            _ => false,
+        }
+    }
+}
+impl Eq for VarKind {}
+impl Hash for VarKind {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.varid().hash(state)
+    }
+}
+
 
 impl Clone for VarKind {
     fn clone(&self) -> Self {
@@ -429,6 +450,12 @@ impl VarKind {
         use self::VarKind::{FloatVariable, LongVariable};
         impl_var_mut_dispatch!(self, v, v.data_into())
     }
+    pub fn data_borrow(&self) -> TensorKind {
+        use self::VarKind::{FloatVariable, LongVariable};
+        let mut self_ = self.clone();
+        let mut self__ = &mut self_;
+        impl_var_mut_dispatch!(self__, v, v.data_into())
+    }
     pub fn tid(&mut self) -> TensorId {
         use self::VarKind::{FloatVariable, LongVariable};
         match *self {
@@ -443,15 +470,15 @@ impl VarKind {
     pub fn typed<T>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
-    pub fn _do_backward(&mut self, grad_output_: &Option<TensorKind>) {
+    pub fn _do_backward(&mut self, grad_output_: &mut Option<VarKind>) {
         use self::VarKind::{FloatVariable, LongVariable};
-        if let Some(ref grad_output) = *grad_output_ {
-            impl_var_mut_dispatch!(self, v, v._do_backward(grad_output.into()))
+        if let Some(ref mut grad_output) = *grad_output_ {
+            impl_var_mut_dispatch!(self, v, v._do_backward(&mut grad_output.clone().into()))
         }
     }
 }
 
-impl<T: Copy> Variable<T> {
+impl<T: Copy + num::Num + Default> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
     }
@@ -510,10 +537,10 @@ impl<T: Copy> Variable<T> {
         }
         ExecutionEngine::run_backward(self, gradient.clone().into(), retain_variables)
     }
-    pub fn _do_backward(&mut self, grad_output: &Tensor<T>) {
+    pub fn _do_backward(&mut self, grad_output: &mut Variable<T>) {
         let inner = self.access();
         assert_eq!(inner.dirty, false);
-        inner._call_hooks(grad_output);
+        inner._call_hooks(grad_output.data_borrow());
         // in place operations consume their input
         // grad returns a borrowed reference
         inner.grad().clone().unwrap().add_(grad_output[0]);

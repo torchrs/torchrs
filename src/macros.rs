@@ -14,7 +14,7 @@ macro_rules! impl_func_delegate {
 #[macro_export]
 macro_rules! impl_mod_delegate {
 	($name:ident) => (
-        impl<T:Default+Copy> ModDelegate<T> for $name<T> {
+        impl<T:Default+Copy + ::num::Num> ModDelegate<T> for $name<T> {
 		    fn delegate(&mut self) -> &mut Module<T> {
     		    &mut self.delegate
     		}

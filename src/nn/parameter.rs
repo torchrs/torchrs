@@ -1,10 +1,11 @@
 use autograd::variable::Variable;
+use num;
 use tensor::*;
 
 pub struct Parameter<T: Copy> {
     pub v: Variable<T>,
 }
-impl<T: Copy> Parameter<T> {
+impl<T: Copy + Default + num::Num> Parameter<T> {
     pub fn new(dims: Vec<usize>) -> Self {
         panic!("implement")
     }
