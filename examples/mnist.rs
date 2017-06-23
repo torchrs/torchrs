@@ -95,7 +95,7 @@ fn parse_args() -> NetArgs {
 }
 
 #[derive(ModParse)]
-struct Net<T: tensor::NumLimits<T> + 'static> {
+struct Net<T: tensor::NumLimits<T>> {
     delegate: nn::Module<T>,
     conv1: nn::Conv2d<T>,
     conv2: nn::Conv2d<T>,
@@ -103,7 +103,7 @@ struct Net<T: tensor::NumLimits<T> + 'static> {
     fc2: nn::Linear<T>,
 }
 
-impl<T: tensor::NumLimits<T> + 'static> Net<T> {
+impl<T: tensor::NumLimits<T>> Net<T> {
     pub fn new() -> Net<T> {
         Net {
                 delegate: nn::Module::new(),
