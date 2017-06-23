@@ -95,7 +95,7 @@ fn parse_args() -> NetArgs {
 }
 
 #[derive(ModParse)]
-struct Net<T: Default + Copy + 'static> {
+struct Net<T: tensor::NumLimits<T> + 'static> {
     delegate: nn::Module<T>,
     conv1: nn::Conv2d<T>,
     conv2: nn::Conv2d<T>,
@@ -103,7 +103,7 @@ struct Net<T: Default + Copy + 'static> {
     fc2: nn::Linear<T>,
 }
 
-impl<T: Default + Copy + 'static> Net<T> {
+impl<T: tensor::NumLimits<T> + 'static> Net<T> {
     pub fn new() -> Net<T> {
         Net {
                 delegate: nn::Module::new(),
@@ -123,7 +123,7 @@ impl_mod_delegate!(Net);
 // idiomatic to Rust method chaining.
 
 // a) as a near verbatim implementation of the python version
-impl<T: Copy + Default> ModIntf<T> for Net<T> {
+impl<T: tensor::NumLimits<T>> ModIntf<T> for Net<T> {
     fn forward(&mut self, args: &mut Variable<T>) -> Variable<T> {
         let pool_val = F::MaxPool2dArgs::default();
         let mut dropout_val = F::DropoutArgs::default();

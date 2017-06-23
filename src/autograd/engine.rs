@@ -4,12 +4,11 @@ use std::collections::HashMap;
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
     use autograd::{Variable, Function, FuncId, RootKind, VarKind};
-    use tensor::{Tensor, TensorKind, OptTensorKindList};
+    use tensor::{NumLimits, Tensor, TensorKind, OptTensorKindList};
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
     use utils::unsafe_lib::Counter;
-    use std::ops::Neg;
     use num;
 
     type FnRefs = RefCell<Vec<Counter<FuncId>>>;
@@ -76,7 +75,7 @@ pub mod ExecutionEngine {
                     prev_grad: &mut Vec<Option<VarKind>>,
                     output_nr: usize,
                     d_prev_func: &VarKind)
-        where T: Copy + Default + num::Num
+        where T: NumLimits<T>
     {
         // We can't match and operate on the vector at
         // the same time because that would be performing
@@ -105,9 +104,9 @@ pub mod ExecutionEngine {
         }
 
     }
-    pub fn run_backward<T: Copy + Default + num::Num>(var: &mut Variable<T>,
-                                                      grad: VarKind,
-                                                      retain_variables: bool) {
+    pub fn run_backward<T: NumLimits<T>>(var: &mut Variable<T>,
+                                         grad: VarKind,
+                                         retain_variables: bool) {
         let grad_fn;
         match var.grad_fn() {
             Some(v) => grad_fn = v,

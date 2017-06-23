@@ -2,10 +2,10 @@ use autograd::variable::Variable;
 use num;
 use tensor::*;
 
-pub struct Parameter<T: Copy> {
+pub struct Parameter<T: NumLimits<T>> {
     pub v: Variable<T>,
 }
-impl<T: Copy + Default + num::Num> Parameter<T> {
+impl<T: NumLimits<T>> Parameter<T> {
     pub fn new(dims: Vec<usize>) -> Self {
         panic!("implement")
     }
@@ -17,7 +17,7 @@ impl<T: Copy + Default + num::Num> Parameter<T> {
         self as *mut Parameter<T>
     }
 }
-impl<T: Copy> Default for Parameter<T> {
+impl<T: NumLimits<T>> Default for Parameter<T> {
     fn default() -> Self {
         Parameter { v: Variable::default() }
     }

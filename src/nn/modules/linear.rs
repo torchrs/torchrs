@@ -2,10 +2,11 @@ use nn::{Module, InitModuleStruct, GetFieldStruct, ModDelegate, ModIntf, Paramet
 use nn::functional as F;
 use autograd::Variable;
 use std::marker::PhantomData;
+use tensor::NumLimits;
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct LinearArgs<T: Default> {
+pub struct LinearArgs<T: ::tensor::NumLimits<T>> {
     in_features: u32,
     out_features: u32,
     #[builder(default="true")]
@@ -13,7 +14,7 @@ pub struct LinearArgs<T: Default> {
     #[builder(default="PhantomData")]
     phantom: PhantomData<T>,
 }
-impl<T: Default + Copy + ::num::Num> LinearArgsBuilder<T> {
+impl<T: ::tensor::NumLimits<T>> LinearArgsBuilder<T> {
     pub fn done(self) -> Linear<T> {
         let args = self.build().unwrap();
         Linear::new(args)
@@ -21,7 +22,7 @@ impl<T: Default + Copy + ::num::Num> LinearArgsBuilder<T> {
 }
 
 #[derive(ModParse)]
-pub struct Linear<T: Copy + Default + ::num::Num> {
+pub struct Linear<T: NumLimits<T>> {
     delegate: Module<T>,
     #[ignore]
     in_features: u32,
@@ -31,7 +32,7 @@ pub struct Linear<T: Copy + Default + ::num::Num> {
     bias: Option<Parameter<T>>,
 }
 
-impl<T: Default + Copy + ::num::Num> Linear<T> {
+impl<T: NumLimits<T>> Linear<T> {
     pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder<T> {
         LinearArgsBuilder::default()
             .in_features(in_features)
@@ -50,7 +51,7 @@ impl<T: Default + Copy + ::num::Num> Linear<T> {
 }
 impl_mod_delegate!(Linear);
 
-impl<T: Default + Copy + ::num::Num> ModIntf<T> for Linear<T> {
+impl<T: NumLimits<T>> ModIntf<T> for Linear<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         if let Some(ref mut bias) = self.bias {
             F::linear(&input, &mut self.weight.v, Some(&mut bias.v))

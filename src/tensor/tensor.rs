@@ -23,6 +23,14 @@ pub enum TensorType {
     Long,
 }
 
+pub trait NumLimits<T>
+    : Copy + Default + ::num::Num + ::std::ops::Neg<Output = T> {
+}
+impl NumLimits<f32> for f32 {}
+impl NumLimits<f64> for f64 {}
+impl NumLimits<i32> for i32 {}
+impl NumLimits<i64> for i64 {}
+
 #[derive(Hash, Serialize, Deserialize)]
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),

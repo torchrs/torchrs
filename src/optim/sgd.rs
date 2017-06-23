@@ -20,8 +20,7 @@ impl SGD {
     }
 }
 
-impl<T: Copy + Default + From<OptimVal> + num::Num + num::Float + Neg<Output = T>> OptIntf<T>
-    for SGD {
+impl<T: ::tensor::NumLimits<T> + From<OptimVal>> OptIntf<T> for SGD {
     fn optimizer(&mut self) -> &mut Optimizer {
         &mut self.optimizer
     }

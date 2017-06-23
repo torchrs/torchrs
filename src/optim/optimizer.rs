@@ -84,8 +84,7 @@ impl Optimizer {
     }
 }
 
-pub trait OptIntf<T: Copy + Default + From<OptimVal> + num::Num + num::Float + Neg<Output = T>>
-     {
+pub trait OptIntf<T: ::tensor::NumLimits<T> + From<OptimVal>> {
     fn optimizer(&mut self) -> &mut Optimizer;
     fn zero_grad(&mut self, model: &mut ModIntf<T>) {
         // XXX figure out point of parameter groups

@@ -478,7 +478,7 @@ impl VarKind {
     }
 }
 
-impl<T: Copy + num::Num + Default> Variable<T> {
+impl<T: NumLimits<T>> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
     }
@@ -558,7 +558,7 @@ impl<T: Copy + num::Num + Default> Variable<T> {
     }
 }
 
-impl<T: Copy> Index<isize> for Variable<T> {
+impl<T: NumLimits<T>> Index<isize> for Variable<T> {
     type Output = T;
 
     fn index(&self, idx: isize) -> &Self::Output {
