@@ -3,9 +3,7 @@ pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ModIntf;
 pub use tensor::{Tensor, TensorKind, NewSelf, NumLimits};
 use nn::Parameter;
-use std::ops::Neg;
 use utils::unsafe_lib::MutMap;
-use num;
 
 
 pub struct Optimizer {
