@@ -302,8 +302,8 @@ impl<T: NumLimits<T>> Index<isize> for Tensor<T> {
     }
 }
 
-type RefTI<T: NumLimits<T>> = RcMut<TensorImpl<T, Output = T>>;
-pub type TIArg<T: NumLimits<T>> = TensorImpl<T, Output = T>;
+type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
+pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits<T>>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
     fn new(&self) -> RefTI<T>;
@@ -312,24 +312,7 @@ pub trait TensorImpl<T: NumLimits<T>>: Index<Ixs, Output = T> {
     fn inner(&self) -> *mut ::std::os::raw::c_void;
 }
 
-impl TensorImpl<f32> for FloatTensor {
-    fn new(&self) -> RefTI<f32> {
-        // XXX place holder implementation
-        RcMutNew(FloatTensor::new())
-    }
-    fn add(&self, value: f32, output: &TIArg<f32>) {
-        let out = typecast!(output.inner(), THFloatTensor);
-        unsafe {
-            THFloatTensor_add(out, self.t, value);
-        };
-    }
-    fn inner(&self) -> *mut ::std::os::raw::c_void {
-        self.t as *mut ::std::os::raw::c_void
-    }
-    fn addt(&self, value: f32, rhs: &TIArg<f32>, output: &TIArg<f32>) {
-        let rhsp = typecast!(rhs.inner(), THFloatTensor);
-    }
-}
+impl_tensor_impl!(FloatTensor, f32, THFloatTensor);
 
 impl Index<isize> for FloatTensor {
     type Output = f32;
@@ -401,50 +384,6 @@ impl FloatTensor {
             *x = rand::random::<f32>()
         }
         t
-    }
-}
-
-impl<'a> Index<&'a [isize]> for FloatTensor {
-    type Output = f32;
-
-    fn index(&self, idx: &'a [isize]) -> &Self::Output {
-        let mut index: isize = 0;
-        let lastidx = max(0, idx.len() as isize - 1) as usize;
-        if idx.len() != self.dims.len() {
-            panic!("bad dimlen")
-        }
-        for i in 0..lastidx {
-            if idx[i] >= self.dims[i] {
-                panic!("bad dimlen")
-            }
-            index += idx[i] * self.dims[i]
-        }
-        if idx[lastidx] >= self.dims[lastidx] {
-            panic!("bad dimlen")
-        }
-        index += idx[lastidx];
-        &self.storage[index]
-    }
-}
-
-impl<'a> IndexMut<&'a [isize]> for FloatTensor {
-    fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
-        let mut index: isize = 0;
-        let lastidx = max(0, idx.len() as isize - 1) as usize;
-        if idx.len() != self.dims.len() {
-            panic!("bad dimlen")
-        }
-        for i in 0..lastidx {
-            if idx[i] >= self.dims[i] {
-                panic!("bad dimlen")
-            }
-            index += idx[i] * self.dims[i]
-        }
-        if idx[lastidx] >= self.dims[lastidx] {
-            panic!("bad dimlen")
-        }
-        index += idx[lastidx];
-        &mut self.storage[index]
     }
 }
 

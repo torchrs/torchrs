@@ -716,7 +716,7 @@ impl TensorKind {
         self
     }
     pub fn acos<T: NumLimits<T>>(&self) -> Self {
-        (self.into(): & Tensor<T>).acos().into()
+        (self.into(): &Tensor<T>).acos().into()
     }
     pub fn acos_<T: NumLimits<T>>(&mut self) -> &mut Self {
         (self.into(): &mut Tensor<T>).acos_();
