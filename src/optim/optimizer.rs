@@ -4,7 +4,6 @@ pub use nn::ModIntf;
 pub use tensor::{Tensor, TensorKind, NewSelf, NumLimits};
 use utils::unsafe_lib::MutMap;
 
-
 pub struct Optimizer {
     pub defaults: HashMap<&'static str, OptimVal>,
     pub state: MutMap<VarId, ParamState>,
@@ -87,7 +86,6 @@ pub trait OptIntf<T: ::tensor::NumLimits<T> + From<OptimVal>> {
         // XXX figure out point of parameter groups
         model.apply_parameters(&mut |p| {
             let mut opt_grad = p.grad();
-            // XXX where is this first allocated?
             if let Some(ref mut grad) = opt_grad.clone() {
                 if grad.is_volatile() {
                     grad.data().zero_();
