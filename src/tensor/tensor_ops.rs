@@ -867,10 +867,10 @@ impl TensorKind {
     pub fn chunk<T: NumLimits<T>>(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
         unimplemented!()
     }
-    pub fn clamp<T: NumLimits<T>>(&self, min: f32, max: f32) -> Self {
+    pub fn clamp<T: NumLimits<T>>(&self, min: T, max: T) -> Self {
         unimplemented!()
     }
-    pub fn clamp_(&mut self, min: f32, max: f32) -> &mut Self {
+    pub fn clamp_<T: NumLimits<T>>(&mut self, min: T, max: T) -> &mut Self {
         unimplemented!()
     }
     pub fn contiguous<T: NumLimits<T>>(&self) -> Self {
@@ -944,7 +944,7 @@ impl TensorKind {
     pub fn element_size<T: NumLimits<T>>(&self) -> i32 {
         unimplemented!()
     }
-    pub fn eq_tensor<T: NumLimits<T>>(&self, other: &Self) -> Tensor<u8> {
+    pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
     pub fn eq_tensor_<T: NumLimits<T>>(&self, other: &Self) -> Self {
@@ -1195,7 +1195,7 @@ impl TensorKind {
     pub fn pow_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn prod(&self) -> f32 {
+    pub fn prod<T: NumLimits<T>>(&self) -> T {
         unimplemented!()
     }
     //
@@ -1304,7 +1304,7 @@ impl TensorKind {
     pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
         unimplemented!()
     }
-    pub fn std(&self) -> f32 {
+    pub fn std<T: NumLimits<T>>(&self) -> T {
         unimplemented!()
     }
     //
