@@ -7,7 +7,7 @@ pub struct FloatStorage {
 }
 impl Drop for FloatStorage {
     fn drop(&mut self) {
-        unsafe {THFloatStorage_free(self.t) }
+        unsafe { THFloatStorage_free(self.t) }
     }
 }
 impl FloatStorage {
@@ -36,7 +36,7 @@ pub struct LongStorage {
 }
 impl Drop for LongStorage {
     fn drop(&mut self) {
-        unsafe {THLongStorage_free(self.t) }
+        unsafe { THLongStorage_free(self.t) }
     }
 }
 impl LongStorage {
