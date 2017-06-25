@@ -60,6 +60,77 @@ macro_rules! typecast {
 }
 
 #[macro_export]
+macro_rules! impl_tensor_impl {
+    ($name:ident, $type:ident, $thname:ident) => {
+    impl TensorImpl<$type> for $name {
+    fn new(&self) -> RefTI<$type> {
+        RcMutNew($name ::new())
+    }
+    fn add(&self, value: $type, output: &TIArg<$type>) {
+        let out = typecast!(output.inner(), $thname);
+        unsafe {
+            concat_idents!(TH, $name, _add)(out, self.t, value);
+        };
+    }
+    fn inner(&self) -> *mut ::std::os::raw::c_void {
+        self.t as *mut ::std::os::raw::c_void
+    }
+    fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
+        let out = typecast!(output.inner(), $thname);
+        let rhsp = typecast!(rhs.inner(), $thname);
+        unsafe {
+            concat_idents!(TH, $name, _add)(out, rhsp, value);
+        };
+    }
+    }
+    impl<'a> Index<&'a [isize]> for $name {
+    type Output = $type;
+
+    fn index(&self, idx: &'a [isize]) -> &Self::Output {
+        let mut index: isize = 0;
+        let lastidx = max(0, idx.len() as isize - 1) as usize;
+        if idx.len() != self.dims.len() {
+            panic!("bad dimlen")
+        }
+        for i in 0..lastidx {
+            if idx[i] >= self.dims[i] {
+                panic!("bad dimlen")
+            }
+            index += idx[i] * self.dims[i]
+        }
+        if idx[lastidx] >= self.dims[lastidx] {
+            panic!("bad dimlen")
+        }
+        index += idx[lastidx];
+        &self.storage[index]
+    }
+    }
+
+    impl<'a> IndexMut<&'a [isize]> for $name {
+    fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
+        let mut index: isize = 0;
+        let lastidx = max(0, idx.len() as isize - 1) as usize;
+        if idx.len() != self.dims.len() {
+            panic!("bad dimlen")
+        }
+        for i in 0..lastidx {
+            if idx[i] >= self.dims[i] {
+                panic!("bad dimlen")
+            }
+            index += idx[i] * self.dims[i]
+        }
+        if idx[lastidx] >= self.dims[lastidx] {
+            panic!("bad dimlen")
+        }
+        index += idx[lastidx];
+        &mut self.storage[index]
+    }
+    }
+
+    }
+}
+
+#[macro_export]
 macro_rules! impl_func {
 	($name:ident) => (
 		#[derive(Clone)]
