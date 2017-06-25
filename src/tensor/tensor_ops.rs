@@ -751,7 +751,7 @@ impl TensorKind {
                                     -> &mut Self {
         unimplemented!()
     }
-    pub fn addcdiv<T: NumLimits<T>>(&self, value: &T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcdiv<T: NumLimits<T>>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
     pub fn addcdiv_<T: NumLimits<T>>(&mut self,
@@ -825,8 +825,8 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn baddbmm<T: NumLimits<T>>(&self,
-                                    beta: &T,
-                                    alpha: &T,
+                                    beta: T,
+                                    alpha: T,
                                     tensor1: &Self,
                                     tensor2: &Self)
                                     -> Self {
