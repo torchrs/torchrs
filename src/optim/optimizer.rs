@@ -2,7 +2,6 @@ pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ModIntf;
 pub use tensor::{Tensor, TensorKind, NewSelf, NumLimits};
-use nn::Parameter;
 use utils::unsafe_lib::MutMap;
 
 
