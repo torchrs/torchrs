@@ -711,14 +711,16 @@ impl TensorKind {
     pub fn abs<T: NumLimits<T>>(&self) -> Self {
         (self.into(): &Tensor<T>).abs().into()
     }
-    pub fn abs_(&mut self) -> &mut Self {
-        impl_tk_dispatch_self!(self, v, v.abs_())
+    pub fn abs_<T: NumLimits<T>>(&mut self) -> &mut Self {
+        (self.into(): &mut Tensor<T>).abs_();
+        self
     }
-    pub fn acos(&self) -> Self {
-        impl_tk_dispatch_self_ref!(self, v, v.acos())
+    pub fn acos<T: NumLimits<T>>(&self) -> Self {
+        (self.into(): & Tensor<T>).acos().into()
     }
-    pub fn acos_(&mut self) -> &mut Self {
-        impl_tk_dispatch_self!(self, v, v.acos_())
+    pub fn acos_<T: NumLimits<T>>(&mut self) -> &mut Self {
+        (self.into(): &mut Tensor<T>).acos_();
+        self
     }
     pub fn add<T: NumLimits<T>>(&self, rhs: T) -> Self {
         (self.into(): &Tensor<T>).add(rhs).into()
@@ -854,8 +856,11 @@ impl TensorKind {
     //
     // cauchy_
     //
-    pub fn ceil<T: NumLimits<T>>(&self) -> Self {
-        unimplemented!()
+    pub fn ceil(&self) -> Self {
+        match *self {
+            TensorKind::FloatTensor(ref t) => t.ceil().into(),
+            TensorKind::LongTensor(ref t) => t.ceil().into(),
+        }
     }
     pub fn ceil_(&mut self) -> &mut Self {
         unimplemented!()
