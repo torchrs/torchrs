@@ -709,9 +709,7 @@ macro_rules! impl_tk_dispatch_self {
 
 impl TensorKind {
     pub fn abs<T: NumLimits<T>>(&self) -> Self {
-        //impl_tk_dispatch_self_ref!(self, v, v.abs())
-        let v: &Tensor<T> = self.into();
-        v.abs().into()
+        (self.into(): &Tensor<T>).abs().into()
     }
     pub fn abs_(&mut self) -> &mut Self {
         impl_tk_dispatch_self!(self, v, v.abs_())
@@ -723,14 +721,10 @@ impl TensorKind {
         impl_tk_dispatch_self!(self, v, v.acos_())
     }
     pub fn add<T: NumLimits<T>>(&self, rhs: T) -> Self {
-        let v: &Tensor<T> = self.into();
-        v.add(rhs).into()
+        (self.into(): &Tensor<T>).add(rhs).into()
     }
     pub fn add_<T: NumLimits<T>>(&mut self, rhs: T) -> &mut Self {
-        {
-            let v: &mut Tensor<T> = self.into();
-            v.add_(rhs);
-        }
+        (self.into(): &mut Tensor<T>).add_(rhs);
         self
     }
     pub fn addt<T: NumLimits<T>>(&self, val: T, rhs: &Self) -> Self {
@@ -738,10 +732,7 @@ impl TensorKind {
         v.addt(val, rhs.into()).into()
     }
     pub fn addt_<T: NumLimits<T>>(&mut self, val: T, rhs: &Self) -> &mut Self {
-        {
-            let v: &mut Tensor<T> = self.into();
-            v.addt_(val, rhs.into());
-        }
+        (self.into(): &mut Tensor<T>).addt_(val, rhs.into());
         self
     }
     pub fn addbmm<T: NumLimits<T>>(&self,

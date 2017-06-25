@@ -1,4 +1,5 @@
 #![feature(specialization)]
+ #![feature(type_ascription)]
 
 extern crate rutorch;
 #[macro_use]
