@@ -1,5 +1,6 @@
 #![feature(specialization)]
  #![feature(type_ascription)]
+ #![feature(concat_idents)]
 
 extern crate rutorch;
 #[macro_use]
