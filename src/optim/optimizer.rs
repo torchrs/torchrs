@@ -1,7 +1,7 @@
 pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ModIntf;
-pub use tensor::{Tensor, TensorKind, NewSelf};
+pub use tensor::{Tensor, TensorKind, NewSelf, NumLimits};
 use nn::Parameter;
 use std::ops::Neg;
 use utils::unsafe_lib::MutMap;
@@ -42,7 +42,7 @@ impl From<TensorKind> for OptimVal {
         OptimVal::Tensor(input)
     }
 }
-impl<T> From<Tensor<T>> for OptimVal {
+impl<T: NumLimits<T>> From<Tensor<T>> for OptimVal {
     fn from(input: Tensor<T>) -> Self {
         OptimVal::Tensor(input.into())
     }
@@ -64,7 +64,7 @@ impl From<OptimVal> for f32 {
     }
 }
 
-impl<T> From<OptimVal> for Tensor<T> {
+impl<T: NumLimits<T>> From<OptimVal> for Tensor<T> {
     fn from(input: OptimVal) -> Self {
         match input {
             self::OptimVal::Tensor(x) => x.clone().into(),

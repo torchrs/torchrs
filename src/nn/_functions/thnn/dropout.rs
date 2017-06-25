@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList, TensorKind, NewSelf};
+use tensor::{TensorKindList, OptTensorKindList, TensorKind, NewSelf, NumLimits};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
@@ -39,8 +39,8 @@ trait Dropout: Noise + FuncIntf {
         };
         if args.p > 0. && args.training {
             let noise = self.make_noise(&input[0])
-                .bernoulli_(&(1. - args.p).into())
-                .div_(&(1. - args.p).into())
+                .bernoulli_(1. - args.p)
+                .div_(1. - args.p)
                 .expand_as(&input[0]);
             self.save_for_backward(&vec![noise.clone()]);
             output.mult_(&noise);

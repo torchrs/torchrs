@@ -26,7 +26,7 @@ pub enum VarKindImpl {
     LongVariable(VariableImpl<i64>),
 }
 
-impl<T> From<VarKindImpl> for VariableImpl<T> {
+impl<T: NumLimits<T>> From<VarKindImpl> for VariableImpl<T> {
     default fn from(input: VarKindImpl) -> Self {
         unreachable!()
     }
@@ -86,13 +86,13 @@ impl From<VarKind> for TensorKind {
         input.clone().data().clone()
     }
 }
-impl<T> From<VarKind> for Tensor<T> {
+impl<T: NumLimits<T>> From<VarKind> for Tensor<T> {
     fn from(input: VarKind) -> Self {
         let t: TensorKind = input.into();
         t.into()
     }
 }
-impl<T> From<Tensor<T>> for VarKind {
+impl<T: NumLimits<T>> From<Tensor<T>> for VarKind {
     fn from(input: Tensor<T>) -> Self {
         let t: TensorKind = input.into();
         t.into()
@@ -117,7 +117,7 @@ impl From<VarId> for VarKind {
     }
 }
 
-impl<T> From<VarKind> for Variable<T> {
+impl<T: NumLimits<T>> From<VarKind> for Variable<T> {
     default fn from(input: VarKind) -> Self {
         panic!("bad cast");
     }
@@ -467,7 +467,7 @@ impl VarKind {
         use self::VarKind::{FloatVariable, LongVariable};
         impl_var_mut_dispatch!(self, v, v.requires_nograd())
     }
-    pub fn typed<T>(self) -> Variable<T> {
+    pub fn typed<T: NumLimits<T>>(self) -> Variable<T> {
         Variable::<T>::from(self)
     }
     pub fn _do_backward(&mut self, grad_output_: &mut Option<VarKind>) {

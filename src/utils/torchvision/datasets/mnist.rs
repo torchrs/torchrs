@@ -7,7 +7,7 @@ use flate2::{Flush, Decompress};
 use std::io::Write;
 use utils::data::{DatasetIntfRef, DatasetIntf};
 use std::rc::Rc;
-use tensor::{Tensor, TensorKind};
+use tensor::{Tensor, TensorKind, NumLimits};
 use torch;
 use std::marker::PhantomData;
 
@@ -131,7 +131,7 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     Ok(torch::byte_tensor_kind(labels))
 }
 
-pub struct MNIST<T> {
+pub struct MNIST<T: NumLimits<T>> {
     pub root: String,
     pub train: bool,
     pub data: Tensor<u8>,
@@ -152,13 +152,15 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done<T: Clone + 'static>(self, xfrm: Option<Xfrm>) -> DatasetIntfRef<CollatedSample<T>> {
+    pub fn done<T: NumLimits<T> + 'static>(self,
+                                           xfrm: Option<Xfrm>)
+                                           -> DatasetIntfRef<CollatedSample<T>> {
         let args = self.build().unwrap();
         Rc::new(MNIST::new(args, xfrm))
     }
 }
 
-impl<T> MNIST<T> {
+impl<T: NumLimits<T>> MNIST<T> {
     pub fn build(root: &str) -> MNISTArgsBuilder {
         MNISTArgsBuilder::default().root(root.into())
     }
@@ -197,7 +199,7 @@ impl<T> MNIST<T> {
     }
 }
 
-impl<T> DatasetIntf for MNIST<T> {
+impl<T: NumLimits<T>> DatasetIntf for MNIST<T> {
     type Batch = CollatedSample<T>;
     fn len(&self) -> usize {
         if self.train { 60000 } else { 10000 }
