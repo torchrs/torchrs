@@ -728,8 +728,7 @@ impl TensorKind {
         self
     }
     pub fn addt<T: NumLimits<T>>(&self, val: T, rhs: &Self) -> Self {
-        let v: &Tensor<T> = self.into();
-        v.addt(val, rhs.into()).into()
+        (self.into(): &Tensor<T>).addt(val, rhs.into()).into()
     }
     pub fn addt_<T: NumLimits<T>>(&mut self, val: T, rhs: &Self) -> &mut Self {
         (self.into(): &mut Tensor<T>).addt_(val, rhs.into());
