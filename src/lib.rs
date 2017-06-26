@@ -1,6 +1,6 @@
 #![feature(specialization)]
- #![feature(type_ascription)]
- #![feature(concat_idents)]
+#![feature(type_ascription)]
+#![feature(concat_idents)]
 
 extern crate rutorch;
 #[macro_use]
@@ -48,12 +48,10 @@ pub type Ix = usize;
 /// Array index type (signed)
 pub type Ixs = isize;
 
-
 #[allow(non_snake_case)]
 pub fn RcMutNew<T>(arg: T) -> RcMut<T> {
     Rc::new(RefCell::new(arg))
 }
-
 
 #[cfg(test)]
 mod tests {
