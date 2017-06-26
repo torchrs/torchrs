@@ -1,5 +1,5 @@
 
-use tensor::{Tensor, TensorKind};
+use tensor::{Tensor, TensorKind, NumLimits};
 
 pub fn byte_tensor_kind<T>(arg: T) -> TensorKind {
     unimplemented!()
@@ -22,6 +22,6 @@ pub fn double_tensor<T>(arg: T) -> Tensor<f64> {
 pub fn long_tensor<T>(arg: T) -> Tensor<i64> {
     unimplemented!()
 }
-pub fn tensor<S, D>(arg: S) -> Tensor<D> {
+pub fn tensor<S, D>(arg: S) -> Tensor<D> where D: NumLimits<D>{
     unimplemented!()
 }

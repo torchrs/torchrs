@@ -50,7 +50,7 @@ impl From<VarKindImpl> for VariableImpl<i64> {
     }
 }
 
-impl<T> From<VariableImpl<T>> for VarKindImpl {
+impl<T:NumLimits<T>> From<VariableImpl<T>> for VarKindImpl {
     default fn from(input: VariableImpl<T>) -> Self {
         unreachable!()
     }
@@ -66,7 +66,7 @@ impl From<VariableImpl<i64>> for VarKindImpl {
     }
 }
 
-impl<T> From<Variable<T>> for VarKind {
+impl<T: NumLimits<T>> From<Variable<T>> for VarKind {
     default fn from(input: Variable<T>) -> Self {
         panic!("bad cast")
     }
@@ -140,7 +140,7 @@ impl From<VarKind> for Variable<i64> {
         }
     }
 }
-impl<'a, T: 'a> From<&'a VarKind> for &'a Variable<T> {
+impl<'a, T: 'a + NumLimits<T>> From<&'a VarKind> for &'a Variable<T> {
     default fn from(input: &'a VarKind) -> Self {
         panic!("bad cast");
     }
@@ -193,13 +193,13 @@ impl Clone for VarKind {
     }
 }
 
-pub trait VarAccess<T> {
+pub trait VarAccess<T : NumLimits<T>> {
     fn access<'a>(&self) -> &'a mut VariableImpl<T>;
     fn borrow(&self) -> &VariableImpl<T>;
     fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self;
 }
 
-impl<T> VarAccess<T> for Variable<T> {
+impl<T: NumLimits<T>> VarAccess<T> for Variable<T> {
     default fn access<'a>(&self) -> &'a mut VariableImpl<T> {
         panic!("unsupported Tensor type")
     }
@@ -279,7 +279,7 @@ impl VarAccess<i64> for Variable<i64> {
     }
 }
 
-pub struct VariableImpl<T> {
+pub struct VariableImpl<T : NumLimits<T>> {
     pub data: Tensor<T>,
     // AKA Creator Id
     grad_fn: Option<Function>,
@@ -290,7 +290,7 @@ pub struct VariableImpl<T> {
     requires_grad: bool,
 }
 
-impl<T: Copy> VariableImpl<T> {
+impl<T: NumLimits<T>> VariableImpl<T> {
     fn new(data: Tensor<T>, args: &VariableArgs) -> Self {
         let creator = match args.creator {
             Some(ref f) => Some(f.clone()),
@@ -321,12 +321,12 @@ impl<T: Copy> VariableImpl<T> {
 }
 
 
-pub struct Variable<T> {
+pub struct Variable<T : NumLimits<T>> {
     pub id: VarId,
     phantom: PhantomData<T>,
 }
 
-impl<T> Default for Variable<T> {
+impl<T: NumLimits<T>> Default for Variable<T> {
     fn default() -> Self {
         Variable {
             id: -1,
@@ -334,7 +334,7 @@ impl<T> Default for Variable<T> {
         }
     }
 }
-impl<T> Clone for Variable<T> {
+impl<T: NumLimits<T>> Clone for Variable<T> {
     fn clone(&self) -> Self {
         Variable {
             id: self.id,
@@ -342,7 +342,7 @@ impl<T> Clone for Variable<T> {
         }
     }
 }
-impl<T> From<u32> for Variable<T> {
+impl<T: NumLimits<T>> From<u32> for Variable<T> {
     fn from(id: u32) -> Self {
         Variable {
             id: id as i32,
@@ -350,7 +350,7 @@ impl<T> From<u32> for Variable<T> {
         }
     }
 }
-impl<T> From<i32> for Variable<T> {
+impl<T: NumLimits<T>> From<i32> for Variable<T> {
     fn from(id: i32) -> Self {
         Variable {
             id: id,
@@ -358,7 +358,7 @@ impl<T> From<i32> for Variable<T> {
         }
     }
 }
-impl<'a, T: 'a> From<&'a i32> for Variable<T> {
+impl<'a, T: 'a + NumLimits<T>> From<&'a i32> for Variable<T> {
     fn from(id: &'a i32) -> Self {
         Variable {
             id: *id,
@@ -366,7 +366,7 @@ impl<'a, T: 'a> From<&'a i32> for Variable<T> {
         }
     }
 }
-impl<T> From<usize> for Variable<T> {
+impl<T: NumLimits<T>> From<usize> for Variable<T> {
     fn from(id: usize) -> Self {
         Variable {
             id: id as i32,
