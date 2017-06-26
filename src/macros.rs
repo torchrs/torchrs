@@ -79,7 +79,7 @@ macro_rules! impl_tensor_impl {
         let out = typecast!(output.inner(), $thname);
         let rhsp = typecast!(rhs.inner(), $thname);
         unsafe {
-            concat_idents!(TH, $name, _add)(out, rhsp, value);
+            concat_idents!($thname, _add)(out, rhsp, value);
         };
     }
     }
@@ -132,7 +132,31 @@ macro_rules! impl_tensor_impl {
         &mut self.storage[index]
     }
     }
-
+    impl Index<isize> for $name {
+    type Output = $type;
+    fn index(&self, idx: isize) -> &Self::Output {
+        unimplemented!()
+    }
+    }
+    impl Drop for $name {
+        fn drop(&mut self) {
+            unsafe { concat_idents!($thname, _free)(self.t) }
+        }
+    }
+    impl Serialize for $name {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        unimplemented!()
+    }
+    }
+    impl<'de> Deserialize<'de> for $name {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        unimplemented!()
+    }
+    }
     }
 }
 

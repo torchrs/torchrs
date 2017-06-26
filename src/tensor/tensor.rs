@@ -269,7 +269,6 @@ impl NewSelf<[usize; 2], TensorKind> for TensorKind {
     }
 }
 
-
 impl<T: NumLimits<T>> Tensor<T> {
     pub fn len(&self) -> usize {
         unimplemented!()
@@ -313,28 +312,6 @@ pub trait TensorImpl<T: NumLimits<T>>: Index<Ixs, Output = T> {
 }
 
 impl_tensor_impl!(FloatTensor, f32, THFloatTensor);
-
-impl Index<isize> for FloatTensor {
-    type Output = f32;
-    fn index(&self, idx: isize) -> &Self::Output {
-        unimplemented!()
-    }
-}
-
-impl Serialize for FloatTensor {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        unimplemented!()
-    }
-}
-impl<'de> Deserialize<'de> for FloatTensor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-    {
-        unimplemented!()
-    }
-}
 
 pub struct FloatTensor {
     t: *mut THFloatTensor,
