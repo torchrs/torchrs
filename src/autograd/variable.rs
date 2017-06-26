@@ -50,7 +50,7 @@ impl From<VarKindImpl> for VariableImpl<i64> {
     }
 }
 
-impl<T:NumLimits<T>> From<VariableImpl<T>> for VarKindImpl {
+impl<T: NumLimits<T>> From<VariableImpl<T>> for VarKindImpl {
     default fn from(input: VariableImpl<T>) -> Self {
         unreachable!()
     }
@@ -193,7 +193,7 @@ impl Clone for VarKind {
     }
 }
 
-pub trait VarAccess<T : NumLimits<T>> {
+pub trait VarAccess<T: NumLimits<T>> {
     fn access<'a>(&self) -> &'a mut VariableImpl<T>;
     fn borrow(&self) -> &VariableImpl<T>;
     fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self;
@@ -279,7 +279,7 @@ impl VarAccess<i64> for Variable<i64> {
     }
 }
 
-pub struct VariableImpl<T : NumLimits<T>> {
+pub struct VariableImpl<T: NumLimits<T>> {
     pub data: Tensor<T>,
     // AKA Creator Id
     grad_fn: Option<Function>,
@@ -321,7 +321,7 @@ impl<T: NumLimits<T>> VariableImpl<T> {
 }
 
 
-pub struct Variable<T : NumLimits<T>> {
+pub struct Variable<T: NumLimits<T>> {
     pub id: VarId,
     phantom: PhantomData<T>,
 }
