@@ -131,7 +131,7 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     Ok(torch::byte_tensor_kind(labels))
 }
 
-pub struct MNIST<T: NumLimits<T>> {
+pub struct MNIST<T: NumLimits> {
     pub root: String,
     pub train: bool,
     pub data: Tensor<u8>,
@@ -152,7 +152,7 @@ pub struct MNISTArgs {
 
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
-    pub fn done<T: NumLimits<T> + 'static>(self,
+    pub fn done<T: NumLimits + 'static>(self,
                                            xfrm: Option<Xfrm>)
                                            -> DatasetIntfRef<CollatedSample<T>> {
         let args = self.build().unwrap();
@@ -160,7 +160,7 @@ impl MNISTArgsBuilder {
     }
 }
 
-impl<T: NumLimits<T>> MNIST<T> {
+impl<T: NumLimits> MNIST<T> {
     pub fn build(root: &str) -> MNISTArgsBuilder {
         MNISTArgsBuilder::default().root(root.into())
     }
@@ -199,7 +199,7 @@ impl<T: NumLimits<T>> MNIST<T> {
     }
 }
 
-impl<T: NumLimits<T>> DatasetIntf for MNIST<T> {
+impl<T: NumLimits> DatasetIntf for MNIST<T> {
     type Batch = CollatedSample<T>;
     fn len(&self) -> usize {
         if self.train { 60000 } else { 10000 }

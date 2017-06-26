@@ -38,7 +38,7 @@ impl From<TensorKind> for OptimVal {
         OptimVal::Tensor(input)
     }
 }
-impl<T: NumLimits<T>> From<Tensor<T>> for OptimVal {
+impl<T: NumLimits> From<Tensor<T>> for OptimVal {
     fn from(input: Tensor<T>) -> Self {
         OptimVal::Tensor(input.into())
     }
@@ -60,7 +60,7 @@ impl From<OptimVal> for f32 {
     }
 }
 
-impl<T: NumLimits<T>> From<OptimVal> for Tensor<T> {
+impl<T: NumLimits> From<OptimVal> for Tensor<T> {
     fn from(input: OptimVal) -> Self {
         match input {
             self::OptimVal::Tensor(x) => x.clone().into(),
@@ -80,7 +80,7 @@ impl Optimizer {
     }
 }
 
-pub trait OptIntf<T: ::tensor::NumLimits<T> + From<OptimVal>> {
+pub trait OptIntf<T: ::tensor::NumLimits + From<OptimVal>> {
     fn optimizer(&mut self) -> &mut Optimizer;
     fn zero_grad(&mut self, model: &mut ModIntf<T>) {
         // XXX figure out point of parameter groups

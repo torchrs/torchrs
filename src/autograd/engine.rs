@@ -75,7 +75,7 @@ pub mod ExecutionEngine {
                     prev_grad: &mut Vec<Option<VarKind>>,
                     output_nr: usize,
                     d_prev_func: &VarKind)
-        where T: NumLimits<T>
+        where T: NumLimits
     {
         // We can't match and operate on the vector at
         // the same time because that would be performing
@@ -104,7 +104,7 @@ pub mod ExecutionEngine {
         }
 
     }
-    pub fn run_backward<T: NumLimits<T>>(var: &mut Variable<T>,
+    pub fn run_backward<T: NumLimits>(var: &mut Variable<T>,
                                          grad: VarKind,
                                          retain_variables: bool) {
         let grad_fn;

@@ -3,7 +3,7 @@ use tensor::*;
 use std::cell::RefMut;
 
 
-impl<T: NumLimits<T>> Tensor<T> {
+impl<T: NumLimits> Tensor<T> {
     pub fn abs(&self) -> Self {
         unimplemented!()
     }
@@ -708,35 +708,35 @@ macro_rules! impl_tk_dispatch_self {
 }
 
 impl TensorKind {
-    pub fn abs<T: NumLimits<T>>(&self) -> Self {
+    pub fn abs<T: NumLimits>(&self) -> Self {
         (self.into(): &Tensor<T>).abs().into()
     }
-    pub fn abs_<T: NumLimits<T>>(&mut self) -> &mut Self {
+    pub fn abs_<T: NumLimits>(&mut self) -> &mut Self {
         (self.into(): &mut Tensor<T>).abs_();
         self
     }
-    pub fn acos<T: NumLimits<T>>(&self) -> Self {
+    pub fn acos<T: NumLimits>(&self) -> Self {
         (self.into(): &Tensor<T>).acos().into()
     }
-    pub fn acos_<T: NumLimits<T>>(&mut self) -> &mut Self {
+    pub fn acos_<T: NumLimits>(&mut self) -> &mut Self {
         (self.into(): &mut Tensor<T>).acos_();
         self
     }
-    pub fn add<T: NumLimits<T>>(&self, rhs: T) -> Self {
+    pub fn add<T: NumLimits>(&self, rhs: T) -> Self {
         (self.into(): &Tensor<T>).add(rhs).into()
     }
-    pub fn add_<T: NumLimits<T>>(&mut self, rhs: T) -> &mut Self {
+    pub fn add_<T: NumLimits>(&mut self, rhs: T) -> &mut Self {
         (self.into(): &mut Tensor<T>).add_(rhs);
         self
     }
-    pub fn addt<T: NumLimits<T>>(&self, val: T, rhs: &Self) -> Self {
+    pub fn addt<T: NumLimits>(&self, val: T, rhs: &Self) -> Self {
         (self.into(): &Tensor<T>).addt(val, rhs.into()).into()
     }
-    pub fn addt_<T: NumLimits<T>>(&mut self, val: T, rhs: &Self) -> &mut Self {
+    pub fn addt_<T: NumLimits>(&mut self, val: T, rhs: &Self) -> &mut Self {
         (self.into(): &mut Tensor<T>).addt_(val, rhs.into());
         self
     }
-    pub fn addbmm<T: NumLimits<T>>(&self,
+    pub fn addbmm<T: NumLimits>(&self,
                                    beta: T,
                                    alpha: T,
                                    tensor1: &Self,
@@ -744,7 +744,7 @@ impl TensorKind {
                                    -> Self {
         unimplemented!()
     }
-    pub fn addbmm_<T: NumLimits<T>>(&mut self,
+    pub fn addbmm_<T: NumLimits>(&mut self,
                                     beta: T,
                                     alpha: T,
                                     tensor1: &Self,
@@ -752,27 +752,27 @@ impl TensorKind {
                                     -> &mut Self {
         unimplemented!()
     }
-    pub fn addcdiv<T: NumLimits<T>>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcdiv<T: NumLimits>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcdiv_<T: NumLimits<T>>(&mut self,
+    pub fn addcdiv_<T: NumLimits>(&mut self,
                                      value: T,
                                      tensor1: &Self,
                                      tensor2: &Self)
                                      -> &mut Self {
         unimplemented!()
     }
-    pub fn addcmul<T: NumLimits<T>>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addcmul<T: NumLimits>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addcmul_<T: NumLimits<T>>(&mut self,
+    pub fn addcmul_<T: NumLimits>(&mut self,
                                      value: T,
                                      tensor1: &Self,
                                      tensor2: &Self)
                                      -> &mut Self {
         unimplemented!()
     }
-    pub fn addmm<T: NumLimits<T>>(&self,
+    pub fn addmm<T: NumLimits>(&self,
                                   beta: T,
                                   alpha: T,
                                   tensor1: &Self,
@@ -780,7 +780,7 @@ impl TensorKind {
                                   -> Self {
         unimplemented!()
     }
-    pub fn addmm_<T: NumLimits<T>>(&mut self,
+    pub fn addmm_<T: NumLimits>(&mut self,
                                    beta: T,
                                    alpha: T,
                                    tensor1: &Self,
@@ -788,10 +788,10 @@ impl TensorKind {
                                    -> &mut Self {
         unimplemented!()
     }
-    pub fn addmv<T: NumLimits<T>>(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
+    pub fn addmv<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmv_<T: NumLimits<T>>(&mut self,
+    pub fn addmv_<T: NumLimits>(&mut self,
                                    beta: T,
                                    alpha: T,
                                    tensor1: &Self,
@@ -799,10 +799,10 @@ impl TensorKind {
                                    -> &mut Self {
         unimplemented!()
     }
-    pub fn addr<T: NumLimits<T>>(&self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> Self {
+    pub fn addr<T: NumLimits>(&self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addr_<T: NumLimits<T>>(&mut self,
+    pub fn addr_<T: NumLimits>(&mut self,
                                   beta: T,
                                   alpha: T,
                                   vec1: &Self,
@@ -810,22 +810,22 @@ impl TensorKind {
                                   -> &mut Self {
         unimplemented!()
     }
-    pub fn asin<T: NumLimits<T>>(&self) -> Self {
+    pub fn asin<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn asin_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn atan<T: NumLimits<T>>(&self) -> Self {
+    pub fn atan<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
-    pub fn atan2<T: NumLimits<T>>(&self) -> Self {
+    pub fn atan2<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn atan2_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn baddbmm<T: NumLimits<T>>(&self,
+    pub fn baddbmm<T: NumLimits>(&self,
                                     beta: T,
                                     alpha: T,
                                     tensor1: &Self,
@@ -833,7 +833,7 @@ impl TensorKind {
                                     -> Self {
         unimplemented!()
     }
-    pub fn baddbmm_<T: NumLimits<T>>(&mut self,
+    pub fn baddbmm_<T: NumLimits>(&mut self,
                                      beta: T,
                                      alpha: T,
                                      tensor1: &Self,
@@ -841,13 +841,13 @@ impl TensorKind {
                                      -> &mut Self {
         unimplemented!()
     }
-    pub fn bernoulli<T: NumLimits<T>>(&self, p: T) -> Self {
+    pub fn bernoulli<T: NumLimits>(&self, p: T) -> Self {
         unimplemented!()
     }
-    pub fn bernoulli_<T: NumLimits<T>>(&mut self, p: T) -> &mut Self {
+    pub fn bernoulli_<T: NumLimits>(&mut self, p: T) -> &mut Self {
         unimplemented!()
     }
-    pub fn bmm<T: NumLimits<T>>(&self, other: &Self) -> Self {
+    pub fn bmm<T: NumLimits>(&self, other: &Self) -> Self {
         unimplemented!()
     }
     pub fn byte(&mut self) -> &mut Self {
@@ -868,16 +868,16 @@ impl TensorKind {
     pub fn char(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn chunk<T: NumLimits<T>>(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
+    pub fn chunk<T: NumLimits>(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
         unimplemented!()
     }
-    pub fn clamp<T: NumLimits<T>>(&self, min: T, max: T) -> Self {
+    pub fn clamp<T: NumLimits>(&self, min: T, max: T) -> Self {
         unimplemented!()
     }
-    pub fn clamp_<T: NumLimits<T>>(&mut self, min: T, max: T) -> &mut Self {
+    pub fn clamp_<T: NumLimits>(&mut self, min: T, max: T) -> &mut Self {
         unimplemented!()
     }
-    pub fn contiguous<T: NumLimits<T>>(&self) -> Self {
+    pub fn contiguous<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     // perform deep copy
@@ -890,77 +890,77 @@ impl TensorKind {
     pub fn copy_async_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn cos<T: NumLimits<T>>(&self) -> Self {
+    pub fn cos<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn cos_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn cosh<T: NumLimits<T>>(&self) -> Self {
+    pub fn cosh<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn cosh_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn cpu<T: NumLimits<T>>(&self) -> Self {
+    pub fn cpu<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
-    pub fn cross<T: NumLimits<T>>(&self, dim: Option<i32>) -> Self {
+    pub fn cross<T: NumLimits>(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn cuda<T: NumLimits<T>>(&self, device: Option<i32>) -> Self {
+    pub fn cuda<T: NumLimits>(&self, device: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn cuda_async<T: NumLimits<T>>(&self, device: Option<i32>) -> Self {
+    pub fn cuda_async<T: NumLimits>(&self, device: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn diag<T: NumLimits<T>>(&self, diag: u32) -> Self {
+    pub fn diag<T: NumLimits>(&self, diag: u32) -> Self {
         unimplemented!()
     }
     pub fn dim(&self) -> i32 {
         unimplemented!()
     }
-    pub fn dist<T: NumLimits<T>>(&self, other: &Self, p: u32) -> f32 {
+    pub fn dist<T: NumLimits>(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()
     }
-    pub fn div<T: NumLimits<T>>(&self, value: T) -> Self {
+    pub fn div<T: NumLimits>(&self, value: T) -> Self {
         unimplemented!()
     }
-    pub fn div_<T: NumLimits<T>>(&mut self, value: T) -> &mut Self {
+    pub fn div_<T: NumLimits>(&mut self, value: T) -> &mut Self {
         unimplemented!()
     }
-    pub fn divt<T: NumLimits<T>>(&self, value: &Self) -> Self {
+    pub fn divt<T: NumLimits>(&self, value: &Self) -> Self {
 
         unimplemented!()
     }
     pub fn divt_(&mut self, value: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn dot<T: NumLimits<T>>(&self, other: &Self) -> Self {
+    pub fn dot<T: NumLimits>(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn double<T: NumLimits<T>>(&self) -> Self {
+    pub fn double<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
-    pub fn eig<T: NumLimits<T>>(&self, eigenvectors: bool) -> (Self, Self) {
+    pub fn eig<T: NumLimits>(&self, eigenvectors: bool) -> (Self, Self) {
         unimplemented!()
     }
-    pub fn element_size<T: NumLimits<T>>(&self) -> i32 {
+    pub fn element_size<T: NumLimits>(&self) -> i32 {
         unimplemented!()
     }
     pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn eq_tensor_<T: NumLimits<T>>(&self, other: &Self) -> Self {
+    pub fn eq_tensor_<T: NumLimits>(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn exp<T: NumLimits<T>>(&self) -> Self {
+    pub fn exp<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn exp_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn expand<T: NumLimits<T>>(&self, dims: &[u32]) -> Self {
+    pub fn expand<T: NumLimits>(&self, dims: &[u32]) -> Self {
         unimplemented!()
     }
     pub fn expand_as(&self, tensor: &Self) -> Self {
@@ -972,16 +972,16 @@ impl TensorKind {
     pub fn float(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn floor<T: NumLimits<T>>(&self) -> Self {
+    pub fn floor<T: NumLimits>(&self) -> Self {
         unimplemented!()
     }
     pub fn floor_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn fmod<T: NumLimits<T>>(&self, divisor: T) -> Self {
+    pub fn fmod<T: NumLimits>(&self, divisor: T) -> Self {
         unimplemented!()
     }
-    pub fn fmod_<T: NumLimits<T>>(&mut self, divisor: T) -> &mut Self {
+    pub fn fmod_<T: NumLimits>(&mut self, divisor: T) -> &mut Self {
         unimplemented!()
     }
     pub fn frac(&self) -> Self {
@@ -1095,13 +1095,13 @@ impl TensorKind {
     pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
         unimplemented!()
     }
-    pub fn max<T: NumLimits<T>>(&self) -> T {
+    pub fn max<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     pub fn max_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
         unimplemented!()
     }
-    pub fn mean<T: NumLimits<T>>(&self) -> T {
+    pub fn mean<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     pub fn mean_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
@@ -1110,7 +1110,7 @@ impl TensorKind {
     //
     // median
     //
-    pub fn min<T: NumLimits<T>>(&self) -> T {
+    pub fn min<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     pub fn min_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
@@ -1122,10 +1122,10 @@ impl TensorKind {
     //
     // mode
     //
-    pub fn mul<T: NumLimits<T>>(&self, rhs: T) -> Self {
+    pub fn mul<T: NumLimits>(&self, rhs: T) -> Self {
         unimplemented!()
     }
-    pub fn mul_<T: NumLimits<T>>(&mut self, rhs: T) -> &mut Self {
+    pub fn mul_<T: NumLimits>(&mut self, rhs: T) -> &mut Self {
         unimplemented!()
     }
     pub fn mult(&self, rhs: &Self) -> Self {
@@ -1199,7 +1199,7 @@ impl TensorKind {
     pub fn pow_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn prod<T: NumLimits<T>>(&self) -> T {
+    pub fn prod<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     //
@@ -1217,10 +1217,10 @@ impl TensorKind {
     pub fn reciprocal_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn remainder<T: NumLimits<T>>(&self, divisor: T) -> Self {
+    pub fn remainder<T: NumLimits>(&self, divisor: T) -> Self {
         unimplemented!()
     }
-    pub fn remainder_<T: NumLimits<T>>(&mut self, divisor: T) -> &mut Self {
+    pub fn remainder_<T: NumLimits>(&mut self, divisor: T) -> &mut Self {
         unimplemented!()
     }
     //
@@ -1308,7 +1308,7 @@ impl TensorKind {
     pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
         unimplemented!()
     }
-    pub fn std<T: NumLimits<T>>(&self) -> T {
+    pub fn std<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     //
@@ -1326,7 +1326,7 @@ impl TensorKind {
     pub fn sub_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn sum<T: NumLimits<T>>(&self) -> T {
+    pub fn sum<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     pub fn sum_reduce(&self, dim: i32, keepdim: bool) -> Self {
@@ -1410,7 +1410,7 @@ impl TensorKind {
     pub fn unsqueeze_(&mut self, dim: i32) -> &mut Self {
         unimplemented!()
     }
-    pub fn var<T: NumLimits<T>>(&self) -> T {
+    pub fn var<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
     pub fn view(&self, dims: &[isize]) -> Self {

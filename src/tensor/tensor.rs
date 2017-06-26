@@ -23,12 +23,12 @@ pub enum TensorType {
     Long,
 }
 
-pub trait NumLimits<T>: Copy + Default + ::num::Num {}
-impl NumLimits<f32> for f32 {}
-impl NumLimits<f64> for f64 {}
-impl NumLimits<i32> for i32 {}
-impl NumLimits<i64> for i64 {}
-impl NumLimits<u8> for u8 {}
+pub trait NumLimits: Copy + Default + ::num::Num {}
+impl NumLimits for f32 {}
+impl NumLimits for f64 {}
+impl NumLimits for i32 {}
+impl NumLimits for i64 {}
+impl NumLimits for u8 {}
 
 #[derive(Hash, Serialize, Deserialize)]
 pub enum TensorKind {
@@ -60,7 +60,7 @@ impl TensorKind {
 }
 
 /*
-impl<T: NumLimits<T>> Index<usize> for TensorKind {
+impl<T: NumLimits> Index<usize> for TensorKind {
     type Output = T;
     fn index(&self, idx: usize) -> &Self::Output {
         unimplemented!()
@@ -88,7 +88,7 @@ impl Clone for TensorKind {
     }
 }
 
-impl<T: NumLimits<T>> From<Tensor<T>> for TensorKind {
+impl<T: NumLimits> From<Tensor<T>> for TensorKind {
     #[allow(unused_variables)]
     default fn from(input: Tensor<T>) -> Self {
         unreachable!()
@@ -107,14 +107,14 @@ impl From<Tensor<i64>> for TensorKind {
     }
 }
 
-impl<T: NumLimits<T>> From<TensorKind> for Tensor<T> {
+impl<T: NumLimits> From<TensorKind> for Tensor<T> {
     #[allow(unused_variables)]
     default fn from(input: TensorKind) -> Self {
         panic!("bad cast")
     }
 }
 
-impl<'a, T: NumLimits<T>> From<&'a TensorKind> for &'a Tensor<T> {
+impl<'a, T: NumLimits> From<&'a TensorKind> for &'a Tensor<T> {
     #[allow(unused_variables)]
     default fn from(input: &'a TensorKind) -> Self {
         panic!("bad cast")
@@ -139,7 +139,7 @@ impl<'a> From<&'a TensorKind> for &'a Tensor<i64> {
     }
 }
 
-impl<'a, T: NumLimits<T>> From<&'a mut TensorKind> for &'a mut Tensor<T> {
+impl<'a, T: NumLimits> From<&'a mut TensorKind> for &'a mut Tensor<T> {
     #[allow(unused_variables)]
     default fn from(input: &'a mut TensorKind) -> Self {
         panic!("bad cast")
@@ -182,18 +182,18 @@ impl From<TensorKind> for Tensor<i64> {
     }
 }
 
-pub struct Tensor<T: NumLimits<T>> {
+pub struct Tensor<T : NumLimits> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 
-impl<T: NumLimits<T>> Serialize for Tensor<T> {
+impl<T: NumLimits> Serialize for Tensor<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         unimplemented!()
     }
 }
-impl<'de, T: NumLimits<T>> Deserialize<'de> for Tensor<T> {
+impl<'de, T: NumLimits> Deserialize<'de> for Tensor<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
@@ -201,13 +201,13 @@ impl<'de, T: NumLimits<T>> Deserialize<'de> for Tensor<T> {
     }
 }
 
-impl<T: NumLimits<T>> Hash for Tensor<T> {
+impl<T: NumLimits> Hash for Tensor<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state)
     }
 }
 
-impl<T: NumLimits<T>> Index<usize> for Tensor<T> {
+impl<T: NumLimits> Index<usize> for Tensor<T> {
     type Output = T;
     fn index(&self, idx: usize) -> &Self::Output {
 
@@ -216,7 +216,7 @@ impl<T: NumLimits<T>> Index<usize> for Tensor<T> {
     }
 }
 
-impl<T: NumLimits<T>> Index<i32> for Tensor<T> {
+impl<T: NumLimits> Index<i32> for Tensor<T> {
     type Output = T;
     fn index(&self, idx: i32) -> &Self::Output {
 
@@ -233,17 +233,17 @@ pub trait NewSelf<D, T> {
     fn new(&self, args: D) -> T;
 }
 
-impl<T: NumLimits<T>> NewSelf<usize, Tensor<T>> for Tensor<T> {
+impl<T: NumLimits> NewSelf<usize, Tensor<T>> for Tensor<T> {
     fn new(&self, args: usize) -> Self {
         unimplemented!()
     }
 }
-impl<T: NumLimits<T>> NewSelf<(), Tensor<T>> for Tensor<T> {
+impl<T: NumLimits> NewSelf<(), Tensor<T>> for Tensor<T> {
     fn new(&self, args: ()) -> Self {
         unimplemented!()
     }
 }
-impl<T: NumLimits<T>> NewSelf<Vec<usize>, Tensor<T>> for Tensor<T> {
+impl<T: NumLimits> NewSelf<Vec<usize>, Tensor<T>> for Tensor<T> {
     fn new(&self, args: Vec<usize>) -> Self {
         unimplemented!()
     }
@@ -269,33 +269,31 @@ impl NewSelf<[usize; 2], TensorKind> for TensorKind {
     }
 }
 
-impl<T: NumLimits<T>> Tensor<T> {
+impl<T: NumLimits> Tensor<T> {
     pub fn len(&self) -> usize {
         unimplemented!()
     }
     pub fn s(&self, dim: usize) -> Self {
         unimplemented!()
     }
-    pub fn cast<D>(&self) -> Tensor<D>
-        where D: NumLimits<D>
-    {
+    pub fn cast<D>(&self) -> Tensor<D> where D: NumLimits {
         unimplemented!()
     }
 }
 
-impl<T: NumLimits<T>> Default for Tensor<T> {
+impl<T: NumLimits> Default for Tensor<T> {
     fn default() -> Self {
         unimplemented!()
     }
 }
 
-impl<T: NumLimits<T>> Clone for Tensor<T> {
+impl<T: NumLimits> Clone for Tensor<T> {
     fn clone(&self) -> Self {
         Tensor { value: self.value.clone() }
     }
 }
 
-impl<T: NumLimits<T>> Index<isize> for Tensor<T> {
+impl<T: NumLimits> Index<isize> for Tensor<T> {
     type Output = T;
 
     fn index(&self, idx: isize) -> &Self::Output {
@@ -305,7 +303,7 @@ impl<T: NumLimits<T>> Index<isize> for Tensor<T> {
 
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub type TIArg<T> = TensorImpl<T, Output = T>;
-pub trait TensorImpl<T: NumLimits<T>>: Index<Ixs, Output = T> {
+pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
     fn new(&self) -> RefTI<T>;
     fn add(&self, value: T, output: &TIArg<T>);

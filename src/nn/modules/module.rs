@@ -10,12 +10,12 @@ use nn::Parameter;
 pub trait InitModuleStruct {
     fn init_module(self) -> Self;
 }
-pub trait GetFieldStruct<T: NumLimits<T>> {
+pub trait GetFieldStruct<T: NumLimits> {
     fn get_param(&mut self, name: &str) -> Option<VarId>;
     fn get_module(&mut self, name: &str) -> &mut ModIntf<T>;
 }
 
-pub struct Module<T: NumLimits<T>> {
+pub struct Module<T: NumLimits> {
     pub _name: String,
     pub training: bool,
     //_backend: TorchBackend,
@@ -26,7 +26,7 @@ pub struct Module<T: NumLimits<T>> {
     pub _modules: Vec<&'static str>,
 }
 
-impl<T: NumLimits<T>> Module<T> {
+impl<T: NumLimits> Module<T> {
     pub fn new() -> Module<T> {
         Module {
             _name: String::from(""),
@@ -68,14 +68,14 @@ impl<T: NumLimits<T>> Module<T> {
     }
 }
 
-pub trait ModDelegate<T: NumLimits<T>> {
+pub trait ModDelegate<T: NumLimits> {
     fn delegate(&mut self) -> &mut Module<T>;
     fn params_iter_mut(&mut self) -> ::std::vec::IntoIter<Variable<T>>;
     fn _apply(&mut self, callback: fn(&mut ::tensor::Tensor<T>));
     fn apply(&mut self, callback: fn(&mut ModIntf<T>));
 }
 
-pub trait ModIntf<T: NumLimits<T>>: ModDelegate<T> + GetFieldStruct<T> {
+pub trait ModIntf<T: NumLimits>: ModDelegate<T> + GetFieldStruct<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
     fn f(&mut self, input: &mut Variable<T>) -> Variable<T> {
         {
@@ -116,7 +116,7 @@ pub trait ModIntf<T: NumLimits<T>>: ModDelegate<T> + GetFieldStruct<T> {
         }
     }
 }
-pub trait ModIntfV<T: NumLimits<T>>: ModDelegate<T> {
+pub trait ModIntfV<T: NumLimits>: ModDelegate<T> {
     fn forwardv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>>;
     fn fv(&mut self, input: &mut Vec<Variable<T>>) -> Vec<Variable<T>> {
         {

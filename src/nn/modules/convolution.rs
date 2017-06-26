@@ -7,7 +7,7 @@ use tensor::NumLimits;
 
 #[builder(pattern="owned")]
 #[derive(Builder)]
-pub struct Conv2dArgs<T: NumLimits<T>> {
+pub struct Conv2dArgs<T: NumLimits> {
     in_features: usize,
     out_features: usize,
     kernel_size: (usize, usize),
@@ -25,7 +25,7 @@ pub struct Conv2dArgs<T: NumLimits<T>> {
     phantom: PhantomData<T>,
 }
 
-impl<T: NumLimits<T>> Conv2dArgsBuilder<T> {
+impl<T: NumLimits> Conv2dArgsBuilder<T> {
     pub fn done(self) -> Conv2d<T> {
         let args = self.build().unwrap();
         Conv2d::new(args)
@@ -33,7 +33,7 @@ impl<T: NumLimits<T>> Conv2dArgsBuilder<T> {
 }
 
 #[derive(ModParse)]
-pub struct Conv2d<T: NumLimits<T>> {
+pub struct Conv2d<T: NumLimits> {
     delegate: Module<T>,
     weight: Parameter<T>,
     bias: Option<Parameter<T>>,
@@ -41,7 +41,7 @@ pub struct Conv2d<T: NumLimits<T>> {
     args: Conv2dFArgs,
 }
 
-impl<T: NumLimits<T>> Conv2d<T> {
+impl<T: NumLimits> Conv2d<T> {
     pub fn build(in_features: usize,
                  out_features: usize,
                  kernel_size: (usize, usize))
@@ -75,7 +75,7 @@ impl<T: NumLimits<T>> Conv2d<T> {
 }
 impl_mod_delegate!(Conv2d);
 
-impl<T: NumLimits<T>> ModIntf<T> for Conv2d<T> {
+impl<T: NumLimits> ModIntf<T> for Conv2d<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
         let bias = if let Some(ref mut biasp) = self.bias {
             Some(&mut biasp.v)
