@@ -114,7 +114,7 @@ impl<T: NumLimits<T>> From<TensorKind> for Tensor<T> {
     }
 }
 
-impl<'a, T> From<&'a TensorKind> for &'a Tensor<T> {
+impl<'a, T: NumLimits<T>> From<&'a TensorKind> for &'a Tensor<T> {
     #[allow(unused_variables)]
     default fn from(input: &'a TensorKind) -> Self {
         panic!("bad cast")
@@ -139,7 +139,7 @@ impl<'a> From<&'a TensorKind> for &'a Tensor<i64> {
     }
 }
 
-impl<'a, T> From<&'a mut TensorKind> for &'a mut Tensor<T> {
+impl<'a, T: NumLimits<T>> From<&'a mut TensorKind> for &'a mut Tensor<T> {
     #[allow(unused_variables)]
     default fn from(input: &'a mut TensorKind) -> Self {
         panic!("bad cast")
@@ -182,7 +182,7 @@ impl From<TensorKind> for Tensor<i64> {
     }
 }
 
-pub struct Tensor<T> {
+pub struct Tensor<T : NumLimits<T>> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 
@@ -193,7 +193,7 @@ impl<T: NumLimits<T>> Serialize for Tensor<T> {
         unimplemented!()
     }
 }
-impl<'de, T> Deserialize<'de> for Tensor<T> {
+impl<'de, T: NumLimits<T>> Deserialize<'de> for Tensor<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
@@ -277,7 +277,7 @@ impl<T: NumLimits<T>> Tensor<T> {
     pub fn s(&self, dim: usize) -> Self {
         unimplemented!()
     }
-    pub fn cast<D>(&self) -> Tensor<D> {
+    pub fn cast<D>(&self) -> Tensor<D> where D: NumLimits<D>{
         unimplemented!()
     }
 }
@@ -340,12 +340,6 @@ pub struct FloatTensor {
     t: *mut THFloatTensor,
     storage: FloatStorage,
     dims: Vec<isize>,
-}
-
-impl Default for FloatTensor {
-    fn default() -> Self {
-        FloatTensor::new()
-    }
 }
 
 impl FloatTensor {

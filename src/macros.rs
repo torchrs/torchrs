@@ -83,6 +83,12 @@ macro_rules! impl_tensor_impl {
         };
     }
     }
+    impl Default for $name {
+        fn default() -> Self {
+            $name ::new()
+        }
+    }
+
     impl<'a> Index<&'a [isize]> for $name {
     type Output = $type;
 
