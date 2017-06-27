@@ -112,7 +112,7 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
         }
         images.push(img)
     }
-    Ok(torch::byte_tensor_kind(images).view(&[-1, 28, 28]))
+    Ok(torch::byte_tensor(images).view(&[-1, 28, 28]).into())
 }
 
 fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
@@ -128,7 +128,7 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     for i in 0..length {
         labels.push(data[8 + i])
     }
-    Ok(torch::byte_tensor_kind(labels))
+    Ok(torch::byte_tensor(labels).into())
 }
 
 pub struct MNIST<T: NumLimits> {
@@ -153,8 +153,8 @@ pub struct MNISTArgs {
 type Xfrm = Box<fn(&TensorKind) -> TensorKind>;
 impl MNISTArgsBuilder {
     pub fn done<T: NumLimits + 'static>(self,
-                                           xfrm: Option<Xfrm>)
-                                           -> DatasetIntfRef<CollatedSample<T>> {
+                                        xfrm: Option<Xfrm>)
+                                        -> DatasetIntfRef<CollatedSample<T>> {
         let args = self.build().unwrap();
         Rc::new(MNIST::new(args, xfrm))
     }
