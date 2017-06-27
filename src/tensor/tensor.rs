@@ -182,7 +182,7 @@ impl From<TensorKind> for Tensor<i64> {
     }
 }
 
-pub struct Tensor<T : NumLimits> {
+pub struct Tensor<T: NumLimits> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 
@@ -276,7 +276,9 @@ impl<T: NumLimits> Tensor<T> {
     pub fn s(&self, dim: usize) -> Self {
         unimplemented!()
     }
-    pub fn cast<D>(&self) -> Tensor<D> where D: NumLimits {
+    pub fn cast<D>(&self) -> Tensor<D>
+        where D: NumLimits
+    {
         unimplemented!()
     }
 }

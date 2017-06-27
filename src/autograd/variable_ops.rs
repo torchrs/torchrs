@@ -712,20 +712,10 @@ impl VarKind {
         //self.data_borrow().clone().addt_(val, rhs.data_borrow());
         self
     }
-    pub fn addbmm<T: NumLimits>(&self,
-                                   beta: T,
-                                   alpha: T,
-                                   tensor1: &Self,
-                                   tensor2: &Self)
-                                   -> Self {
+    pub fn addbmm<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addbmm_<T: NumLimits>(self,
-                                    beta: T,
-                                    alpha: T,
-                                    tensor1: &Self,
-                                    tensor2: &Self)
-                                    -> Self {
+    pub fn addbmm_<T: NumLimits>(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
     pub fn addcdiv<T: NumLimits>(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
@@ -740,20 +730,10 @@ impl VarKind {
     pub fn addcmul_<T: NumLimits>(self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmm<T: NumLimits>(&self,
-                                  beta: T,
-                                  alpha: T,
-                                  tensor1: &Self,
-                                  tensor2: &Self)
-                                  -> Self {
+    pub fn addmm<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addmm_<T: NumLimits>(self,
-                                   beta: T,
-                                   alpha: T,
-                                   tensor1: &Self,
-                                   tensor2: &Self)
-                                   -> Self {
+    pub fn addmm_<T: NumLimits>(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
     pub fn addmv<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
@@ -783,20 +763,10 @@ impl VarKind {
     pub fn atan2_(self) -> Self {
         unimplemented!()
     }
-    pub fn baddbmm<T: NumLimits>(&self,
-                                    beta: T,
-                                    alpha: T,
-                                    tensor1: &Self,
-                                    tensor2: &Self)
-                                    -> Self {
+    pub fn baddbmm<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn baddbmm_<T: NumLimits>(self,
-                                     beta: T,
-                                     alpha: T,
-                                     tensor1: &Self,
-                                     tensor2: &Self)
-                                     -> Self {
+    pub fn baddbmm_<T: NumLimits>(self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
     }
     pub fn bernoulli<T: NumLimits>(&self, p: T) -> Self {

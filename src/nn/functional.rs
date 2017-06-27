@@ -6,9 +6,9 @@ pub use nn::_functions::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
 
 pub fn max_pool2d<T: NumLimits>(input: &Variable<T>,
-                                   kernel_size: (u32, u32),
-                                   args: &MaxPool2dArgs)
-                                   -> Variable<T> {
+                                kernel_size: (u32, u32),
+                                args: &MaxPool2dArgs)
+                                -> Variable<T> {
     let mut pool_args = args.v.clone();
     pool_args.kernel_size = vec![kernel_size.0, kernel_size.1];
     MaxPool2d::new(&pool_args)
@@ -58,10 +58,10 @@ pub fn dropout2d_<T: NumLimits>(input: &mut Variable<T>, args: &DropoutArgs) -> 
 }
 
 pub fn conv2d<T: NumLimits>(input: &mut Variable<T>,
-                               weight: &mut Variable<T>,
-                               mut bias_: Option<&mut Variable<T>>,
-                               args: &mut Conv2dFArgs)
-                               -> Variable<T> {
+                            weight: &mut Variable<T>,
+                            mut bias_: Option<&mut Variable<T>>,
+                            args: &mut Conv2dFArgs)
+                            -> Variable<T> {
     let mut v = match bias_ {
         Some(ref mut bias) => {
             vec![input.clone().into(),
@@ -77,9 +77,9 @@ pub fn conv2d<T: NumLimits>(input: &mut Variable<T>,
 }
 
 pub fn linear<T: NumLimits>(input: &Variable<T>,
-                               weight: &mut Variable<T>,
-                               bias_: Option<&mut Variable<T>>)
-                               -> Variable<T> {
+                            weight: &mut Variable<T>,
+                            bias_: Option<&mut Variable<T>>)
+                            -> Variable<T> {
     let v = if let Some(bias) = bias_ {
         vec![input.clone(), weight.clone(), bias.clone()]
     } else {
@@ -111,9 +111,9 @@ pub fn log_softmax<T: NumLimits>(input: &Variable<T>) -> Variable<T> {
 }
 
 pub fn nll_loss<T: NumLimits>(input: &Variable<T>,
-                                 target: &Variable<i64>,
-                                 args: &NLLLossArgs)
-                                 -> Variable<T> {
+                              target: &Variable<i64>,
+                              args: &NLLLossArgs)
+                              -> Variable<T> {
     let mut kind_input = vec![input.clone().into(), target.clone().into()];
     NLLLoss::new(args).f(&mut kind_input).remove(0).into()
 

@@ -105,8 +105,8 @@ pub mod ExecutionEngine {
 
     }
     pub fn run_backward<T: NumLimits>(var: &mut Variable<T>,
-                                         grad: VarKind,
-                                         retain_variables: bool) {
+                                      grad: VarKind,
+                                      retain_variables: bool) {
         let grad_fn;
         match var.grad_fn() {
             Some(v) => grad_fn = v,
