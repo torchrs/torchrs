@@ -59,14 +59,6 @@ impl TensorKind {
     }
 }
 
-/*
-impl<T: NumLimits> Index<usize> for TensorKind {
-    type Output = T;
-    fn index(&self, idx: usize) -> &Self::Output {
-        unimplemented!()
-    }
-}
-*/
 impl PartialEq for TensorKind {
     fn eq(&self, other: &Self) -> bool {
         use self::TensorKind::{FloatTensor, LongTensor};
@@ -225,10 +217,6 @@ impl<T: NumLimits> Index<i32> for Tensor<T> {
     }
 }
 
-
-pub trait New<D, T> {
-    fn new(args: D) -> T;
-}
 pub trait NewSelf<D, T> {
     fn new(&self, args: D) -> T;
 }
@@ -331,7 +319,7 @@ impl FloatTensor {
             }
         }
     }
-    pub fn with_capacity(dims: &[isize]) -> Self {
+    pub fn with_capacity(dims: &[usize]) -> Self {
         let size = dims.iter().product();
         let storage = FloatStorage::with_capacity(size);
         let strides = vec![1; dims.len()];
@@ -347,10 +335,10 @@ impl FloatTensor {
         FloatTensor {
             t: &mut t,
             storage: storage,
-            dims: Vec::from(dims),
+            dims: dims.iter().map(|v| *v as isize).collect(),
         }
     }
-    pub fn randn(dims: &[isize]) -> Self {
+    pub fn randn(dims: &[usize]) -> Self {
         /* XXX */
         let mut t = FloatTensor::with_capacity(dims);
         for x in t.storage.iter_mut() {

@@ -14,8 +14,8 @@ impl FloatStorage {
     pub fn new() -> Self {
         unsafe { FloatStorage { t: THFloatStorage_new() } }
     }
-    pub fn with_capacity(size: isize) -> Self {
-        unsafe { FloatStorage { t: THFloatStorage_newWithSize(size) } }
+    pub fn with_capacity(size: usize) -> Self {
+        unsafe { FloatStorage { t: THFloatStorage_newWithSize(size as isize) } }
     }
     pub fn into_slice(&self) -> &[f32] {
         unsafe { slice::from_raw_parts((*self.t).data, (*self.t).size as usize) }
@@ -43,8 +43,8 @@ impl LongStorage {
     pub fn new() -> Self {
         unsafe { LongStorage { t: THLongStorage_new() } }
     }
-    pub fn with_capacity(size: isize) -> Self {
-        unsafe { LongStorage { t: THLongStorage_newWithSize(size) } }
+    pub fn with_capacity(size: usize) -> Self {
+        unsafe { LongStorage { t: THLongStorage_newWithSize(size as isize) } }
     }
     pub fn into_slice(&self) -> &[i64] {
         unsafe { slice::from_raw_parts((*self.t).data, (*self.t).size as usize) }
