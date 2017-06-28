@@ -181,12 +181,14 @@ impl<T: NumLimits> TensorNew<T> for Tensor<T> {
 
 impl TensorNew<u8> for Tensor<u8> {
     fn tensor_new(arg: THDims) -> Tensor<u8> {
-        unimplemented!()
+        let t = ::RcMutNew(::tensor::ByteTensor::with_capacity(arg.dims.as_slice()));
+        ::tensor::Tensor { value: t }
     }
 }
 impl TensorNew<i64> for Tensor<i64> {
     fn tensor_new(arg: THDims) -> Tensor<i64> {
-        unimplemented!()
+        let t = ::RcMutNew(::tensor::LongTensor::with_capacity(arg.dims.as_slice()));
+        ::tensor::Tensor { value: t }
     }
 }
 impl TensorNew<f32> for Tensor<f32> {
@@ -197,7 +199,8 @@ impl TensorNew<f32> for Tensor<f32> {
 }
 impl TensorNew<f64> for Tensor<f64> {
     fn tensor_new(arg: THDims) -> Tensor<f64> {
-        unimplemented!()
+        let t = ::RcMutNew(::tensor::DoubleTensor::with_capacity(arg.dims.as_slice()));
+        ::tensor::Tensor { value: t }
     }
 }
 

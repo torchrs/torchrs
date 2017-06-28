@@ -450,6 +450,7 @@ macro_rules! impl_tensor_impl {
 }
 
 impl_tensor_impl!(FloatTensor, f32, THFloatTensor, FloatStorage);
+impl_tensor_impl!(DoubleTensor, f64, THDoubleTensor, DoubleStorage);
 impl_tensor_impl!(LongTensor, i64, THLongTensor, LongStorage);
 impl_tensor_impl!(ByteTensor, u8, THByteTensor, ByteStorage);
 

@@ -47,5 +47,6 @@ macro_rules! impl_storage_impl {
 }
 
 impl_storage_impl!(FloatStorage, f32, THFloatStorage);
+impl_storage_impl!(DoubleStorage, f64, THDoubleStorage);
 impl_storage_impl!(LongStorage, i64, THLongStorage);
 impl_storage_impl!(ByteStorage, u8, THByteStorage);
