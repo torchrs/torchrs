@@ -183,7 +183,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
         } else {
             (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
-        let mut output = model.f(&mut data);
+        let mut output = model.f(data);
         test_loss += F::nll_loss(output.clone(), target.clone(), &F::NLLLossArgs::default());
         let pred = output.data().max_reduce(1).1;
         correct += pred.eq_tensor(&*target.data()).cpu().sum() as u32;

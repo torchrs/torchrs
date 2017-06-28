@@ -77,17 +77,12 @@ pub trait ModDelegate<T: NumLimits> {
 
 pub trait ModIntf<T: NumLimits>: ModDelegate<T> + GetFieldStruct<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T>;
-    fn f<D: AsMut<Variable<T>>>(&mut self, mut input: D) -> Variable<T>
-        where Self: Sized
-    {
-        self.f_inner(input.as_mut())
-    }
-    fn f_inner(&mut self, input: &mut Variable<T>) -> Variable<T> {
+    fn f(&mut self, mut input: Variable<T>) -> Variable<T> {
         {
             let mut m = self.delegate();
             // do pre-forward hooks
         }
-        let output = self.forward(input.as_mut());
+        let output = self.forward(&mut input);
         {
             let mut m = self.delegate();
             // do post-forward hooks
