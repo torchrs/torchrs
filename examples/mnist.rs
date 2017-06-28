@@ -7,8 +7,6 @@ extern crate torchrs;
 #[macro_use]
 extern crate clap;
 
-
-
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
 use torchrs::optim;
 use torchrs::optim::OptimVal;
@@ -200,11 +198,15 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
 
 fn main() {
     let train_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::<f32>::build("../data").done(None),
+        D::DataLoader::new(datasets::MNIST::<f32>::build("../data")
+                               .download(true)
+                               .done(None),
                            D::DataLoaderArgs::default());
 
     let test_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::<f32>::build("../data").done(None),
+        D::DataLoader::new(datasets::MNIST::<f32>::build("../data")
+                               .train(false)
+                               .done(None),
                            D::DataLoaderArgs::default());
     let args = parse_args();
     let mut model = Net::new();
