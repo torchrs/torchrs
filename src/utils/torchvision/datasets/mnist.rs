@@ -4,7 +4,7 @@ use std::{io, fs, slice};
 use curl::easy::Easy;
 use memmap::{Mmap, Protection};
 use flate2::{Flush, Decompress};
-use std::io::Write;
+use std::io::{Read, Write};
 use utils::data::{DatasetIntfRef, DatasetIntf};
 use std::rc::Rc;
 use tensor::{Tensor, TensorKind, NumLimits};
@@ -52,7 +52,8 @@ fn download(root: &String) -> io::Result<()> {
     for url in URLS.iter() {
         println!("downloading {}", url);
         let paths: Vec<_> = url.split("/").collect();
-        let fname: Vec<_> = paths[5].split("/").collect();
+        let mut fname: Vec<_> = paths[5].split("/").collect();
+        fname = fname[0].split(".").collect();
         let file_path = raw_path.join(fname[0]);
         let mut file = fs::OpenOptions::new()
             .write(true)
@@ -71,10 +72,10 @@ fn download(root: &String) -> io::Result<()> {
                 .unwrap();
             transfer.perform().unwrap();
         }
-        let mut output = Vec::with_capacity(data.len());
-        // do we have a header?
-        Decompress::new(false)
-            .decompress_vec(data.as_slice(), &mut output, Flush::Finish)?;
+        let mut output = Vec::with_capacity(data.len() + 1100000);
+        let mut gz = ::flate2::read::GzDecoder::new(data.as_slice())?;
+        gz.read_to_end(&mut output)?;
+
         file.write_all(output.as_slice())?;
     }
     println!("Proceeding");
@@ -95,11 +96,11 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
     let fp = Mmap::open_path(path, Protection::Read)?;
     let (length, nrows, ncols);
     {
-        let data = unsafe { slice::from_raw_parts(fp.ptr() as *const u32, fp.len()) };
-        assert_eq!(data[0], 2051);
-        length = data[1] as usize;
-        nrows = data[2] as usize;
-        ncols = data[3] as usize;
+        let data = unsafe { slice::from_raw_parts(fp.ptr() as *const i32, fp.len()) };
+        assert_eq!(i32::from_be(data[0]), 2051);
+        length = i32::from_be(data[1]) as usize;
+        nrows = i32::from_be(data[2]) as usize;
+        ncols = i32::from_be(data[3]) as usize;
     }
     let data = unsafe { fp.as_slice() };
     let mut images: Vec<Vec<u8>> = Vec::with_capacity(length);
