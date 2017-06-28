@@ -1,5 +1,5 @@
 use autograd::{Function, FuncId, ExecutionEngine};
-use tensor::{Tensor, NewSelf};
+use tensor::Tensor;
 use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
@@ -530,7 +530,7 @@ impl<T: NumLimits> Variable<T> {
             gradient = match gradient_ {
                 Some(gradient) => gradient,
                 None => {
-                    store = parent.data.new(1);
+                    store = parent.data.new(T::one());
                     &mut store
                 }
             };

@@ -1,15 +1,25 @@
-use tensor::{Tensor, NumLimits};
+use tensor::{Tensor, NumLimits, THVec, THVecGeneric, THDims};
+use num::NumCast;
 
-pub struct THVec<T> {
-    data: Vec<T>,
-    dims: Vec<usize>,
-}
 impl<T: NumLimits> THVec<T> {
-    fn new(dims: Vec<usize>, data: Vec<T>) -> Self {
+    pub fn new(dims: Vec<usize>, data: Vec<T>) -> Self {
         THVec {
             dims: dims,
             data: data,
         }
+    }
+}
+impl THVecGeneric {
+    pub fn new(dims: Vec<usize>, data: Vec<i64>) -> Self {
+        THVecGeneric {
+            dims: dims,
+            data: data,
+        }
+    }
+}
+impl THDims {
+    fn new(dims: Vec<usize>) -> Self {
+        THDims { dims: dims }
     }
 }
 
@@ -44,6 +54,58 @@ impl<T: NumLimits> From<T> for THVec<T> {
         THVec::new(vec![], v)
     }
 }
+impl<T: NumLimits> From<T> for THVecGeneric {
+    fn from(input: T) -> Self {
+        let v: Vec<i64> = vec![<i64 as NumCast>::from(input).unwrap()];
+        THVecGeneric::new(vec![], v)
+    }
+}
+
+#[allow(unused_variables)]
+impl<T: NumLimits> From<()> for THVec<T> {
+    fn from(input: ()) -> Self {
+        THVec::new(vec![], vec![])
+    }
+}
+#[allow(unused_variables)]
+impl From<()> for THVecGeneric {
+    fn from(input: ()) -> Self {
+        THVecGeneric::new(vec![], vec![])
+    }
+}
+#[allow(unused_variables)]
+impl From<()> for THDims {
+    fn from(input: ()) -> Self {
+        THDims::new(vec![])
+    }
+}
+impl<T: NumLimits> From<(usize, usize)> for THVec<T> {
+    fn from(input: (usize, usize)) -> Self {
+
+        THVec::new(vec![input.0, input.1], vec![])
+    }
+}
+impl From<(usize, usize)> for THVecGeneric {
+    fn from(input: (usize, usize)) -> Self {
+
+        THVecGeneric::new(vec![input.0, input.1], vec![])
+    }
+}
+impl<T: NumLimits> From<Vec<usize>> for THVec<T> {
+    fn from(input: Vec<usize>) -> Self {
+        THVec::new(input, vec![])
+    }
+}
+impl From<Vec<usize>> for THVecGeneric {
+    fn from(input: Vec<usize>) -> Self {
+        THVecGeneric::new(input, vec![])
+    }
+}
+impl From<Vec<usize>> for THDims {
+    fn from(input: Vec<usize>) -> Self {
+        THDims::new(input)
+    }
+}
 impl<T: NumLimits> From<Vec<Tensor<T>>> for THVec<T> {
     fn from(input: Vec<Tensor<T>>) -> Self {
         /*
@@ -51,6 +113,37 @@ impl<T: NumLimits> From<Vec<Tensor<T>>> for THVec<T> {
         THVec::new(2, v)
         */
         unimplemented!()
+    }
+}
+impl From<THVecGeneric> for THVec<f32> {
+    fn from(input: THVecGeneric) -> Self {
+        let data: Vec<f32> = input
+            .data
+            .iter()
+            .map(|t| <f32 as NumCast>::from(*t).unwrap())
+            .collect();
+        THVec::new(input.dims.clone(), data)
+    }
+}
+impl From<THVecGeneric> for THVec<i64> {
+    fn from(input: THVecGeneric) -> Self {
+        let data: Vec<i64> = input
+            .data
+            .iter()
+            .map(|t| <i64 as NumCast>::from(*t).unwrap())
+            .collect();
+        THVec::new(input.dims.clone(), data)
+    }
+}
+
+impl<T: NumLimits> From<THVec<T>> for THDims {
+    fn from(input: THVec<T>) -> Self {
+        THDims::new(input.dims.clone())
+    }
+}
+impl From<THVecGeneric> for THDims {
+    fn from(input: THVecGeneric) -> Self {
+        THDims::new(input.dims.clone())
     }
 }
 impl<T: NumLimits> From<[T; 0]> for THVec<T> {
@@ -75,35 +168,35 @@ impl<T: NumLimits> From<[T; 3]> for THVec<T> {
 }
 
 pub trait TensorNew<T: NumLimits> {
-    fn tensor_new(arg: THVec<T>) -> Tensor<T> {
+    fn tensor_new(arg: THDims) -> Tensor<T> {
         unimplemented!()
     }
 }
 
 impl<T: NumLimits> TensorNew<T> for Tensor<T> {
-    default fn tensor_new(arg: THVec<T>) -> Tensor<T> {
+    default fn tensor_new(arg: THDims) -> Tensor<T> {
         unreachable!()
     }
 }
 
 impl TensorNew<u8> for Tensor<u8> {
-    fn tensor_new(arg: THVec<u8>) -> Tensor<u8> {
+    fn tensor_new(arg: THDims) -> Tensor<u8> {
         unimplemented!()
     }
 }
 impl TensorNew<i64> for Tensor<i64> {
-    fn tensor_new(arg: THVec<i64>) -> Tensor<i64> {
+    fn tensor_new(arg: THDims) -> Tensor<i64> {
         unimplemented!()
     }
 }
 impl TensorNew<f32> for Tensor<f32> {
-    fn tensor_new(arg: THVec<f32>) -> Tensor<f32> {
+    fn tensor_new(arg: THDims) -> Tensor<f32> {
         let t = ::RcMutNew(::tensor::FloatTensor::with_capacity(arg.dims.as_slice()));
         ::tensor::Tensor { value: t }
     }
 }
 impl TensorNew<f64> for Tensor<f64> {
-    fn tensor_new(arg: THVec<f64>) -> Tensor<f64> {
+    fn tensor_new(arg: THDims) -> Tensor<f64> {
         unimplemented!()
     }
 }
@@ -133,5 +226,6 @@ pub fn tensor<S, T>(arg: S) -> Tensor<T>
     where T: NumLimits,
           S: Into<THVec<T>>
 {
-    Tensor::tensor_new(arg.into())
+    let t: THVec<T> = arg.into();
+    Tensor::tensor_new(t.into())
 }

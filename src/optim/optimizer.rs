@@ -1,7 +1,7 @@
 pub use std::collections::HashMap;
 pub use autograd::{Variable, VarKind, VarId};
 pub use nn::ModIntf;
-pub use tensor::{Tensor, TensorKind, NewSelf, NumLimits};
+pub use tensor::{Tensor, TensorKind, NumLimits};
 use utils::unsafe_lib::MutMap;
 
 pub struct Optimizer {

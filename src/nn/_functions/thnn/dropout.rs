@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList, TensorKind, NewSelf, NumLimits};
+use tensor::{TensorKindList, OptTensorKindList, TensorKind, NumLimits};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]

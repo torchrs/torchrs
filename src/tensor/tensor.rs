@@ -6,12 +6,25 @@ use std::convert::From;
 use std::cmp::max;
 use std::hash::{Hash, Hasher};
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
+use num::NumCast;
 
 use storage::*;
 use ::*;
 pub use tensor::tensor_ops::*;
 use rand;
 use {Ixs, RcMut};
+
+pub struct THVec<T> {
+    pub data: Vec<T>,
+    pub dims: Vec<usize>,
+}
+pub struct THVecGeneric {
+    pub data: Vec<i64>,
+    pub dims: Vec<usize>,
+}
+pub struct THDims {
+    pub dims: Vec<usize>,
+}
 
 pub enum TensorType {
     Float,
@@ -23,7 +36,7 @@ pub enum TensorType {
     Long,
 }
 
-pub trait NumLimits: Copy + Default + ::num::Num {}
+pub trait NumLimits: Copy + Default + ::num::Num + ::num::NumCast {}
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
 impl NumLimits for i32 {}
@@ -45,6 +58,28 @@ pub type TensorId = usize;
 
 
 impl TensorKind {
+    pub fn new<S>(&self, args: S) -> Self
+        where S: Into<THVecGeneric>
+    {
+        match *self {
+            TensorKind::FloatTensor(ref t) => {
+                let tv: THVecGeneric = args.into();
+                let tv: THVec<f32> = tv.into();
+                let mut newt: Tensor<f32> = t.new(tv.dims);
+                newt.set(tv.data);
+                newt.into()
+            }
+            TensorKind::LongTensor(ref t) => {
+                let tv: THVecGeneric = args.into();
+                let tv: THVec<i64> = tv.into();
+                let mut newt: Tensor<i64> = t.new(tv.dims);
+                newt.set(tv.data);
+                newt.into()
+            }
+
+        }
+    }
+
     pub fn backend(&self) -> Box<nn::BackendIntf> {
         unimplemented!()
     }
@@ -217,47 +252,16 @@ impl<T: NumLimits> Index<i32> for Tensor<T> {
     }
 }
 
-pub trait NewSelf<D, T> {
-    fn new(&self, args: D) -> T;
-}
-
-impl<T: NumLimits> NewSelf<usize, Tensor<T>> for Tensor<T> {
-    fn new(&self, args: usize) -> Self {
-        unimplemented!()
-    }
-}
-impl<T: NumLimits> NewSelf<(), Tensor<T>> for Tensor<T> {
-    fn new(&self, args: ()) -> Self {
-        unimplemented!()
-    }
-}
-impl<T: NumLimits> NewSelf<Vec<usize>, Tensor<T>> for Tensor<T> {
-    fn new(&self, args: Vec<usize>) -> Self {
-        unimplemented!()
-    }
-}
-impl NewSelf<usize, TensorKind> for TensorKind {
-    fn new(&self, args: usize) -> Self {
-        unimplemented!()
-    }
-}
-impl NewSelf<(), TensorKind> for TensorKind {
-    fn new(&self, args: ()) -> Self {
-        unimplemented!()
-    }
-}
-impl NewSelf<Vec<usize>, TensorKind> for TensorKind {
-    fn new(&self, args: Vec<usize>) -> Self {
-        unimplemented!()
-    }
-}
-impl NewSelf<[usize; 2], TensorKind> for TensorKind {
-    fn new(&self, args: [usize; 2]) -> Self {
-        unimplemented!()
-    }
-}
-
 impl<T: NumLimits> Tensor<T> {
+    pub fn new<S>(&self, args: S) -> Self
+        where S: Into<THVec<T>>
+    {
+
+        ::torch::tensor::<S, T>(args)
+    }
+    pub fn set(&mut self, args: Vec<T>) {
+        unimplemented!()
+    }
     pub fn len(&self) -> usize {
         unimplemented!()
     }

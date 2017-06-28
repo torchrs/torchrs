@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList};
-use tensor::{TensorKindList, OptTensorKindList, NewSelf};
+use tensor::{TensorKindList, OptTensorKindList};
 
 pub struct Threshold {
     delegate: Function,

@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{OptTensorKindList, TensorKindList, NewSelf};
+use tensor::{OptTensorKindList, TensorKindList};
 
 impl_func!(LinearF);
 
@@ -7,7 +7,7 @@ impl FuncIntf for LinearF {
     fn forward(&mut self, input_list: &mut TensorKindList) -> TensorKindList {
         self.save_for_backward(input_list);
         let (input, weight) = (input_list.remove(0), input_list.remove(0));
-        let mut output = input.new([input.size()[0], weight.size()[0]]);
+        let mut output = input.new((input.size()[0], weight.size()[0]));
         output.addmm_(0, 1, &input, &weight.t());
         if input_list.len() != 0 {
             let bias = input_list.remove(0).expand_as(&output);

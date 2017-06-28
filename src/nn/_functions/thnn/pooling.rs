@@ -1,5 +1,5 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList, NewSelf};
+use tensor::{TensorKindList, OptTensorKindList};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
