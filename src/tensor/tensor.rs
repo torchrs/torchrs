@@ -305,52 +305,153 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn inner(&self) -> *mut ::std::os::raw::c_void;
 }
 
-impl_tensor_impl!(FloatTensor, f32, THFloatTensor);
+macro_rules! impl_tensor_impl {
+    ($name:ident, $type:ident, $thname:ident, $storage_name:ident) => {
+        pub struct $name {
+            t: *mut $thname,
+            storage: $storage_name,
+            dims: Vec<isize>,
+        }
+        impl $name {
+            pub fn new() -> Self {
+                unsafe {
+                    $name {
+                        t: concat_idents!($thname, _new)(),
+                        storage: $storage_name ::new(),
+                        dims: Vec::new(),
+                    }
+                }
+            }
+            pub fn with_capacity(dims: &[usize]) -> Self {
+                let size = dims.iter().product();
+                let storage = $storage_name ::with_capacity(size);
+                let strides = vec![1; dims.len()];
+                let mut t = $thname {
+                    size: dims.clone().as_ptr() as *mut ::std::os::raw::c_long,
+                    stride: strides.as_ptr() as *mut ::std::os::raw::c_long,
+                    nDimension: dims.len() as i32,
+                    storage: storage.t,
+                    storageOffset: 0,
+                    refcount: 1,
+                    flag: TH_TENSOR_REFCOUNTED as i8,
+                };
+                $name {
+                    t: &mut t,
+                    storage: storage,
+                    dims: dims.iter().map(|v| *v as isize).collect(),
+                }
+            }
+            pub fn randn(dims: &[usize]) -> Self {
+                /* XXX */
+                let mut t = $name  ::with_capacity(dims);
+                for x in t.storage.iter_mut() {
+                    *x = rand::random::<$type>()
+                }
+                t
+            }
+        }
 
-pub struct FloatTensor {
-    t: *mut THFloatTensor,
-    storage: FloatStorage,
-    dims: Vec<isize>,
-}
+        impl TensorImpl<$type> for $name {
+            fn new(&self) -> RefTI<$type> {
+                RcMutNew($name ::new())
+            }
+            fn add(&self, value: $type, output: &TIArg<$type>) {
+                let out = typecast!(output.inner(), $thname);
+                unsafe {
+                    concat_idents!(TH, $name, _add)(out, self.t, value);
+                };
+            }
+            fn inner(&self) -> *mut ::std::os::raw::c_void {
+                self.t as *mut ::std::os::raw::c_void
+            }
+            fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
+                let out = typecast!(output.inner(), $thname);
+                let rhsp = typecast!(rhs.inner(), $thname);
+                unsafe {
+                    concat_idents!($thname, _add)(out, rhsp, value);
+                };
+            }
+        }
+        impl Default for $name {
+            fn default() -> Self {
+                $name ::new()
+            }
+        }
 
-impl FloatTensor {
-    pub fn new() -> Self {
-        unsafe {
-            FloatTensor {
-                t: THFloatTensor_new(),
-                storage: FloatStorage::new(),
-                dims: Vec::new(),
+        impl<'a> Index<&'a [isize]> for $name {
+            type Output = $type;
+
+            fn index(&self, idx: &'a [isize]) -> &Self::Output {
+                let mut index: isize = 0;
+                let lastidx = max(0, idx.len() as isize - 1) as usize;
+                if idx.len() != self.dims.len() {
+                    panic!("bad dimlen")
+                }
+                for i in 0..lastidx {
+                    if idx[i] >= self.dims[i] {
+                        panic!("bad dimlen")
+                    }
+                    index += idx[i] * self.dims[i]
+                }
+                if idx[lastidx] >= self.dims[lastidx] {
+                    panic!("bad dimlen")
+                }
+                index += idx[lastidx];
+                &self.storage[index]
+            }
+        }
+
+        impl<'a> IndexMut<&'a [isize]> for $name {
+            fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
+                let mut index: isize = 0;
+                let lastidx = max(0, idx.len() as isize - 1) as usize;
+                if idx.len() != self.dims.len() {
+                    panic!("bad dimlen")
+                }
+                for i in 0..lastidx {
+                    if idx[i] >= self.dims[i] {
+                        panic!("bad dimlen")
+                    }
+                    index += idx[i] * self.dims[i]
+                }
+                if idx[lastidx] >= self.dims[lastidx] {
+                    panic!("bad dimlen")
+                }
+                index += idx[lastidx];
+                &mut self.storage[index]
+            }
+        }
+        impl Index<isize> for $name {
+            type Output = $type;
+            fn index(&self, idx: isize) -> &Self::Output {
+                unimplemented!()
+            }
+        }
+        impl Drop for $name {
+            fn drop(&mut self) {
+                unsafe { concat_idents!($thname, _free)(self.t) }
+            }
+        }
+        impl Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where S: Serializer
+            {
+                unimplemented!()
+            }
+        }
+        impl<'de> Deserialize<'de> for $name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where D: Deserializer<'de>
+            {
+                unimplemented!()
             }
         }
     }
-    pub fn with_capacity(dims: &[usize]) -> Self {
-        let size = dims.iter().product();
-        let storage = FloatStorage::with_capacity(size);
-        let strides = vec![1; dims.len()];
-        let mut t = THFloatTensor {
-            size: dims.clone().as_ptr() as *mut ::std::os::raw::c_long,
-            stride: strides.as_ptr() as *mut ::std::os::raw::c_long,
-            nDimension: dims.len() as i32,
-            storage: storage.t,
-            storageOffset: 0,
-            refcount: 1,
-            flag: TH_TENSOR_REFCOUNTED as i8,
-        };
-        FloatTensor {
-            t: &mut t,
-            storage: storage,
-            dims: dims.iter().map(|v| *v as isize).collect(),
-        }
-    }
-    pub fn randn(dims: &[usize]) -> Self {
-        /* XXX */
-        let mut t = FloatTensor::with_capacity(dims);
-        for x in t.storage.iter_mut() {
-            *x = rand::random::<f32>()
-        }
-        t
-    }
 }
+
+impl_tensor_impl!(FloatTensor, f32, THFloatTensor, FloatStorage);
+impl_tensor_impl!(LongTensor, i64, THLongTensor, LongStorage);
+impl_tensor_impl!(ByteTensor, u8, THByteTensor, ByteStorage);
 
 pub fn make_vec(val: usize, count: usize) -> Vec<isize> {
     let mut vec = Vec::new();
