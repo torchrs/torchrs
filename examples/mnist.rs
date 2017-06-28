@@ -128,23 +128,23 @@ impl<T: tensor::NumLimits> ModIntf<T> for Net<T> {
         let pool_val = F::MaxPool2dArgs::default();
         let mut dropout_val = F::DropoutArgs::default();
         dropout_val.training = self.delegate.training;
-        let mut x = F::relu(&F::max_pool2d(&self.conv1.f(args), (2, 2), &pool_val));
-        x = F::relu(&F::max_pool2d(&F::dropout2d(&self.conv2.f(&mut x), &dropout_val),
-                                   (2, 2),
-                                   &pool_val));
-        x = x.view(&[-1, 320]);
-        x = F::relu(&self.fc1.f(&mut x));
-        x = F::dropout(&x, &dropout_val);
-        x = self.fc2.f(&mut x);
-        F::log_softmax(&x)
+        let mut x = F::relu(F::max_pool2d(self.conv1.f(args), (2, 2), &pool_val));
+        x = F::relu(F::max_pool2d(F::dropout2d(self.conv2.f(x), &dropout_val),
+                                  (2, 2),
+                                  &pool_val));
+        x = x.view([-1, 320]);
+        x = F::relu(self.fc1.f(x));
+        x = F::dropout(x, &dropout_val);
+        x = self.fc2.f(x);
+        F::log_softmax(x)
     }
 }
 
-fn train<'a>(model: &mut Net<f32>,
-             args: &NetArgs,
-             train_loader: &D::BatchLoader<f32, i64>,
-             epoch: u32,
-             optimizer: &mut optim::OptIntf<f32>) {
+fn train(model: &mut Net<f32>,
+         args: &NetArgs,
+         train_loader: &D::BatchLoader<f32, i64>,
+         epoch: u32,
+         optimizer: &mut optim::OptIntf<f32>) {
     model.train();
     for (batch_idx, (ref data, ref target)) in train_loader.iter().enumerate() {
         let (mut data, target) = if args.cuda {
@@ -153,8 +153,8 @@ fn train<'a>(model: &mut Net<f32>,
             (Variable::new(data.clone()), Variable::new(target.clone()))
         };
         optimizer.zero_grad(model);
-        let output = model.f(&mut data);
-        let mut loss = F::nll_loss(&output, &target, &F::NLLLossArgs::default());
+        let output = model.f(data.clone());
+        let mut loss = F::nll_loss(output, target, &F::NLLLossArgs::default());
         loss.backward();
         optimizer.step(model);
         if batch_idx % args.log_interval == 0 {
@@ -184,7 +184,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
         let mut output = model.f(&mut data);
-        test_loss += F::nll_loss(&output, &target, &F::NLLLossArgs::default());
+        test_loss += F::nll_loss(output.clone(), target.clone(), &F::NLLLossArgs::default());
         let pred = output.data().max_reduce(1).1;
         correct += pred.eq_tensor(&*target.data()).cpu().sum() as u32;
     }

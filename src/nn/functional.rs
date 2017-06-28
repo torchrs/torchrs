@@ -5,7 +5,7 @@ use nn::_functions::{Conv2dFArgs, ConvNdArgs, ConvNd, Dropout1d, Dropout2d, Thre
 pub use nn::_functions::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
 
-pub fn max_pool2d<T: NumLimits>(input: &Variable<T>,
+pub fn max_pool2d<T: NumLimits>(input: Variable<T>,
                                 kernel_size: (u32, u32),
                                 args: &MaxPool2dArgs)
                                 -> Variable<T> {
@@ -17,7 +17,7 @@ pub fn max_pool2d<T: NumLimits>(input: &Variable<T>,
         .into()
 }
 
-pub fn dropout<T: NumLimits>(input: &Variable<T>, args: &DropoutArgs) -> Variable<T> {
+pub fn dropout<T: NumLimits>(input: Variable<T>, args: &DropoutArgs) -> Variable<T> {
     if args.training == false {
         return input.clone();
     }
@@ -27,7 +27,7 @@ pub fn dropout<T: NumLimits>(input: &Variable<T>, args: &DropoutArgs) -> Variabl
         .into()
 }
 
-pub fn dropout_<T: NumLimits>(input: &mut Variable<T>, args: &DropoutArgs) -> Variable<T> {
+pub fn dropout_<T: NumLimits>(input: Variable<T>, args: &DropoutArgs) -> Variable<T> {
     if args.training == false {
         return input.clone();
     }
@@ -37,7 +37,7 @@ pub fn dropout_<T: NumLimits>(input: &mut Variable<T>, args: &DropoutArgs) -> Va
         .into()
 }
 
-pub fn dropout2d<T: NumLimits>(input: &Variable<T>, args: &DropoutArgs) -> Variable<T> {
+pub fn dropout2d<T: NumLimits>(input: Variable<T>, args: &DropoutArgs) -> Variable<T> {
     if args.training == false {
         return input.clone();
     }
@@ -47,7 +47,7 @@ pub fn dropout2d<T: NumLimits>(input: &Variable<T>, args: &DropoutArgs) -> Varia
         .into()
 }
 
-pub fn dropout2d_<T: NumLimits>(input: &mut Variable<T>, args: &DropoutArgs) -> Variable<T> {
+pub fn dropout2d_<T: NumLimits>(input: Variable<T>, args: &DropoutArgs) -> Variable<T> {
     if args.training == false {
         return input.clone();
     }
@@ -89,29 +89,29 @@ pub fn linear<T: NumLimits>(input: &Variable<T>,
     LinearF::new().f(&mut v).remove(0).into()
 }
 
-pub fn relu<T: NumLimits>(input: &Variable<T>) -> Variable<T> {
+pub fn relu<T: NumLimits>(input: Variable<T>) -> Variable<T> {
     Threshold::new(0., 0., false)
         .f(&mut vec![input.clone().into()])
         .remove(0)
         .into()
 }
 
-pub fn relu_<T: NumLimits>(input: &mut Variable<T>) -> Variable<T> {
+pub fn relu_<T: NumLimits>(input: Variable<T>) -> Variable<T> {
     Threshold::new(0., 0., true)
         .f(&mut vec![input.clone().into()])
         .remove(0)
         .into()
 }
 
-pub fn log_softmax<T: NumLimits>(input: &Variable<T>) -> Variable<T> {
+pub fn log_softmax<T: NumLimits>(input: Variable<T>) -> Variable<T> {
     LogSoftmax::new()
         .f(&mut vec![input.clone().into()])
         .remove(0)
         .into()
 }
 
-pub fn nll_loss<T: NumLimits>(input: &Variable<T>,
-                              target: &Variable<i64>,
+pub fn nll_loss<T: NumLimits>(input: Variable<T>,
+                              target: Variable<i64>,
                               args: &NLLLossArgs)
                               -> Variable<T> {
     let mut kind_input = vec![input.clone().into(), target.clone().into()];
