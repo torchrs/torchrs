@@ -160,7 +160,7 @@ impl<T: NumLimits> Variable<T> {
     pub fn cross(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn cuda(&self, device: Option<i32>) -> Self {
+    pub fn cuda(&self, deewce: Option<i32>) -> Self {
         unimplemented!()
     }
     pub fn cuda_async(&self, device: Option<i32>) -> Self {
@@ -669,7 +669,9 @@ impl<T: NumLimits> Variable<T> {
     pub fn var(&self) -> f32 {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[isize]) -> Self {
+    pub fn view<D>(&self, dims: D) -> Self
+        where D: AsRef<[isize]>
+    {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
@@ -1349,7 +1351,9 @@ impl VarKind {
     pub fn var(&self) -> f32 {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[isize]) -> Self {
+    pub fn view<D>(&self, dims: D) -> Self
+        where D: AsRef<[isize]>
+    {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {

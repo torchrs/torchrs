@@ -676,7 +676,9 @@ impl<T: NumLimits> Tensor<T> {
     pub fn var(&self) -> f32 {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[isize]) -> Self {
+    pub fn view<D>(&self, dims: D) -> Self
+        where D: AsRef<[isize]>
+    {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
@@ -1398,7 +1400,9 @@ impl TensorKind {
     pub fn var<T: NumLimits>(&self) -> T {
         unimplemented!()
     }
-    pub fn view(&self, dims: &[isize]) -> Self {
+    pub fn view<D>(&self, dims: D) -> Self
+        where D: AsRef<[isize]>
+    {
         unimplemented!()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
