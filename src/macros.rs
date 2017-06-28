@@ -62,101 +62,101 @@ macro_rules! typecast {
 #[macro_export]
 macro_rules! impl_tensor_impl {
     ($name:ident, $type:ident, $thname:ident) => {
-    impl TensorImpl<$type> for $name {
-    fn new(&self) -> RefTI<$type> {
-        RcMutNew($name ::new())
-    }
-    fn add(&self, value: $type, output: &TIArg<$type>) {
-        let out = typecast!(output.inner(), $thname);
-        unsafe {
-            concat_idents!(TH, $name, _add)(out, self.t, value);
-        };
-    }
-    fn inner(&self) -> *mut ::std::os::raw::c_void {
-        self.t as *mut ::std::os::raw::c_void
-    }
-    fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
-        let out = typecast!(output.inner(), $thname);
-        let rhsp = typecast!(rhs.inner(), $thname);
-        unsafe {
-            concat_idents!($thname, _add)(out, rhsp, value);
-        };
-    }
-    }
-    impl Default for $name {
-        fn default() -> Self {
-            $name ::new()
-        }
-    }
-
-    impl<'a> Index<&'a [isize]> for $name {
-    type Output = $type;
-
-    fn index(&self, idx: &'a [isize]) -> &Self::Output {
-        let mut index: isize = 0;
-        let lastidx = max(0, idx.len() as isize - 1) as usize;
-        if idx.len() != self.dims.len() {
-            panic!("bad dimlen")
-        }
-        for i in 0..lastidx {
-            if idx[i] >= self.dims[i] {
-                panic!("bad dimlen")
+        impl TensorImpl<$type> for $name {
+            fn new(&self) -> RefTI<$type> {
+                RcMutNew($name ::new())
             }
-            index += idx[i] * self.dims[i]
-        }
-        if idx[lastidx] >= self.dims[lastidx] {
-            panic!("bad dimlen")
-        }
-        index += idx[lastidx];
-        &self.storage[index]
-    }
-    }
-
-    impl<'a> IndexMut<&'a [isize]> for $name {
-    fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
-        let mut index: isize = 0;
-        let lastidx = max(0, idx.len() as isize - 1) as usize;
-        if idx.len() != self.dims.len() {
-            panic!("bad dimlen")
-        }
-        for i in 0..lastidx {
-            if idx[i] >= self.dims[i] {
-                panic!("bad dimlen")
+            fn add(&self, value: $type, output: &TIArg<$type>) {
+                let out = typecast!(output.inner(), $thname);
+                unsafe {
+                    concat_idents!(TH, $name, _add)(out, self.t, value);
+                };
             }
-            index += idx[i] * self.dims[i]
+            fn inner(&self) -> *mut ::std::os::raw::c_void {
+                self.t as *mut ::std::os::raw::c_void
+            }
+            fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
+                let out = typecast!(output.inner(), $thname);
+                let rhsp = typecast!(rhs.inner(), $thname);
+                unsafe {
+                    concat_idents!($thname, _add)(out, rhsp, value);
+                };
+            }
         }
-        if idx[lastidx] >= self.dims[lastidx] {
-            panic!("bad dimlen")
+        impl Default for $name {
+            fn default() -> Self {
+                $name ::new()
+            }
         }
-        index += idx[lastidx];
-        &mut self.storage[index]
-    }
-    }
-    impl Index<isize> for $name {
-    type Output = $type;
-    fn index(&self, idx: isize) -> &Self::Output {
-        unimplemented!()
-    }
-    }
-    impl Drop for $name {
-        fn drop(&mut self) {
-            unsafe { concat_idents!($thname, _free)(self.t) }
+
+        impl<'a> Index<&'a [isize]> for $name {
+            type Output = $type;
+
+            fn index(&self, idx: &'a [isize]) -> &Self::Output {
+                let mut index: isize = 0;
+                let lastidx = max(0, idx.len() as isize - 1) as usize;
+                if idx.len() != self.dims.len() {
+                    panic!("bad dimlen")
+                }
+                for i in 0..lastidx {
+                    if idx[i] >= self.dims[i] {
+                        panic!("bad dimlen")
+                    }
+                    index += idx[i] * self.dims[i]
+                }
+                if idx[lastidx] >= self.dims[lastidx] {
+                    panic!("bad dimlen")
+                }
+                index += idx[lastidx];
+                &self.storage[index]
+            }
         }
-    }
-    impl Serialize for $name {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        unimplemented!()
-    }
-    }
-    impl<'de> Deserialize<'de> for $name {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-    {
-        unimplemented!()
-    }
-    }
+
+        impl<'a> IndexMut<&'a [isize]> for $name {
+            fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
+                let mut index: isize = 0;
+                let lastidx = max(0, idx.len() as isize - 1) as usize;
+                if idx.len() != self.dims.len() {
+                    panic!("bad dimlen")
+                }
+                for i in 0..lastidx {
+                    if idx[i] >= self.dims[i] {
+                        panic!("bad dimlen")
+                    }
+                    index += idx[i] * self.dims[i]
+                }
+                if idx[lastidx] >= self.dims[lastidx] {
+                    panic!("bad dimlen")
+                }
+                index += idx[lastidx];
+                &mut self.storage[index]
+            }
+        }
+        impl Index<isize> for $name {
+            type Output = $type;
+            fn index(&self, idx: isize) -> &Self::Output {
+                unimplemented!()
+            }
+        }
+        impl Drop for $name {
+            fn drop(&mut self) {
+                unsafe { concat_idents!($thname, _free)(self.t) }
+            }
+        }
+        impl Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where S: Serializer
+            {
+                unimplemented!()
+            }
+        }
+        impl<'de> Deserialize<'de> for $name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where D: Deserializer<'de>
+            {
+                unimplemented!()
+            }
+        }
     }
 }
 
