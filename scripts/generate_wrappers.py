@@ -194,7 +194,7 @@ def build_header():
 	header += "#![allow(non_snake_case)]\n"
 	header += "#![allow(non_camel_case)]\n\n"
 	header += "use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};\n"
-	header += "use tensor::{OptTensorKindList, TensorKindList, TensorKind, NewSelf, make_vec};\n"
+	header += "use tensor::{OptTensorKindList, TensorKindList, TensorKind, make_vec};\n"
 	header += "use itertools::repeat_call;\n"
 	header += "use nn::backends::backend::*;\n\n\n"
 	return header
