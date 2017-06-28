@@ -1,6 +1,6 @@
 use std::collections::{HashMap, hash_map};
 use tensor::{Tensor, NumLimits};
-use autograd::{Variable, VarId};
+use autograd::{Variable, VarId, VarAccess};
 use std::slice;
 use std::vec::IntoIter;
 use std::ops::{Deref, DerefMut};
@@ -96,6 +96,20 @@ pub trait ModIntf<T: NumLimits>: ModDelegate<T> + GetFieldStruct<T> {
             let module = self.get_module(name);
             module.train()
         }
+    }
+    fn max_id(&mut self) -> i32 {
+        let mut max = 0;
+        self.apply_parameters(&mut |v| if v.id > max {
+                                       max = v.id
+                                   });
+        max
+    }
+    fn free_grad(&mut self) {
+        self.apply_parameters(&mut |v| *v.access().grad() = None);
+    }
+    fn free_graph(&mut self) {
+        self.free_grad();
+        ::autograd::var_table_reset(self.max_id());
     }
     fn apply_parameters(&mut self, func: &mut FnMut(&mut Variable<T>)) {
         let mod_names = self.delegate()._modules.clone();

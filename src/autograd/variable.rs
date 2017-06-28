@@ -26,6 +26,15 @@ pub enum VarKindImpl {
     LongVariable(VariableImpl<i64>),
 }
 
+
+pub fn var_table_reset(max: VarId) {
+    VAR_TABLE.with(|f| {
+                       let mut table = f.borrow_mut();
+                       table.truncate(max as usize);
+                   });
+
+}
+
 impl<T: NumLimits> From<VarKindImpl> for VariableImpl<T> {
     default fn from(input: VarKindImpl) -> Self {
         unreachable!()
@@ -305,7 +314,7 @@ impl<T: NumLimits> VariableImpl<T> {
             requires_grad: args.requires_grad,
         }
     }
-    fn grad(&mut self) -> &mut Option<Variable<T>> {
+    pub fn grad(&mut self) -> &mut Option<Variable<T>> {
         &mut self.grad
     }
     fn _call_hooks(&self, grad_output: &Tensor<T>) {

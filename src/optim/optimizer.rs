@@ -84,17 +84,10 @@ pub trait OptIntf<T: ::tensor::NumLimits + From<OptimVal>> {
     fn optimizer(&mut self) -> &mut Optimizer;
     fn zero_grad(&mut self, model: &mut ModIntf<T>) {
         // XXX figure out point of parameter groups
-        model.apply_parameters(&mut |p| {
-            let mut opt_grad = p.grad();
-            if let Some(ref mut grad) = opt_grad.clone() {
-                if grad.is_volatile() {
-                    grad.data().zero_();
-                } else {
-                    let data = grad.data();
-                    *opt_grad = Some(Variable::new(data.new(()).zero_().clone()));
-                }
-            }
-        });
+        model.apply_parameters(&mut |p| if p.requires_grad() {
+                                        *p.grad() =
+                                            Some(Variable::new(p.data().new(()).zero_().clone()));
+                                    });
     }
     /* ignore largely unused closure arg to start */
     fn step(&mut self, model: &mut ModIntf<T>);

@@ -157,6 +157,7 @@ fn train(model: &mut Net<f32>,
         let mut loss = F::nll_loss(output, target, &F::NLLLossArgs::default());
         loss.backward();
         optimizer.step(model);
+        model.free_graph();
         if batch_idx % args.log_interval == 0 {
             println!("Train Epoch: {} [{}/{} ({:.0}%)]\tLoss: {:.6}",
                      epoch,
@@ -177,7 +178,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             volatile: true,
             ..Default::default()
         };
-        let (mut data, mut target) = if args.cuda {
+        let (data, mut target) = if args.cuda {
             (Variable::new_args(data.cuda(None).clone(), &varargs),
              Variable::new(target.cuda(None).clone()))
         } else {
@@ -198,8 +199,6 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
 }
 
 fn main() {
-    // no data loaders yet so demonstrate with Vec placeholder
-
     let train_loader: D::BatchLoader<f32, i64> =
         D::DataLoader::new(datasets::MNIST::<f32>::build("../data").done(None),
                            D::DataLoaderArgs::default());
