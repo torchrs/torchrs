@@ -36,7 +36,9 @@ pub enum TensorType {
     Long,
 }
 
-pub trait NumLimits: Copy + Default + ::num::Num + ::num::NumCast {}
+pub trait NumLimits
+    : Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {
+}
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
 impl NumLimits for i32 {}
@@ -232,7 +234,9 @@ impl<T: NumLimits> Serialize for Tensor<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        unimplemented!()
+        let rt = self.value.borrow().to_rust_tensor();
+        let result = rt.serialize(serializer)?;
+        Ok(result)
     }
 }
 impl<'de, T: NumLimits> Deserialize<'de> for Tensor<T> {
@@ -312,12 +316,20 @@ impl<T: NumLimits> Index<isize> for Tensor<T> {
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
-    //fn view<'a>(&self, dims: &[i32]) -> Tensor<'a>;
     fn new(&self) -> RefTI<T>;
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn view(&self, dims: &[isize]) -> RefTI<T>;
+    fn to_rust_tensor(&self) -> RustTensor<T>;
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RustTensor<T> {
+    size: Vec<i64>,
+    stride: Vec<i64>,
+    storage: Vec<T>,
+    storageOffset: isize,
 }
 
 macro_rules! impl_tensor_impl {
@@ -337,13 +349,35 @@ macro_rules! impl_tensor_impl {
                     }
                 }
             }
-            pub fn from_parts(t: *mut $thname, storage: $storage_name, dims: Vec<isize>) -> Self {
-                    $name {
-                        t: t,
-                        storage: storage,
-                        dims: dims,
-                    }
+            fn from_parts(t: *mut $thname, storage: $storage_name, dims: Vec<isize>) -> Self {
+                $name {
+                    t: t,
+                    storage: storage,
+                    dims: dims,
+                }
+            }
+            fn to_rust_tensor(&self) -> RustTensor<$type> {
+                let mut size: Vec<i64> = Vec::new();
+                let mut stride: Vec<i64> = Vec::new();
+                let mut storage = Vec::new();
+                let offset = unsafe {(*self.t).storageOffset};
+                let nd  = unsafe {(*self.t).nDimension};
+                let need_stride = unsafe {(*self.t).stride != std::ptr::null_mut()};
 
+                for i in 0..nd {
+                    let s = unsafe { &*(*self.t).size.offset(i as isize) };
+                    size.push(*s);
+                }
+                if need_stride {
+                    for i in 0..nd {
+                        let s = unsafe { &*(*self.t).stride.offset(i as isize) };
+                        stride.push(*s);
+                    }
+                }
+                for i in self.storage.iter() {
+                    storage.push(*i);
+                }
+                RustTensor {size: size, stride: stride, storage: storage, storageOffset: offset}
             }
             pub fn with_capacity<D>(dims: D) -> Self
                 where D: AsRef<[usize]>
@@ -403,6 +437,9 @@ macro_rules! impl_tensor_impl {
                 let t = unsafe { concat_idents!($thname, _newView)(self.t, size.t)  };
                 let t = $name :: from_parts(t, self.storage.clone(), dims.to_vec());
                 RcMutNew(t)
+            }
+            fn to_rust_tensor(&self) -> RustTensor<$type> {
+                self.to_rust_tensor()
             }
         }
         impl Default for $name {
@@ -468,7 +505,9 @@ macro_rules! impl_tensor_impl {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where S: Serializer
             {
-                unimplemented!()
+                let rt = self.to_rust_tensor();
+                let result = rt.serialize(serializer)?;
+                Ok(result)
             }
         }
         impl<'de> Deserialize<'de> for $name {
