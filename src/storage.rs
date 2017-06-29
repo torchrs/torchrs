@@ -7,12 +7,30 @@ macro_rules! impl_storage_impl {
         pub struct $name {
             pub t: *mut $thname,
         }
+        impl Clone for $name {
+            fn clone(&self) -> Self {
+                unsafe { concat_idents!($thname, _retain)(self.t)};
+                $name {t: self.t }
+            }
+        }
         impl $name {
             pub fn new() -> Self {
                 unsafe { $name { t: concat_idents!($thname, _new)() } }
             }
             pub fn with_capacity(size: usize) -> Self {
                 unsafe { $name { t: concat_idents!($thname, _newWithSize)(size as isize) } }
+            }
+            pub fn with_data<D>(data: D) -> Self
+                where D: AsRef<[$type]>
+            {
+                let data = data.as_ref();
+                let mut store = unsafe { $name {
+                    t: concat_idents!($thname, _newWithSize)(data.len() as isize)
+                } };
+                for i in 0..data.len() {
+                    store[i as isize] = data[i];
+                }
+                store
             }
             pub fn into_slice(&self) -> &[$type] {
                 unsafe { slice::from_raw_parts((*self.t).data, (*self.t).size as usize) }

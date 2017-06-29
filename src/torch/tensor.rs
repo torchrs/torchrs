@@ -115,6 +115,16 @@ impl<T: NumLimits> From<Vec<Tensor<T>>> for THVec<T> {
         unimplemented!()
     }
 }
+impl From<THVecGeneric> for THVec<u8> {
+    fn from(input: THVecGeneric) -> Self {
+        let data: Vec<u8> = input
+            .data
+            .iter()
+            .map(|t| <u8 as NumCast>::from(*t).unwrap())
+            .collect();
+        THVec::new(input.dims.clone(), data)
+    }
+}
 impl From<THVecGeneric> for THVec<f32> {
     fn from(input: THVecGeneric) -> Self {
         let data: Vec<f32> = input

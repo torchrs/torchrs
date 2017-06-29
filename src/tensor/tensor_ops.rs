@@ -679,7 +679,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        unimplemented!()
+        Tensor { value: self.value.borrow_mut().view(dims.as_ref()) }
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()
@@ -694,6 +694,16 @@ macro_rules! impl_tk_dispatch_self_ref {
         match * $key {
             TensorKind::FloatTensor(ref $var) => TensorKind::FloatTensor($action) ,
             TensorKind::LongTensor(ref $var) => TensorKind::LongTensor($action) ,
+            TensorKind::ByteTensor(ref $var) => TensorKind::ByteTensor($action) ,
+        }
+    )}
+}
+macro_rules! impl_tk_dispatch_self_ref_other {
+    ($key:ident, $var:ident, $action:expr ) => {(
+        match * $key {
+            TensorKind::FloatTensor(ref $var) => $action,
+            TensorKind::LongTensor(ref $var) => $action,
+            TensorKind::ByteTensor(ref $var) => $action,
         }
     )}
 }
@@ -703,6 +713,7 @@ macro_rules! impl_tk_dispatch_self {
         match * $key {
             TensorKind::FloatTensor(ref mut $var) => {$action;} ,
             TensorKind::LongTensor(ref mut $var) => {$action;} ,
+            TensorKind::ByteTensor(ref mut $var) => {$action;} ,
         };
         $key
         }
@@ -844,10 +855,8 @@ impl TensorKind {
     // cauchy_
     //
     pub fn ceil(&self) -> Self {
-        match *self {
-            TensorKind::FloatTensor(ref t) => t.ceil().into(),
-            TensorKind::LongTensor(ref t) => t.ceil().into(),
-        }
+        impl_tk_dispatch_self_ref!(self, t, t.ceil())
+
     }
     pub fn ceil_(&mut self) -> &mut Self {
         unimplemented!()
@@ -999,10 +1008,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn id(&self) -> usize {
-        match *self {
-            TensorKind::FloatTensor(ref t) => t.id(),
-            TensorKind::LongTensor(ref t) => t.id(),
-        }
+        impl_tk_dispatch_self_ref_other!(self, t, t.id())
     }
     pub fn index_masked(&self, m: &Tensor<u8>) -> Self {
         unimplemented!()
@@ -1403,7 +1409,7 @@ impl TensorKind {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        unimplemented!()
+        impl_tk_dispatch_self_ref!(self, t, (t.view(dims)))
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()

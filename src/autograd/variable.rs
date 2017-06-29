@@ -432,10 +432,11 @@ macro_rules! impl_var_mut_dispatch {
 
 impl VarKind {
     pub fn new_args(data: TensorKind, args: &VariableArgs) -> Self {
-        use self::TensorKind::{FloatTensor, LongTensor};
+        use self::TensorKind::{FloatTensor, LongTensor, ByteTensor};
         match data {
             FloatTensor(t) => Variable::<f32>::new_args(t, args).into(),
             LongTensor(t) => Variable::<i64>::new_args(t, args).into(),
+            ByteTensor(t) => Variable::<u8>::new_args(t, args).into(),
         }
     }
 

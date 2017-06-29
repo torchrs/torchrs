@@ -47,6 +47,7 @@ impl NumLimits for u8 {}
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),
     LongTensor(Tensor<i64>),
+    ByteTensor(Tensor<u8>),
 }
 
 pub type TensorList<T> = Vec<Tensor<T>>;
@@ -76,6 +77,13 @@ impl TensorKind {
                 newt.set(tv.data);
                 newt.into()
             }
+            TensorKind::ByteTensor(ref t) => {
+                let tv: THVecGeneric = args.into();
+                let tv: THVec<u8> = tv.into();
+                let mut newt: Tensor<u8> = t.new(tv.dims);
+                newt.set(tv.data);
+                newt.into()
+            }
 
         }
     }
@@ -96,10 +104,11 @@ impl TensorKind {
 
 impl PartialEq for TensorKind {
     fn eq(&self, other: &Self) -> bool {
-        use self::TensorKind::{FloatTensor, LongTensor};
+        use self::TensorKind::{FloatTensor, LongTensor, ByteTensor};
         match (self, other) {
             (&FloatTensor(ref t1), &FloatTensor(ref t2)) => t1.id() == t2.id(),
             (&LongTensor(ref t1), &LongTensor(ref t2)) => t1.id() == t2.id(),
+            (&ByteTensor(ref t1), &ByteTensor(ref t2)) => t1.id() == t2.id(),
             _ => false,
         }
     }
@@ -107,10 +116,11 @@ impl PartialEq for TensorKind {
 impl Eq for TensorKind {}
 impl Clone for TensorKind {
     fn clone(&self) -> Self {
-        use self::TensorKind::{FloatTensor, LongTensor};
+        use self::TensorKind::{FloatTensor, LongTensor, ByteTensor};
         match *self {
             FloatTensor(ref t) => FloatTensor(t.clone()),
             LongTensor(ref t) => LongTensor(t.clone()),
+            ByteTensor(ref t) => ByteTensor(t.clone()),
         }
     }
 }
@@ -125,6 +135,11 @@ impl<T: NumLimits> From<Tensor<T>> for TensorKind {
 impl From<Tensor<f32>> for TensorKind {
     fn from(input: Tensor<f32>) -> Self {
         TensorKind::FloatTensor(input)
+    }
+}
+impl From<Tensor<u8>> for TensorKind {
+    fn from(input: Tensor<u8>) -> Self {
+        TensorKind::ByteTensor(input)
     }
 }
 
@@ -256,7 +271,6 @@ impl<T: NumLimits> Tensor<T> {
     pub fn new<S>(&self, args: S) -> Self
         where S: Into<THVec<T>>
     {
-
         ::torch::tensor::<S, T>(args)
     }
     pub fn set(&mut self, args: Vec<T>) {
@@ -303,6 +317,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
+    fn view(&self, dims: &[isize]) -> RefTI<T>;
 }
 
 macro_rules! impl_tensor_impl {
@@ -322,27 +337,38 @@ macro_rules! impl_tensor_impl {
                     }
                 }
             }
-            pub fn with_capacity(dims: &[usize]) -> Self {
+            pub fn from_parts(t: *mut $thname, storage: $storage_name, dims: Vec<isize>) -> Self {
+                    $name {
+                        t: t,
+                        storage: storage,
+                        dims: dims,
+                    }
+
+            }
+            pub fn with_capacity<D>(dims: D) -> Self
+                where D: AsRef<[usize]>
+            {
+                let dims_long : Vec<i64> = dims.as_ref().iter().map(|t| *t as i64).collect();
+                let dims = dims.as_ref();
+                let sizes = LongStorage::with_data(dims_long.as_slice());
                 let size = dims.iter().product();
                 let storage = $storage_name ::with_capacity(size);
-                let strides = vec![1; dims.len()];
-                let mut t = $thname {
-                    size: dims.clone().as_ptr() as *mut ::std::os::raw::c_long,
-                    stride: strides.as_ptr() as *mut ::std::os::raw::c_long,
-                    nDimension: dims.len() as i32,
-                    storage: storage.t,
-                    storageOffset: 0,
-                    refcount: 1,
-                    flag: TH_TENSOR_REFCOUNTED as i8,
+                let mut t = unsafe {
+                    concat_idents!($thname, _newWithStorage)(storage.t,
+                                                             0,
+                                                             sizes.t,
+                                                             std::ptr::null_mut())
                 };
                 $name {
-                    t: &mut t,
+                    t: t,
                     storage: storage,
-                    dims: dims.iter().map(|v| *v as isize).collect(),
-                }
+                    dims: dims.iter().map(|t| *t as isize).collect(),
+                 }
             }
-            pub fn randn(dims: &[usize]) -> Self {
-                /* XXX */
+            pub fn randn<D>(dims: D) -> Self
+                where D: AsRef<[usize]>
+            {
+                let dims = dims.as_ref();
                 let mut t = $name  ::with_capacity(dims);
                 for x in t.storage.iter_mut() {
                     *x = rand::random::<$type>()
@@ -371,13 +397,19 @@ macro_rules! impl_tensor_impl {
                     concat_idents!($thname, _add)(out, rhsp, value);
                 };
             }
+            fn view(&self, dims: &[isize]) -> RefTI<$type> {
+                let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
+                let size = LongStorage::with_data(dims_long.as_slice());
+                let t = unsafe { concat_idents!($thname, _newView)(self.t, size.t)  };
+                let t = $name :: from_parts(t, self.storage.clone(), dims.to_vec());
+                RcMutNew(t)
+            }
         }
         impl Default for $name {
             fn default() -> Self {
                 $name ::new()
             }
         }
-
         impl<'a> Index<&'a [isize]> for $name {
             type Output = $type;
 
