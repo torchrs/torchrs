@@ -216,11 +216,28 @@ impl From<TensorKind> for Tensor<f32> {
         }
     }
 }
-
+/*
+impl From<TensorKind> for Tensor<f64> {
+    fn from(input: TensorKind) -> Self {
+        match input {
+            TensorKind::DoubleTensor(v) => v,
+            _ => unimplemented!(),
+        }
+    }
+}
+*/
 impl From<TensorKind> for Tensor<i64> {
     fn from(input: TensorKind) -> Self {
         match input {
             TensorKind::LongTensor(v) => v,
+            _ => unimplemented!(),
+        }
+    }
+}
+impl From<TensorKind> for Tensor<u8> {
+    fn from(input: TensorKind) -> Self {
+        match input {
+            TensorKind::ByteTensor(v) => v,
             _ => unimplemented!(),
         }
     }
@@ -239,11 +256,12 @@ impl<T: NumLimits> Serialize for Tensor<T> {
         Ok(result)
     }
 }
-impl<'de, T: NumLimits> Deserialize<'de> for Tensor<T> {
+impl<'de, T: NumLimits + Deserialize<'de>> Deserialize<'de> for Tensor<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
-        unimplemented!()
+        let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?;
+        Ok(rt.into())
     }
 }
 
@@ -270,6 +288,8 @@ impl<T: NumLimits> Index<i32> for Tensor<T> {
         unimplemented!()
     }
 }
+
+
 
 impl<T: NumLimits> Tensor<T> {
     pub fn new<S>(&self, args: S) -> Self
@@ -323,6 +343,38 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn view(&self, dims: &[isize]) -> RefTI<T>;
     fn to_rust_tensor(&self) -> RustTensor<T>;
 }
+
+impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
+    #[allow(unused_variables)]
+    default fn from(input: RustTensor<T>) -> Self {
+        unreachable!()
+    }
+}
+impl From<RustTensor<u8>> for Tensor<u8> {
+    #[allow(unused_variables)]
+    default fn from(input: RustTensor<u8>) -> Self {
+        ByteTensor::from_rust_tensor(input)
+    }
+}
+impl From<RustTensor<f32>> for Tensor<f32> {
+    #[allow(unused_variables)]
+    default fn from(input: RustTensor<f32>) -> Self {
+        FloatTensor::from_rust_tensor(input)
+    }
+}
+impl From<RustTensor<f64>> for Tensor<f64> {
+    #[allow(unused_variables)]
+    default fn from(input: RustTensor<f64>) -> Self {
+        DoubleTensor::from_rust_tensor(input)
+    }
+}
+impl From<RustTensor<i64>> for Tensor<i64> {
+    #[allow(unused_variables)]
+    default fn from(input: RustTensor<i64>) -> Self {
+        LongTensor::from_rust_tensor(input)
+    }
+}
+
 
 #[derive(Serialize, Deserialize)]
 pub struct RustTensor<T> {
@@ -378,6 +430,17 @@ macro_rules! impl_tensor_impl {
                     storage.push(*i);
                 }
                 RustTensor {size: size, stride: stride, storage: storage, storageOffset: offset}
+            }
+            fn from_rust_tensor(rt: RustTensor<$type>) -> Tensor<$type> {
+                let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
+                let mut newt = $name ::with_capacity(size);
+                unsafe {
+                    (*newt.t).storageOffset = rt.storageOffset;
+                }
+                for (i, d) in rt.storage.iter().enumerate() {
+                    newt.storage[i as isize] = *d;
+                }
+                Tensor {value: RcMutNew(newt)}
             }
             pub fn with_capacity<D>(dims: D) -> Self
                 where D: AsRef<[usize]>
