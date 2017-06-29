@@ -120,9 +120,9 @@ fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
     let fp = Mmap::open_path(path, Protection::Read)?;
     let length;
     {
-        let data = unsafe { slice::from_raw_parts(fp.ptr() as *const u32, fp.len()) };
-        assert_eq!(data[0], 2049);
-        length = data[1] as usize;
+        let data = unsafe { slice::from_raw_parts(fp.ptr() as *const i32, fp.len()) };
+        assert_eq!(i32::from_be(data[0]), 2049);
+        length = i32::from_be(data[1]) as usize;
     }
     let data = unsafe { fp.as_slice() };
     let mut labels: Vec<u8> = Vec::with_capacity(length);
