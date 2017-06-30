@@ -197,18 +197,18 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
 }
 
 fn main() {
-    let train_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::<f32>::build("../data")
-                               .download(true)
-                               .done(None),
-                           D::DataLoaderArgs::default());
-
-    let test_loader: D::BatchLoader<f32, i64> =
-        D::DataLoader::new(datasets::MNIST::<f32>::build("../data")
-                               .train(false)
-                               .done(None),
-                           D::DataLoaderArgs::default());
     let args = parse_args();
+    let train_loader: D::BatchLoader<f32, i64> = D::DataLoader::build()
+        .batch_size(args.batch_size)
+        .done(datasets::MNIST::<f32>::build("../data")
+                  .download(false)
+                  .done(None));
+
+    let test_loader: D::BatchLoader<f32, i64> = D::DataLoader::build()
+        .batch_size(args.batch_size)
+        .done(datasets::MNIST::<f32>::build("../data")
+                  .train(false)
+                  .done(None));
     let mut model = Net::new();
     let mut optimizer = optim::SGD::new(map_opt!{"lr" => args.lr, "momentum" => args.momentum});
     for epoch in 1..args.epochs + 1 {
