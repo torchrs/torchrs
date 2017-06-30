@@ -77,14 +77,26 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
 
     let name = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
-    let atmatch = variants.iter()
+    // XXX figure out how to avoid this 
+    let used_variants0 = variants.iter().filter(|field| {
+            if field.attrs.iter().any(|attr| attr.name() == "ignore") { false}
+            else if is_type(& field.ty, "Module") {false}
+            else {true}
+    });
+    let used_variants1 = variants.iter().filter(|field| {
+            if field.attrs.iter().any(|attr| attr.name() == "ignore") { false}
+            else if is_type(& field.ty, "Module") {false}
+            else {true}
+    });
+    let used_variants2 = variants.iter().filter(|field| {
+            if field.attrs.iter().any(|attr| attr.name() == "ignore") { false}
+            else if is_type(& field.ty, "Module") {false}
+            else {true}
+    });
+    let atmatch = used_variants0
         .filter_map(|field| {
-            if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
-                is_type(& field.ty, "Module")
-            { return None;}
             let field_name = field.ident.as_ref().clone();
             let is_option = is_type(&field.ty, "Option");
-            get_type(&field.ty);
             match get_type(&field.ty) {
                 Kind::Parameter if is_option => 
                     Some( quote! { 
@@ -105,14 +117,10 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
                 _ => panic!("bad match {:?}", field.ty),
             }
         });
-    let param_match = variants.iter()
+    let param_match = used_variants1
         .filter_map(|field| {
-            if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
-                is_type(& field.ty, "Module")
-            { return None;}
             let field_name = field.ident.as_ref().clone();
             let is_option = is_type(&field.ty, "Option");
-            get_type(&field.ty);
             match get_type(&field.ty) {
                 Kind::Parameter if is_option => 
                     Some( quote! { 
@@ -128,45 +136,17 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
             }
 
         });
-    let mut module_match =  variants.iter()
+    let module_match = used_variants2
         .filter_map(|field| {
-            if field.attrs.iter().any(|attr| attr.name() == "ignore") ||
-                is_type(& field.ty, "Module")
-            { return None;}
             let field_name = field.ident.as_ref().clone();
-            get_type(&field.ty);
             match get_type(&field.ty) {
-                Kind::Parameter => None,
+                Kind::Parameter => {println!("{:?}", field.ty); None},
                 Kind::ModIntf => 
                     Some( quote! { stringify!(#field_name) => &mut self. #field_name,  } ),
                 _ => panic!("bad match {:?}", field.ty),
             }
         });
-    let foo = if module_match.any(|_| true) == false {
-
-    quote! {
-        impl #impl_generics InitModuleStruct for #name  #ty_generics  #where_clause {
-            fn init_module(mut self) -> Self {
-                self.delegate()._name = stringify!(#name).into();
-                #(#atmatch);* 
-                ;
-                self
-            }
-        }
-        impl #impl_generics GetFieldStruct<T> for #name  #ty_generics  #where_clause {
-            fn get_param(&mut self, name: &str) -> Option<i32> {
-                match name {
-                    #(#param_match)*
-                    _ => panic!("unknown Parameter {}", name),
-                }
-            } 
-            fn get_module(&mut self, name: &str) -> &mut ModIntf<T> {
-                unreachable!()
-            } 
-        }
-    }
-    } else {
-    quote! {
+    let foo = quote! {
         impl #impl_generics InitModuleStruct for #name  #ty_generics  #where_clause {
             fn init_module(mut self) -> Self {
                 self.delegate()._name = stringify!(#name).into();
@@ -189,7 +169,6 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
                 }
             } 
         }
-    }
 
     };
     println!("parse is {}", foo);
