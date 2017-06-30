@@ -7,8 +7,8 @@ use tensor::NumLimits;
 #[builder(pattern="owned")]
 #[derive(Builder)]
 pub struct LinearArgs<T: ::tensor::NumLimits> {
-    in_features: u32,
-    out_features: u32,
+    in_features: usize,
+    out_features: usize,
     #[builder(default="true")]
     bias: bool,
     #[builder(default="PhantomData")]
@@ -25,39 +25,45 @@ impl<T: ::tensor::NumLimits> LinearArgsBuilder<T> {
 pub struct Linear<T: NumLimits> {
     delegate: Module<T>,
     #[ignore]
-    in_features: u32,
+    in_features: usize,
     #[ignore]
-    out_features: u32,
+    out_features: usize,
     weight: Parameter<T>,
     bias: Option<Parameter<T>>,
 }
 
 impl<T: NumLimits> Linear<T> {
-    pub fn build(in_features: u32, out_features: u32) -> LinearArgsBuilder<T> {
+    pub fn build(in_features: usize, out_features: usize) -> LinearArgsBuilder<T> {
         LinearArgsBuilder::default()
             .in_features(in_features)
             .out_features(out_features)
     }
     pub fn new(args: LinearArgs<T>) -> Linear<T> {
-        unimplemented!();
+        let bias = if args.bias {
+            Some(Parameter::new((args.out_features)))
+        } else {
+            None
+        };
         Linear {
                 delegate: Module::new(),
                 in_features: args.in_features,
                 out_features: args.out_features,
-                weight: Parameter::default(),
-                bias: None,
+                weight: Parameter::new((args.out_features, args.in_features)),
+                bias: bias,
             }
             .init_module()
+            /* XXX reset (initialize) parameters */
     }
 }
 impl_mod_delegate!(Linear);
 
 impl<T: NumLimits> ModIntf<T> for Linear<T> {
     fn forward(&mut self, input: &mut Variable<T>) -> Variable<T> {
-        if let Some(ref mut bias) = self.bias {
-            F::linear(&input, &mut self.weight.v, Some(&mut bias.v))
+        let bias = if let Some(ref mut bias) = self.bias {
+            Some(&mut bias.v)
         } else {
-            F::linear(&input, &mut self.weight.v, None)
-        }
+            None
+        };
+        F::linear(&input, &mut self.weight.v, bias)
     }
 }
