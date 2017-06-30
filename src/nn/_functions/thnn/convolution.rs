@@ -43,6 +43,10 @@ impl Default for Conv1dFArgs {
 #[builder(pattern="owned")]
 #[derive(Builder)]
 pub struct Conv2dFArgs {
+    #[builder(default="1")]
+    pub in_features: usize,
+    #[builder(default="1")]
+    pub out_features: usize,
     #[builder(default="vec![1, 1]")]
     pub kernel_size: Vec<usize>,
     #[builder(default="vec![1, 1]")]
