@@ -664,8 +664,9 @@ impl<T: NumLimits> Tensor<T> {
     pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
         unimplemented!()
     }
-    pub fn uniform_(&mut self, range: (i32, i32)) -> &mut Self {
-        unimplemented!()
+    pub fn uniform_(&mut self, range: (f64, f64)) -> &mut Self {
+        self.value.borrow_mut().uniform_(range);
+        self
     }
     pub fn unsqueeze(&self, dim: i32) -> Self {
         unimplemented!()
@@ -679,7 +680,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        Tensor { value: self.value.borrow_mut().view(dims.as_ref()) }
+        Tensor {value: self.value.borrow_mut().view(dims.as_ref()) }
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()
@@ -704,6 +705,15 @@ macro_rules! impl_tk_dispatch_self_ref_other {
             TensorKind::FloatTensor(ref $var) => $action,
             TensorKind::LongTensor(ref $var) => $action,
             TensorKind::ByteTensor(ref $var) => $action,
+        }
+    )}
+}
+macro_rules! impl_tk_dispatch_self_ref_other_mut {
+    ($key:ident, $var:ident, $action:expr ) => {(
+        match * $key {
+            TensorKind::FloatTensor(ref mut $var) => $action,
+            TensorKind::LongTensor(ref mut $var) => $action,
+            TensorKind::ByteTensor(ref mut $var) => $action,
         }
     )}
 }
@@ -1394,8 +1404,9 @@ impl TensorKind {
     pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
         unimplemented!()
     }
-    pub fn uniform_(&mut self, range: (i32, i32)) -> &mut Self {
-        unimplemented!()
+    pub fn uniform_(&mut self, range: (f64, f64)) -> &mut Self {
+        impl_tk_dispatch_self_ref_other_mut!(self, v, {v.uniform_(range);});
+        self
     }
     pub fn unsqueeze(&self, dim: i32) -> Self {
         unimplemented!()

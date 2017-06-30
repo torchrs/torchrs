@@ -35,9 +35,7 @@ pub enum TensorType {
     Long,
 }
 
-pub trait NumLimits
-    : Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {
-}
+pub trait NumLimits: Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {}
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
 impl NumLimits for i32 {}
@@ -259,7 +257,7 @@ impl<'de, T: NumLimits + Deserialize<'de>> Deserialize<'de> for Tensor<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
-        let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?;
+        let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?; 
         Ok(rt.into())
     }
 }
@@ -341,6 +339,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn view(&self, dims: &[isize]) -> RefTI<T>;
     fn to_rust_tensor(&self) -> RustTensor<T>;
+    fn uniform_(&mut self, range: (f64, f64));
 }
 
 impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
@@ -503,6 +502,9 @@ macro_rules! impl_tensor_impl {
             fn to_rust_tensor(&self) -> RustTensor<$type> {
                 self.to_rust_tensor()
             }
+            fn uniform_(&mut self, range: (f64, f64)) {
+                self.uniform_(range)
+            }
         }
         impl Default for $name {
             fn default() -> Self {
@@ -581,6 +583,41 @@ macro_rules! impl_tensor_impl {
         }
     }
 }
+pub struct Generator {
+    t: *mut THGenerator,
+}
+impl Generator {
+    pub fn new() -> Self {
+        let t = unsafe {THGenerator_new()};
+        Generator {t: t}
+    }
+}
+impl FloatTensor {
+    fn uniform_(&mut self, range: (f64, f64)) {
+        let g = Generator::new();
+        unsafe {THFloatTensor_uniform(self.t, g.t, range.0, range.1)};
+    }
+}
+impl DoubleTensor {
+    fn uniform_(&mut self, range: (f64, f64)) {
+        let g = Generator::new();
+        unsafe {THDoubleTensor_uniform(self.t, g.t, range.0, range.1)};
+    }
+}
+impl ByteTensor {
+    fn uniform_(&mut self, range: (f64, f64)) {
+        unimplemented!()
+    }
+}
+impl LongTensor {
+    fn uniform_(&mut self, range: (f64, f64)) {
+        unimplemented!()
+    }
+}
+
+
+
+
 
 impl_tensor_impl!(FloatTensor, f32, THFloatTensor, FloatStorage);
 impl_tensor_impl!(DoubleTensor, f64, THDoubleTensor, DoubleStorage);
