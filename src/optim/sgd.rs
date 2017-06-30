@@ -1,6 +1,5 @@
 use optim::*;
 use std::ops::Neg;
-use num;
 
 pub struct SGD {
     optimizer: Optimizer,

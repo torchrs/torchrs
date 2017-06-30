@@ -381,7 +381,7 @@ pub struct RustTensor<T> {
     size: Vec<i64>,
     stride: Vec<i64>,
     storage: Vec<T>,
-    storageOffset: isize,
+    storage_offset: isize,
 }
 
 macro_rules! impl_tensor_impl {
@@ -429,13 +429,13 @@ macro_rules! impl_tensor_impl {
                 for i in self.storage.iter() {
                     storage.push(*i);
                 }
-                RustTensor {size: size, stride: stride, storage: storage, storageOffset: offset}
+                RustTensor {size: size, stride: stride, storage: storage, storage_offset: offset}
             }
             fn from_rust_tensor(rt: RustTensor<$type>) -> Tensor<$type> {
                 let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
                 let mut newt = $name ::with_capacity(size);
                 unsafe {
-                    (*newt.t).storageOffset = rt.storageOffset;
+                    (*newt.t).storageOffset = rt.storage_offset;
                 }
                 for (i, d) in rt.storage.iter().enumerate() {
                     newt.storage[i as isize] = *d;
@@ -450,7 +450,7 @@ macro_rules! impl_tensor_impl {
                 let sizes = LongStorage::with_data(dims_long.as_slice());
                 let size = dims.iter().product();
                 let storage = $storage_name ::with_capacity(size);
-                let mut t = unsafe {
+                let t = unsafe {
                     concat_idents!($thname, _newWithStorage)(storage.t,
                                                              0,
                                                              sizes.t,

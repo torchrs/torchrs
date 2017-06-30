@@ -1,15 +1,11 @@
-use std::collections::HashMap;
-
-
 #[allow(non_snake_case)]
 pub mod ExecutionEngine {
     use autograd::{Variable, Function, FuncId, RootKind, VarKind};
-    use tensor::{NumLimits, Tensor, TensorKind, OptTensorKindList};
+    use tensor::NumLimits;
     use std::collections::{HashSet, HashMap, VecDeque};
     use std::cell::RefCell;
     use itertools;
     use utils::unsafe_lib::Counter;
-    use num;
 
     type FnRefs = RefCell<Vec<Counter<FuncId>>>;
     type FnDependencies = HashMap<FuncId, FnRefs>;
