@@ -1,5 +1,4 @@
 use autograd::variable::Variable;
-use num;
 use torch;
 use tensor::*;
 

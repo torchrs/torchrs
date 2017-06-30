@@ -1,11 +1,7 @@
-use std::collections::{HashMap, hash_map};
+use std::collections::HashMap;
 use tensor::{Tensor, NumLimits};
 use autograd::{Variable, VarId, VarAccess};
 use std::slice;
-use std::vec::IntoIter;
-use std::ops::{Deref, DerefMut};
-use std::marker::PhantomData;
-use nn::Parameter;
 
 pub trait InitModuleStruct {
     fn init_module(self) -> Self;
@@ -35,10 +31,6 @@ impl<T: NumLimits> Module<T> {
             _modules: Vec::new(),
             training: true,
         }
-    }
-    #[inline]
-    fn as_mut_ptr(&mut self) -> *mut Module<T> {
-        self as *mut Module<T>
     }
     pub fn add_module(&mut self, module: &'static str) {
         self._modules.push(module);
