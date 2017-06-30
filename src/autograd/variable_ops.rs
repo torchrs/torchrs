@@ -1,6 +1,5 @@
 #![allow(unused_variables)]
 use tensor::*;
-use num;
 use std::cell::RefMut;
 use autograd::{Variable, VariableArgs, VarAccess, VarKind};
 
@@ -698,6 +697,7 @@ impl VarKind {
     }
     pub fn add<T: NumLimits>(&self, rhs: T) -> Self {
         let mut v = self.copy();
+        unimplemented!();
         //v.data().clone().add_(&rhs);
         v
     }

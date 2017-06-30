@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use tensor::{Tensor, NumLimits};
 use autograd::{Variable, VarId, VarAccess};
-use std::slice;
 
 pub trait InitModuleStruct {
     fn init_module(self) -> Self;

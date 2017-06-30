@@ -4,7 +4,6 @@ use std::ops::{AddAssign, Index};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::hash::{Hash, Hasher};
-use num;
 use tensor::*;
 use ::*;
 
@@ -190,14 +189,12 @@ impl Hash for VarKind {
     }
 }
 
-
 impl Clone for VarKind {
     fn clone(&self) -> Self {
         use self::VarKind::{FloatVariable, LongVariable};
         match *self {
             FloatVariable(ref v) => FloatVariable(v.clone()),
             LongVariable(ref v) => LongVariable(v.clone()),
-            _ => unimplemented!(),
         }
     }
 }

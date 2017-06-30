@@ -6,7 +6,6 @@ use std::convert::From;
 use std::cmp::max;
 use std::hash::{Hash, Hasher};
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
-use num::NumCast;
 
 use storage::*;
 use ::*;

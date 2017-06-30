@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::{io, fs, slice};
 use curl::easy::Easy;
 use memmap::{Mmap, Protection};
-use flate2::{Flush, Decompress};
 use std::io::{Read, Write};
 use utils::data::{DatasetIntfRef, DatasetIntf};
 use std::rc::Rc;

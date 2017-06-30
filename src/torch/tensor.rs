@@ -22,7 +22,6 @@ impl THDims {
         THDims { dims: dims }
     }
 }
-
 impl<T: NumLimits> From<Vec<Vec<Vec<T>>>> for THVec<T> {
     fn from(input: Vec<Vec<Vec<T>>>) -> Self {
         let dims = vec![input.len(), input[0].len(), input[0][0].len()];
@@ -81,7 +80,6 @@ impl From<()> for THDims {
 }
 impl<T: NumLimits> From<(usize, usize)> for THVec<T> {
     fn from(input: (usize, usize)) -> Self {
-
         THVec::new(vec![input.0, input.1], vec![])
     }
 }
@@ -169,12 +167,11 @@ impl From<THVecGeneric> for THDims {
 }
 
 trait TensorNew<T: NumLimits> {
-    fn tensor_new(arg: THDims) -> Tensor<T> {
-        unimplemented!()
-    }
+    fn tensor_new(arg: THDims) -> Tensor<T>;
 }
 
 impl<T: NumLimits> TensorNew<T> for Tensor<T> {
+    #[allow(unused_variables)]
     default fn tensor_new(arg: THDims) -> Tensor<T> {
         unreachable!()
     }
@@ -204,7 +201,6 @@ impl TensorNew<f64> for Tensor<f64> {
         ::tensor::Tensor { value: t }
     }
 }
-
 
 pub fn byte_tensor<T>(arg: T) -> Tensor<u8>
     where T: Into<THVec<u8>>
