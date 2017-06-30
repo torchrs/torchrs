@@ -39,6 +39,7 @@ impl<T: NumLimits> Linear<T> {
             .out_features(out_features)
     }
     pub fn new(args: LinearArgs<T>) -> Linear<T> {
+        unimplemented!();
         Linear {
                 delegate: Module::new(),
                 in_features: args.in_features,
