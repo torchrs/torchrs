@@ -38,6 +38,14 @@ impl<T: NumLimits> Linear<T> {
             .in_features(in_features)
             .out_features(out_features)
     }
+    fn reset_parameters(mut self) -> Self {
+        let stdv : f64 = 1. / (self.in_features as f64).sqrt();
+        self.weight.v.data().uniform_((-stdv, stdv));
+        if let Some(ref mut bias) = self.bias {
+            bias.v.data().uniform_((-stdv, stdv));
+        }
+        self
+    }
     pub fn new(args: LinearArgs<T>) -> Linear<T> {
         let bias = if args.bias {
             Some(Parameter::new((args.out_features)))
@@ -52,7 +60,7 @@ impl<T: NumLimits> Linear<T> {
                 bias: bias,
             }
             .init_module()
-            /* XXX reset (initialize) parameters */
+            .reset_parameters()
     }
 }
 impl_mod_delegate!(Linear);
