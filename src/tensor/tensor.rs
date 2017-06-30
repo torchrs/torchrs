@@ -35,7 +35,9 @@ pub enum TensorType {
     Long,
 }
 
-pub trait NumLimits: Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {}
+pub trait NumLimits
+    : Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {
+}
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
 impl NumLimits for i32 {}
@@ -257,7 +259,7 @@ impl<'de, T: NumLimits + Deserialize<'de>> Deserialize<'de> for Tensor<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
-        let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?; 
+        let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?;
         Ok(rt.into())
     }
 }
@@ -588,20 +590,20 @@ pub struct Generator {
 }
 impl Generator {
     pub fn new() -> Self {
-        let t = unsafe {THGenerator_new()};
-        Generator {t: t}
+        let t = unsafe { THGenerator_new() };
+        Generator { t: t }
     }
 }
 impl FloatTensor {
     fn uniform_(&mut self, range: (f64, f64)) {
         let g = Generator::new();
-        unsafe {THFloatTensor_uniform(self.t, g.t, range.0, range.1)};
+        unsafe { THFloatTensor_uniform(self.t, g.t, range.0, range.1) };
     }
 }
 impl DoubleTensor {
     fn uniform_(&mut self, range: (f64, f64)) {
         let g = Generator::new();
-        unsafe {THDoubleTensor_uniform(self.t, g.t, range.0, range.1)};
+        unsafe { THDoubleTensor_uniform(self.t, g.t, range.0, range.1) };
     }
 }
 impl ByteTensor {
