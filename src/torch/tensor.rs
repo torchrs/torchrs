@@ -91,6 +91,17 @@ impl From<(usize, usize)> for THVecGeneric {
         THVecGeneric::new(vec![input.0, input.1], vec![])
     }
 }
+impl From<(usize)> for THVecGeneric {
+    fn from(input: (usize)) -> Self {
+
+        THVecGeneric::new(vec![input], vec![])
+    }
+}
+impl<T: NumLimits> From<(usize)> for THVec<T> {
+    fn from(input: (usize)) -> Self {
+        THVec::new(vec![input], vec![])
+    }
+}
 impl<T: NumLimits> From<Vec<usize>> for THVec<T> {
     fn from(input: Vec<usize>) -> Self {
         THVec::new(input, vec![])
@@ -156,28 +167,8 @@ impl From<THVecGeneric> for THDims {
         THDims::new(input.dims.clone())
     }
 }
-impl<T: NumLimits> From<[T; 0]> for THVec<T> {
-    fn from(input: [T; 0]) -> Self {
-        unimplemented!()
-    }
-}
-impl<T: NumLimits> From<[T; 1]> for THVec<T> {
-    fn from(input: [T; 1]) -> Self {
-        unimplemented!()
-    }
-}
-impl<T: NumLimits> From<[T; 2]> for THVec<T> {
-    fn from(input: [T; 2]) -> Self {
-        unimplemented!()
-    }
-}
-impl<T: NumLimits> From<[T; 3]> for THVec<T> {
-    fn from(input: [T; 3]) -> Self {
-        unimplemented!()
-    }
-}
 
-pub trait TensorNew<T: NumLimits> {
+trait TensorNew<T: NumLimits> {
     fn tensor_new(arg: THDims) -> Tensor<T> {
         unimplemented!()
     }
