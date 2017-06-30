@@ -294,7 +294,11 @@ impl<T: NumLimits> Tensor<T> {
     pub fn new<S>(&self, args: S) -> Self
         where S: Into<THVec<T>>
     {
-        ::torch::tensor::<S, T>(args)
+        let mut args: THVec<T> = args.into();
+        if args.dims.len() == 0 {
+            args.dims = self.size();
+        }
+        ::torch::tensor(args)
     }
     pub fn set(&mut self, args: Vec<T>) {
         unimplemented!()
@@ -342,6 +346,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn view(&self, dims: &[isize]) -> RefTI<T>;
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
+    fn size(&self) -> Vec<usize>;
 }
 
 impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
@@ -506,6 +511,9 @@ macro_rules! impl_tensor_impl {
             }
             fn uniform_(&mut self, range: (f64, f64)) {
                 self.uniform_(range)
+            }
+            fn size(&self) -> Vec<usize> {
+                self.dims.iter().map(|v| *v as usize).collect()
             }
         }
         impl Default for $name {

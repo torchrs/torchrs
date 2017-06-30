@@ -554,7 +554,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn size(&self) -> Vec<usize> {
-        unimplemented!()
+        self.value.borrow().size()
     }
     pub fn sort(&self, dim: Option<i32>, descending: bool) -> (Self, Tensor<i64>) {
         unimplemented!()
