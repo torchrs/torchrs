@@ -16,8 +16,8 @@ pub struct DataLoader<T: Clone> {
 }
 
 #[derive(Builder)]
-#[allow(deprecated)]
-pub struct DataLoaderArgs {
+#[builder(pattern="owned")]
+pub struct DataLoaderArgs<T> {
     #[builder(default="1")]
     pub batch_size: usize,
     #[builder(default="0")]
@@ -30,9 +30,11 @@ pub struct DataLoaderArgs {
     shuffle: bool,
     #[builder(default="None")]
     pub sampler: Option<Sampler>,
+    #[builder(default="::std::marker::PhantomData")]
+    phantom: ::std::marker::PhantomData<T>,
 }
 
-impl Default for DataLoaderArgs {
+impl<T: Clone + Default> Default for DataLoaderArgs<T> {
     fn default() -> Self {
         DataLoaderArgsBuilder::default().build().unwrap()
     }
@@ -64,8 +66,18 @@ impl<T: Clone> Iterator for DataLoaderIter<T> {
     }
 }
 
-impl<T: Clone + 'static> DataLoader<T> {
-    pub fn new(dataset: DatasetIntfRef<T>, args: DataLoaderArgs) -> Self {
+impl<T: Default + Clone + 'static> DataLoaderArgsBuilder<T> {
+    pub fn done(self, dataset: DatasetIntfRef<T>) -> DataLoader<T> {
+        let args = self.build().unwrap();
+        DataLoader::new(dataset, args)
+    }
+}
+
+impl<T: Clone + 'static + Default> DataLoader<T> {
+    pub fn build() -> DataLoaderArgsBuilder<T> {
+        DataLoaderArgsBuilder::default()
+    }
+    pub fn new(dataset: DatasetIntfRef<T>, args: DataLoaderArgs<T>) -> Self {
         let sampler = match args.sampler {
             Some(sampler) => sampler,
             None => {
