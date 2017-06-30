@@ -189,11 +189,11 @@ impl<T: NumLimits> MNIST<T> {
         }
     }
     fn index(&self, idx: usize) -> Sample<T> {
-        let img = self.data.s(idx);
+        let img = self.data.s([idx]);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into()).into()
         } else {
-            img.copy().cast::<T>()
+            img.cast::<T>()
         };
         (img, self.labels[idx].clone() as i64)
     }

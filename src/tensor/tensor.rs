@@ -306,8 +306,11 @@ impl<T: NumLimits> Tensor<T> {
     pub fn len(&self) -> usize {
         unimplemented!()
     }
-    pub fn s(&self, dim: usize) -> Self {
-        unimplemented!()
+    /* XXX handle non-contiguous case */
+    pub fn s<D>(&self, dim: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        self.value.borrow().s(dim.as_ref())
     }
     pub fn cast<D>(&self) -> Tensor<D>
         where D: NumLimits
@@ -347,6 +350,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
     fn size(&self) -> Vec<usize>;
+    fn s(&self, dim: &[usize]) -> Tensor<T>;
 }
 
 impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
@@ -477,6 +481,10 @@ macro_rules! impl_tensor_impl {
                 }
                 t
             }
+            fn storage_offset(&self) -> usize {
+                let t = unsafe {(*self.t).storageOffset};
+                t as usize
+            }
         }
 
         impl TensorImpl<$type> for $name {
@@ -514,6 +522,36 @@ macro_rules! impl_tensor_impl {
             }
             fn size(&self) -> Vec<usize> {
                 self.dims.iter().map(|v| *v as usize).collect()
+            }
+            fn s(&self, dim: &[usize]) -> Tensor<$type> {
+                let mut increment = self.storage.len() - self.storage_offset();
+                if self.dims.len() < dim.len() {
+                    panic!("bad slice index {:?}", dim);
+                }
+               /* calculate new storage offset and validate */
+                for i in 0..dim.len() {
+                    if dim[i] as isize >= self.dims[i] {
+                        panic!("{} out of range {:?}", dim[i], self.dims[i]);
+                    }
+                }
+                let mut offset = 0;
+                let mut new_dims = self.dims.clone();
+                for i in 0..dim.len() {
+                    increment /= self.dims[i] as usize;
+                    offset += dim[i] * increment;
+                    new_dims.remove(0);
+                }
+                let dims_long : Vec<i64> = new_dims.iter().map(|t| *t as i64).collect();
+                let sizes = LongStorage::with_data(dims_long.as_slice());
+                let storage = self.storage.clone();
+                let t = unsafe {
+                    concat_idents!($thname, _newWithStorage)(storage.t,
+                                                             offset as isize,
+                                                             sizes.t,
+                                                             std::ptr::null_mut())
+                };
+                let t = $name :: from_parts(t, storage, new_dims);
+                Tensor { value: RcMutNew(t) }
             }
         }
         impl Default for $name {
