@@ -53,7 +53,7 @@ impl<T: NumLimits> Conv2d<T> {
     }
     pub fn new(args: Conv2dArgs<T>) -> Conv2d<T> {
         let bias = if args.bias {
-            Some(Parameter::new(vec![args.out_features]))
+            Some(Parameter::new((args.out_features)))
         } else {
             None
         };
@@ -66,7 +66,7 @@ impl<T: NumLimits> Conv2d<T> {
         };
         Conv2d {
                 delegate: Module::new(),
-                weight: Parameter::new(vec![args.out_features, args.in_features]),
+                weight: Parameter::new((args.out_features, args.in_features)),
                 bias: bias,
                 args: fargs,
             }
