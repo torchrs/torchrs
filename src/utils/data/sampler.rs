@@ -18,7 +18,10 @@ impl Sampler {
 
 fn indices(len: usize) -> Vec<usize> {
     let mut v: Vec<usize> = Vec::with_capacity(len);
-    v.iter_mut().enumerate().map(|(i, _)| i).collect()
+    for i in 0..len {
+        v.push(i);
+    }
+    v
 }
 
 pub trait SamplerIntf {
