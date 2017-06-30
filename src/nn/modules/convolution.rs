@@ -56,7 +56,7 @@ impl<T: NumLimits> Conv2d<T> {
         for k in &self.args.kernel_size {
             n *= *k;
         }
-        let stdv : f64 = 1. / (n as f64).sqrt();
+        let stdv: f64 = 1. / (n as f64).sqrt();
         self.weight.v.data().uniform_((-stdv, stdv));
         if let Some(ref mut bias) = self.bias {
             bias.v.data().uniform_((-stdv, stdv));

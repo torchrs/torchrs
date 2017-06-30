@@ -39,7 +39,7 @@ impl<T: NumLimits> Linear<T> {
             .out_features(out_features)
     }
     fn reset_parameters(mut self) -> Self {
-        let stdv : f64 = 1. / (self.in_features as f64).sqrt();
+        let stdv: f64 = 1. / (self.in_features as f64).sqrt();
         self.weight.v.data().uniform_((-stdv, stdv));
         if let Some(ref mut bias) = self.bias {
             bias.v.data().uniform_((-stdv, stdv));
