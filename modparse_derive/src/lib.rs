@@ -140,7 +140,7 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         .filter_map(|field| {
             let field_name = field.ident.as_ref().clone();
             match get_type(&field.ty) {
-                Kind::Parameter => {println!("{:?}", field.ty); None},
+                Kind::Parameter => None,
                 Kind::ModIntf => 
                     Some( quote! { stringify!(#field_name) => &mut self. #field_name,  } ),
                 _ => panic!("bad match {:?}", field.ty),
@@ -171,7 +171,6 @@ fn impl_parse(ast: &mut syn::DeriveInput) -> quote::Tokens {
         }
 
     };
-    println!("parse is {}", foo);
     foo
 }
 
