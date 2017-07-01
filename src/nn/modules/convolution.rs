@@ -10,13 +10,13 @@ use tensor::NumLimits;
 pub struct Conv2dArgs<T: NumLimits> {
     in_features: usize,
     out_features: usize,
-    kernel_size: (usize, usize),
+    kernel_size: (i32, i32),
     #[builder(default="vec![1, 1]")]
-    pub stride: Vec<u32>,
+    pub stride: Vec<i32>,
     #[builder(default="vec![0, 0]")]
-    pub padding: Vec<u32>,
+    pub padding: Vec<i32>,
     #[builder(default="vec![1, 1]")]
-    pub dilation: Vec<u32>,
+    pub dilation: Vec<i32>,
     #[builder(default="1")]
     groups: u32,
     #[builder(default="true")]
@@ -44,7 +44,7 @@ pub struct Conv2d<T: NumLimits> {
 impl<T: NumLimits> Conv2d<T> {
     pub fn build(in_features: usize,
                  out_features: usize,
-                 kernel_size: (usize, usize))
+                 kernel_size: (i32, i32))
                  -> Conv2dArgsBuilder<T> {
         Conv2dArgsBuilder::default()
             .in_features(in_features)
@@ -52,7 +52,7 @@ impl<T: NumLimits> Conv2d<T> {
             .kernel_size(kernel_size)
     }
     fn reset_parameters(mut self) -> Self {
-        let mut n = self.args.in_features;
+        let mut n = self.args.in_features as i32;
         for k in &self.args.kernel_size {
             n *= *k;
         }
