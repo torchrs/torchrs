@@ -274,7 +274,7 @@ impl<T: NumLimits> Index<usize> for Tensor<T> {
     type Output = T;
     fn index(&self, idx: usize) -> &Self::Output {
         let t = unsafe { &mut *self.value.as_ptr() };
-        t.index(idx as isize)
+        t.index(idx)
     }
 }
 
@@ -342,17 +342,9 @@ impl<T: NumLimits> Clone for Tensor<T> {
     }
 }
 
-impl<T: NumLimits> Index<isize> for Tensor<T> {
-    type Output = T;
-
-    fn index(&self, idx: isize) -> &Self::Output {
-        unimplemented!()
-    }
-}
-
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub type TIArg<T> = TensorImpl<T, Output = T>;
-pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
+pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn new(&self) -> RefTI<T>;
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
@@ -462,7 +454,7 @@ macro_rules! impl_tensor_impl {
                     (*newt.t).storageOffset = rt.storage_offset;
                 }
                 for (i, d) in rt.storage.iter().enumerate() {
-                    newt.storage[i as isize] = *d;
+                    newt.storage[i] = *d;
                 }
                 Tensor {value: RcMutNew(newt)}
             }
@@ -510,7 +502,7 @@ macro_rules! impl_tensor_impl {
             fn set_storage(&mut self, v: Vec<$type>) {
                 let storage_offset = self.storage_offset();
                 for i in 0..self.len() {
-                    self.storage[(storage_offset + i) as isize] = v[i]
+                    self.storage[(storage_offset + i)] = v[i]
                 }
             }
         }
@@ -600,7 +592,7 @@ macro_rules! impl_tensor_impl {
             type Output = $type;
 
             fn index(&self, idx: &'a [isize]) -> &Self::Output {
-                let mut index: isize = 0;
+                let mut index = 0;
                 let lastidx = max(0, idx.len() as isize - 1) as usize;
                 if idx.len() != self.dims.len() {
                     panic!("bad dimlen")
@@ -609,19 +601,19 @@ macro_rules! impl_tensor_impl {
                     if idx[i] >= self.dims[i] {
                         panic!("bad dimlen")
                     }
-                    index += idx[i] * self.dims[i]
+                    index += (idx[i] * self.dims[i]) as usize;
                 }
                 if idx[lastidx] >= self.dims[lastidx] {
                     panic!("bad dimlen")
                 }
-                index += idx[lastidx];
+                index += idx[lastidx] as usize;
                 &self.storage[index]
             }
         }
 
         impl<'a> IndexMut<&'a [isize]> for $name {
             fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
-                let mut index: isize = 0;
+                let mut index = 0;
                 let lastidx = max(0, idx.len() as isize - 1) as usize;
                 if idx.len() != self.dims.len() {
                     panic!("bad dimlen")
@@ -630,25 +622,25 @@ macro_rules! impl_tensor_impl {
                     if idx[i] >= self.dims[i] {
                         panic!("bad dimlen")
                     }
-                    index += idx[i] * self.dims[i]
+                    index += (idx[i] * self.dims[i]) as usize;
                 }
                 if idx[lastidx] >= self.dims[lastidx] {
                     panic!("bad dimlen")
                 }
-                index += idx[lastidx];
+                index += idx[lastidx] as usize;
                 &mut self.storage[index]
             }
         }
-        impl Index<isize> for $name {
+        impl Index<usize> for $name {
             type Output = $type;
-            fn index(&self, idx: isize) -> &Self::Output {
+            fn index(&self, idx: usize) -> &Self::Output {
                 if self.dims.len() != 1 {
                     panic!("bad index size")
                 };
-                if self.dims[0] <= idx {
+                if self.dims[0] <= idx as isize {
                     panic!("idx {} out of range", idx)
                 };
-                &self.storage[self.storage_offset() as isize + idx]
+                &self.storage[self.storage_offset() + idx]
             }
         }
         impl Drop for $name {
