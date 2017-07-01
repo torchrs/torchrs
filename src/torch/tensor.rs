@@ -115,8 +115,8 @@ impl From<Vec<usize>> for THDims {
         THDims::new(input)
     }
 }
-impl<T: NumLimits> From<Vec<Tensor<T>>> for THVec<T> {
-    fn from(input: Vec<Tensor<T>>) -> Self {
+impl<S: NumLimits, D: NumLimits> From<Vec<Tensor<S>>> for THVec<D> {
+    fn from(input: Vec<Tensor<S>>) -> Self {
         /*
         let v = input.iter().flat_map(|d| d.iter()).map(|d| *d).collect();
         THVec::new(2, v)
