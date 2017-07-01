@@ -273,9 +273,8 @@ impl<T: NumLimits> Hash for Tensor<T> {
 impl<T: NumLimits> Index<usize> for Tensor<T> {
     type Output = T;
     fn index(&self, idx: usize) -> &Self::Output {
-
-        //        self.value.borrow_mut().index(idx as isize)
-        unimplemented!()
+        let t = unsafe { &mut *self.value.as_ptr() };
+        t.index(idx as isize)
     }
 }
 
@@ -304,7 +303,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn len(&self) -> usize {
-        unimplemented!()
+        self.value.borrow().len()
     }
     /* XXX handle non-contiguous case */
     pub fn s<D>(&self, dim: D) -> Self
@@ -315,7 +314,19 @@ impl<T: NumLimits> Tensor<T> {
     pub fn cast<D>(&self) -> Tensor<D>
         where D: NumLimits
     {
-        unimplemented!()
+        println!("construct tensor");
+        let t: Tensor<D> = torch::tensor(self.size());
+        println!("cast values");
+        let s = self.value
+            .borrow()
+            .storage()
+            .iter()
+            .map(|v| <D as num::NumCast>::from(*v).unwrap())
+            .collect();
+        println!("copy values");
+        t.value.borrow_mut().set_storage(s);
+        println!("return t");
+        t
     }
 }
 
@@ -350,8 +361,12 @@ pub trait TensorImpl<T: NumLimits>: Index<Ixs, Output = T> {
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
     fn size(&self) -> Vec<usize>;
+    fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
+    fn storage(&self) -> Vec<T>;
+    fn set_storage(&mut self, v: Vec<T>);
 }
+
 
 impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
     #[allow(unused_variables)]
@@ -485,11 +500,27 @@ macro_rules! impl_tensor_impl {
                 let t = unsafe {(*self.t).storageOffset};
                 t as usize
             }
+            fn len(&self) -> usize {
+                let t: isize = self.dims.iter().product();
+                t as usize
+            }
+            fn storage(&self) -> Vec<$type> {
+                self.storage[self.storage_offset()..(self.len() + self.storage_offset())].to_vec()
+            }
+            fn set_storage(&mut self, v: Vec<$type>) {
+                let storage_offset = self.storage_offset();
+                for i in 0..self.len() {
+                    self.storage[(storage_offset + i) as isize] = v[i]
+                }
+            }
         }
 
         impl TensorImpl<$type> for $name {
             fn new(&self) -> RefTI<$type> {
                 RcMutNew($name ::new())
+            }
+            fn len(&self) -> usize {
+                self.len()
             }
             fn add(&self, value: $type, output: &TIArg<$type>) {
                 let out = typecast!(output.inner(), $thname);
@@ -553,6 +584,12 @@ macro_rules! impl_tensor_impl {
                 let t = $name :: from_parts(t, storage, new_dims);
                 Tensor { value: RcMutNew(t) }
             }
+            fn storage(&self) -> Vec<$type> {
+                self.storage()
+            }
+            fn set_storage(&mut self, v: Vec<$type>) {
+                self.set_storage(v)
+            }
         }
         impl Default for $name {
             fn default() -> Self {
@@ -605,7 +642,13 @@ macro_rules! impl_tensor_impl {
         impl Index<isize> for $name {
             type Output = $type;
             fn index(&self, idx: isize) -> &Self::Output {
-                unimplemented!()
+                if self.dims.len() != 1 {
+                    panic!("bad index size")
+                };
+                if self.dims[0] <= idx {
+                    panic!("idx {} out of range", idx)
+                };
+                &self.storage[self.storage_offset() as isize + idx]
             }
         }
         impl Drop for $name {
