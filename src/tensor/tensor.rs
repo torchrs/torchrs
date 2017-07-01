@@ -317,14 +317,15 @@ impl<T: NumLimits> Tensor<T> {
         println!("construct tensor");
         let t: Tensor<D> = torch::tensor(self.size());
         println!("cast values");
-        let s = self.value
+        let s: Vec<D> = self.value
             .borrow()
             .storage()
+            .to_vec()
             .iter()
             .map(|v| <D as num::NumCast>::from(*v).unwrap())
             .collect();
         println!("copy values");
-        t.value.borrow_mut().set_storage(s);
+        t.value.borrow_mut().set_storage(s.as_slice());
         println!("return t");
         t
     }
@@ -355,8 +356,8 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn size(&self) -> Vec<usize>;
     fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
-    fn storage(&self) -> Vec<T>;
-    fn set_storage(&mut self, v: Vec<T>);
+    fn storage(&self) -> &[T];
+    fn set_storage(&mut self, v: &[T]);
 }
 
 
@@ -496,11 +497,9 @@ macro_rules! impl_tensor_impl {
                 let t: isize = self.dims.iter().product();
                 t as usize
             }
-            fn storage(&self) -> Vec<$type> {
-                self.storage[self.storage_offset()..(self.len() + self.storage_offset())].to_vec()
-            }
-            fn set_storage(&mut self, v: Vec<$type>) {
+            fn set_storage(&mut self, v: &[$type]) {
                 let storage_offset = self.storage_offset();
+                assert_eq!(v.len(), self.len());
                 for i in 0..self.len() {
                     self.storage[(storage_offset + i)] = v[i]
                 }
@@ -576,10 +575,10 @@ macro_rules! impl_tensor_impl {
                 let t = $name :: from_parts(t, storage, new_dims);
                 Tensor { value: RcMutNew(t) }
             }
-            fn storage(&self) -> Vec<$type> {
-                self.storage()
+            fn storage(&self) -> &[$type] {
+                &self.storage[self.storage_offset()..(self.len() + self.storage_offset())]
             }
-            fn set_storage(&mut self, v: Vec<$type>) {
+            fn set_storage(&mut self, v: &[$type]) {
                 self.set_storage(v)
             }
         }
