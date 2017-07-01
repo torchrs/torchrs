@@ -30,7 +30,7 @@ struct NetArgs {
     lr: f32,
     #[builder(default="0.5")]
     momentum: f32,
-    #[builder(default="true")]
+    #[builder(default="false")]
     cuda: bool,
     #[builder(default="1")]
     seed: usize,
