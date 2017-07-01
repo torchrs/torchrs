@@ -348,17 +348,19 @@ type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn new(&self) -> RefTI<T>;
+
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
-    fn view(&self, dims: &[isize]) -> RefTI<T>;
-    fn to_rust_tensor(&self) -> RustTensor<T>;
-    fn uniform_(&mut self, range: (f64, f64));
-    fn size(&self) -> Vec<usize>;
     fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
-    fn storage(&self) -> &[T];
+    fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
+    fn storage(&self) -> &[T];
+    fn to_rust_tensor(&self) -> RustTensor<T>;
+    fn uniform_(&mut self, range: (f64, f64));
+    fn view(&self, dims: &[isize]) -> RefTI<T>;
+    fn zero(&mut self);
 }
 
 
@@ -592,6 +594,9 @@ macro_rules! impl_tensor_impl {
             }
             fn set_storage(&mut self, v: &[$type]) {
                 self.set_storage(v)
+            }
+            fn zero(&mut self) {
+                unsafe { concat_idents!($thname, _zero)(self.t) };
             }
         }
         impl Default for $name {

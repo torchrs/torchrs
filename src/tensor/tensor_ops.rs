@@ -680,13 +680,14 @@ impl<T: NumLimits> Tensor<T> {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        Tensor { value: self.value.borrow_mut().view(dims.as_ref()) }
+        Tensor {value: self.value.borrow_mut().view(dims.as_ref()) }
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()
     }
     pub fn zero_(&mut self) -> &mut Self {
-        unimplemented!()
+        self.value.borrow_mut().zero();
+        self
     }
 }
 
