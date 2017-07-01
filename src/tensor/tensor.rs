@@ -394,6 +394,15 @@ impl From<RustTensor<i64>> for Tensor<i64> {
 }
 
 
+pub struct Generator {
+    t: *mut THGenerator,
+}
+impl Generator {
+    pub fn new() -> Self {
+        let t = unsafe { THGenerator_new() };
+        Generator { t: t }
+    }
+}
 #[derive(Serialize, Deserialize)]
 pub struct RustTensor<T> {
     size: Vec<i64>,
@@ -541,7 +550,9 @@ macro_rules! impl_tensor_impl {
                 self.to_rust_tensor()
             }
             fn uniform_(&mut self, range: (f64, f64)) {
-                self.uniform_(range)
+                let g = Generator::new();
+                #[allow(unused_unsafe)]
+                unsafe { concat_idents!($thname, _uniform)(self.t, g.t, range.0, range.1) };
             }
             fn size(&self) -> Vec<usize> {
                 self.dims.iter().map(|v| *v as usize).collect()
@@ -666,40 +677,21 @@ macro_rules! impl_tensor_impl {
         }
     }
 }
-pub struct Generator {
-    t: *mut THGenerator,
-}
-impl Generator {
-    pub fn new() -> Self {
-        let t = unsafe { THGenerator_new() };
-        Generator { t: t }
-    }
-}
-impl FloatTensor {
-    fn uniform_(&mut self, range: (f64, f64)) {
-        let g = Generator::new();
-        unsafe { THFloatTensor_uniform(self.t, g.t, range.0, range.1) };
-    }
-}
-impl DoubleTensor {
-    fn uniform_(&mut self, range: (f64, f64)) {
-        let g = Generator::new();
-        unsafe { THDoubleTensor_uniform(self.t, g.t, range.0, range.1) };
-    }
-}
-impl ByteTensor {
-    fn uniform_(&mut self, range: (f64, f64)) {
-        unimplemented!()
-    }
-}
-impl LongTensor {
-    fn uniform_(&mut self, range: (f64, f64)) {
-        unimplemented!()
-    }
-}
 
-
-
+#[allow(non_snake_case, unused_variables)]
+pub fn THByteTensor_uniform(self_: *mut THByteTensor,
+                            _generator: *mut THGenerator,
+                            a: f64,
+                            b: f64) {
+    unimplemented!()
+}
+#[allow(non_snake_case, unused_variables)]
+pub fn THLongTensor_uniform(self_: *mut THLongTensor,
+                            _generator: *mut THGenerator,
+                            a: f64,
+                            b: f64) {
+    unimplemented!()
+}
 
 
 impl_tensor_impl!(FloatTensor, f32, THFloatTensor, FloatStorage);
