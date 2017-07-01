@@ -1,6 +1,6 @@
 use rutorch::*;
 use std::ops::{Index, IndexMut};
-use std::slice;
+use std::{slice, ops};
 
 macro_rules! impl_storage_impl {
     ($name:ident, $type:ident, $thname:ident) => {
@@ -32,7 +32,7 @@ macro_rules! impl_storage_impl {
                     t: concat_idents!($thname, _newWithSize)(data.len() as isize)
                 } };
                 for i in 0..data.len() {
-                    store[i as isize] = data[i];
+                    store[i] = data[i];
                 }
                 store
             }
@@ -49,20 +49,56 @@ macro_rules! impl_storage_impl {
                 self.into_slice_mut().iter_mut()
             }
         }
+        impl ops::Deref for $name {
+            type Target = [$type];
+
+            fn deref(&self) -> &Self::Target {
+                self.into_slice()
+            }
+        }
+        impl ops::DerefMut for $name {
+            fn deref_mut (&mut self) -> &mut Self::Target {
+                self.into_slice_mut()
+            }
+        }
         impl Drop for $name {
             fn drop(&mut self) {
                 unsafe { concat_idents!($thname, _free)(self.t) }
             }
         }
-        impl Index<isize> for $name {
+        impl Index<usize> for $name {
             type Output = $type;
-            fn index(&self, idx: isize) -> &Self::Output {
-                unsafe { &*(*self.t).data.offset(idx) }
+            fn index(&self, idx: usize) -> &Self::Output {
+                &(**self)[idx]
             }
         }
-        impl IndexMut<isize> for $name {
-            fn index_mut(&mut self, idx: isize) -> &mut Self::Output {
-                unsafe { &mut *(*self.t).data.offset(idx) }
+        impl Index<ops::Range<usize>> for $name {
+            type Output = [$type];
+            fn index(&self, idx: ops::Range<usize>) -> &Self::Output {
+                Index::index(&**self, idx)
+            }
+        }
+        impl Index<ops::RangeTo<usize>> for $name {
+            type Output = [$type];
+            fn index(&self, idx: ops::RangeTo<usize>) -> &Self::Output {
+                Index::index(&**self, idx)
+            }
+        }
+        impl Index<ops::RangeFrom<usize>> for $name {
+            type Output = [$type];
+            fn index(&self, idx: ops::RangeFrom<usize>) -> &Self::Output {
+                Index::index(&**self, idx)
+            }
+        }
+        impl Index<ops::RangeFull> for $name {
+            type Output = [$type];
+            fn index(&self, _idx: ops::RangeFull) -> &Self::Output {
+                self
+            }
+        }
+        impl IndexMut<usize> for $name {
+            fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+                &mut (**self)[idx]
             }
         }
     }
