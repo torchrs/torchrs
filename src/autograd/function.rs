@@ -22,16 +22,6 @@ impl RootKind {
     }
 }
 
-impl_func!(FuncStub);
-impl FuncIntf for FuncStub {
-    #[allow(unused_variables)]
-    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
-        unreachable!()
-    }
-    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
-        unreachable!()
-    }
-}
 pub struct FuncImpl {
     previous_functions: Vec<(RootKind, i32)>,
     saved_variables: Vec<VarId>,
@@ -41,7 +31,7 @@ pub struct FuncImpl {
     output_ids: HashMap<VarId, usize>,
     to_save: Vec<TensorId>,
     requires_grad: bool,
-    owner: RcMut<FuncIntf>,
+    owner: Option<RcMut<FuncIntf>>,
 }
 impl Default for FuncImpl {
     fn default() -> Self {
@@ -54,7 +44,7 @@ impl Default for FuncImpl {
             output_ids: HashMap::new(),
             to_save: Vec::new(),
             requires_grad: false,
-            owner: FuncStub::new().value,
+            owner: None,
         }
     }
 }
@@ -64,7 +54,7 @@ impl FuncImpl {
         unimplemented!();
     }
     fn init(&mut self, intf: RcMut<FuncIntf>) {
-        self.owner = intf;
+        self.owner = Some(intf);
     }
 }
 
@@ -165,7 +155,12 @@ impl Function {
                     specify retain_variables=True when calling backward for \
                     the first time.");
         };
-        let grad_input = inner.owner.borrow_mut().backward_var(grad_output);
+
+        let grad_input = if let Some(ref owner) = inner.owner {
+            owner.borrow_mut().backward_var(grad_output)
+        } else {
+            panic!("owner not set")
+        };
         //inner._call_hooks(&grad_input, grad_output);
         if !retain_variables {
             inner.saved_variables.clear();
