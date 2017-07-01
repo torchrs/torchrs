@@ -188,12 +188,13 @@ impl<T: NumLimits> MNIST<T> {
             phantom: PhantomData,
         }
     }
-    fn index(&self, idx: usize) -> Sample<T> {
+    fn index(&self, idx: usize) -> Sample<u8> {
+        println!("index called idx: {}", idx);
         let img = self.data.s([idx]);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into()).into()
         } else {
-            img.cast::<T>()
+            img.clone()
         };
         (img, self.labels[idx].clone() as i64)
     }
@@ -205,11 +206,12 @@ impl<T: NumLimits> DatasetIntf for MNIST<T> {
         if self.train { 60000 } else { 10000 }
     }
     fn collate(&self, sample: Vec<usize>) -> Self::Batch {
-        let v: Vec<Sample<T>> = sample.into_iter().map(|i| self.index(i)).collect();
+        println!("collate called len: {}", sample.len());
+        let v: Vec<Sample<u8>> = sample.into_iter().map(|i| self.index(i)).collect();
         let labels: Vec<i64> = v.iter().map(|&(_, ref t)| *t).collect();
-        let imgs: Vec<Tensor<T>> = v.into_iter().map(|(d, _)| d).collect();
+        let imgs: Vec<Tensor<u8>> = v.into_iter().map(|(d, _)| d).collect();
         // XXX should check for case of double
-        let img_batch = torch::tensor(imgs);
+        let img_batch: Tensor<T> = torch::tensor(imgs);
         let label_batch = torch::long_tensor(labels);
         (img_batch, label_batch)
     }
