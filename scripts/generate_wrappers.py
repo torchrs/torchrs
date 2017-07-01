@@ -11,18 +11,18 @@ THNN_UTILS_PATH = os.path.join(BASE_PATH, 'torch', '_thnn', 'utils.py')
 
 
 def import_module(name, path):
-    if sys.version_info >= (3, 5):
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(name, path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    elif sys.version_info >= (3, 0):
-        from importlib.machinery import SourceFileLoader
-        return SourceFileLoader(name, path).load_module()
-    else:
-        import imp
-        return imp.load_source(name, path)
+	if sys.version_info >= (3, 5):
+		import importlib.util
+		spec = importlib.util.spec_from_file_location(name, path)
+		module = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(module)
+		return module
+	elif sys.version_info >= (3, 0):
+		from importlib.machinery import SourceFileLoader
+		return SourceFileLoader(name, path).load_module()
+	else:
+		import imp
+		return imp.load_source(name, path)
 
 thnn_utils = import_module('torch._thnn.utils', THNN_UTILS_PATH)
 
@@ -35,58 +35,58 @@ FUNCTION_TEMPLATE = Template("""\
 """)
 
 COMMON_TRANSFORMS = {
-    'THIndex_t': 'i64',
-    'THCIndex_t': 'usize',
-    'THInteger_t': 'i32',
-    'int': 'i32'
+	'THIndex_t': 'i64',
+	'THCIndex_t': 'usize',
+	'THInteger_t': 'i32',
+	'int': 'i32'
 }
 COMMON_CPU_TRANSFORMS = {
-    'THNNState*': 'void*',
-    'THIndexTensor*': 'THLongTensor*',
-    'THIntegerTensor*': 'THIntTensor*',
+	'THNNState*': 'void*',
+	'THIndexTensor*': 'THLongTensor*',
+	'THIntegerTensor*': 'THIntTensor*',
 }
 COMMON_GPU_TRANSFORMS = {
-    'THCState*': 'void*',
-    'THCIndexTensor*': 'THCudaLongTensor*',
+	'THCState*': 'void*',
+	'THCIndexTensor*': 'THCudaLongTensor*',
 }
 
 TYPE_TRANSFORMS = {
-    'Trait': {
-        'int': 'i32',
-        'long': 'i64',
-        'THTensor*': '&mut TensorKind',
-        'real': 'f32',
-        'accreal': 'f64',
-        'double': 'f64',
-        'THIndexTensor*': '&mut TensorKind',
-        'THIntegerTensor*': '&mut TensorKind',
-        'THGenerator*': '&mut THGenerator'
-    },
-    'Float': {
-        'THTensor*': 'THFloatTensor*',
-        'real': 'float',
-        'accreal': 'double',
-    },
-    'Double': {
-        'THTensor*': 'THDoubleTensor*',
-        'real': 'double',
-        'accreal': 'double',
-    },
-    'CudaHalf': {
-        'THCTensor*': 'THCudaHalfTensor*',
-        'real': 'half',
-        'accreal': 'float',
-    },
-    'Cuda': {
-        'THCTensor*': 'THCudaTensor*',
-        'real': 'float',
-        'accreal': 'float',
-    },
-    'CudaDouble': {
-        'THCTensor*': 'THCudaDoubleTensor*',
-        'real': 'double',
-        'accreal': 'double',
-    },
+	'Trait': {
+		'int': 'i32',
+		'long': 'i64',
+		'THTensor*': '&mut TensorKind',
+		'real': 'f32',
+		'accreal': 'f64',
+		'double': 'f64',
+		'THIndexTensor*': '&mut TensorKind',
+		'THIntegerTensor*': '&mut TensorKind',
+		'THGenerator*': '&mut THGenerator'
+	},
+	'Float': {
+		'THTensor*': 'THFloatTensor*',
+		'real': 'float',
+		'accreal': 'double',
+	},
+	'Double': {
+		'THTensor*': 'THDoubleTensor*',
+		'real': 'double',
+		'accreal': 'double',
+	},
+	'CudaHalf': {
+		'THCTensor*': 'THCudaHalfTensor*',
+		'real': 'half',
+		'accreal': 'float',
+	},
+	'Cuda': {
+		'THCTensor*': 'THCudaTensor*',
+		'real': 'float',
+		'accreal': 'float',
+	},
+	'CudaDouble': {
+		'THCTensor*': 'THCudaDoubleTensor*',
+		'real': 'double',
+		'accreal': 'double',
+	},
 }
 
 def should_wrap_function(name):
@@ -98,43 +98,68 @@ def should_wrap_function(name):
 		name.endswith('backward'))
 
 for t, transforms in TYPE_TRANSFORMS.items():
-    transforms.update(COMMON_TRANSFORMS)
+	transforms.update(COMMON_TRANSFORMS)
 
 for t in ['Float', 'Double']:
-    TYPE_TRANSFORMS[t].update(COMMON_CPU_TRANSFORMS)
+	TYPE_TRANSFORMS[t].update(COMMON_CPU_TRANSFORMS)
 for t in ['CudaHalf', 'Cuda', 'CudaDouble']:
-    TYPE_TRANSFORMS[t].update(COMMON_GPU_TRANSFORMS)
+	TYPE_TRANSFORMS[t].update(COMMON_GPU_TRANSFORMS)
 
 def rstype(arg):
 	return TYPE_TRANSFORMS['Trait'].get(arg.type, arg.type)
 
 def wrap_function_decl(name, arguments):
-    cname = name
-    type = 'Trait'
-    declaration = ''
-    declaration += '\t' + 'fn ' + cname + \
-        '(&mut self, ' + ', '.join(arg.name + ': ' + TYPE_TRANSFORMS[type].get(arg.type, arg.type) for arg in arguments[1:]) + ')'
-    return declaration
+	cname = name
+	type = 'Trait'
+	declaration = '\tfn ' + cname + '(&mut self'
+	for arg in arguments[1:]:
+		declaration += ', ' + arg.name + ': ' 
+		nexttype = TYPE_TRANSFORMS[type].get(arg.type, arg.type)
+		if not arg.is_optional:
+			declaration += nexttype
+		else:
+			declaration += '&mut Option<TensorKind>'
+	declaration += ')'
+	return declaration
 
 def arg_cast(name, argtype, type):
 	usename = name
 	if "Tensor" in argtype:
 		usename += '.inner() as *mut {}'.format(TYPE_TRANSFORMS[type][argtype][:-1])
 	return usename
+def arg_cast_inner(name, argtype, type):
+	usename = name
+	if "Tensor" in argtype:
+		usename += ' as *mut {}'.format(TYPE_TRANSFORMS[type][argtype][:-1])
+	return usename
+
+def unwrap_option(arg):
+	out = "\t\tlet mut {} = if let &mut Some(ref t) = {}".format(arg.name, arg.name)
+	out += " {t.inner()} else { ::std::ptr::null_mut()};\n"
+	return out
 
 def wrap_function_impl(type, name, arguments):
-    cname = 'THNN_' + type + name
-    impl = '\t\tunsafe {\n'
-    impl += '\t\t\t' + cname + \
-        '(self.state, ' + ', '.join(arg_cast(arg.name, arg.type, type) for arg in arguments[1:]) + ');\n'
+	impl = ''
+	for arg in arguments[1:]:
+		if arg.is_optional:
+			impl += unwrap_option(arg)
+	cname = 'THNN_' + type + name
+	impl += '\t\tunsafe {\n'
+	impl += '\t\t\t' + cname + '(self.state'
+	for arg in arguments[1:]:
+		if arg.is_optional:
+			impl += ', {}'.format(arg_cast_inner(arg.name, arg.type, type))
+		else:
+			impl += ', {}'.format(arg_cast(arg.name, arg.type, type))
+	impl += ');\n'
 
-    impl += '\t\t}\n'
-    return impl
+	impl += '\t\t}\n'
+	return impl
 
 def generate_wrappers():
-    wrap_backend_decl()
-    wrap_backend_impls()
-    generate_function_classes()
+	wrap_backend_decl()
+	wrap_backend_impls()
+	generate_function_classes()
 #    wrap_cunn()
 #    wrap_generic()
 
@@ -143,9 +168,9 @@ def wrap_backend_decl():
 	wrapper += "#![allow(non_snake_case)]\n\n"
 	wrapper += "use rutorch::*;"
 	wrapper += "use tensor::{Tensor, TensorKind};\n\n"
-    #wrapper = '#include <TH/TH.h>\n\n\n'
+	#wrapper = '#include <TH/TH.h>\n\n\n'
 	wrapper += 'pub trait BackendIntf {\n\n'
-	wrapper += "\tfn get_state(&self) ->  *mut ::std::os::raw::c_void;\n"
+	#wrapper += "\tfn get_state(&self) ->  *mut ::std::os::raw::c_void;\n"
 	nn_functions = thnn_utils.parse_header(thnn_utils.THNN_H_PATH)
 	nn_functions = filter(lambda fn: "unfolded" not in fn.name, nn_functions)
 	nn_functions = filter(lambda fn: should_wrap_function(fn.name), nn_functions)
@@ -169,9 +194,9 @@ def wrap_backend_impl_type(type):
 	wrapper += "\tstate: *mut ::std::os::raw::c_void,\n"
 	wrapper += "}\n\n"
 	wrapper += "impl BackendIntf for THNN_{}Backend ".format(type) + " {\n"
-	wrapper += "\tfn get_state(&self) ->  *mut ::std::os::raw::c_void {\n"
-	wrapper += "\t\tself.state"
-	wrapper += "\t}"
+	#wrapper += "\tfn get_state(&self) ->  *mut ::std::os::raw::c_void {\n"
+	#wrapper += "\t\tself.state"
+	#wrapper += "\t}"
 	nn_functions = thnn_utils.parse_header(thnn_utils.THNN_H_PATH)
 	nn_functions = filter(lambda fn: "unfolded" not in fn.name, nn_functions)
 	nn_functions = filter(lambda fn: should_wrap_function(fn.name), nn_functions)
@@ -221,12 +246,19 @@ def build_args(name, args):
 def _make_function_class_criterion(class_name, update_output, update_grad_input, acc_grad_parameters):
 	full_args = update_output.arguments[4:]
 	args = [arg for arg in full_args if "Tensor" not in arg.type]
-	tensor_idxs = [idx for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
+	tensor_idxs = [(arg.is_optional, idx) for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
 	input_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
-	for i, idx in enumerate(tensor_idxs):
-		output_args.insert(idx, "&mut input_list[{}].clone()".format(i+2))
-		input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
+	for i, arg in enumerate(update_output.arguments):
+		if arg.is_optional:
+			print("{} at {} is optional - {}".format(arg.name, i, class_name))
+	for i, (opt, idx) in enumerate(tensor_idxs):
+		if opt:
+			output_args.insert(idx, "&mut Some(input_list[{}].clone())".format(i+2))
+			input_args.insert(idx, "&mut Some(saved[{}].clone())".format(i+2))
+		else:
+			output_args.insert(idx, "&mut input_list[{}].clone()".format(i+2))
+			input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
 
 	def build_forward_class_criterion():
 		forward = "\t\tlet mut backend = input_list[0].backend();\n"
@@ -272,15 +304,15 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 	return fn_class
 
 def _find_buffers(args, ignored_args):
-    additional_arg_idx = 0
-    buffers = []
-    for arg in args:
-        if arg.name in ignored_args:
-            continue
-        if arg.type == 'THTensor*':
-            buffers.append((additional_arg_idx, arg.name))
-        additional_arg_idx += 1
-    return buffers
+	additional_arg_idx = 0
+	buffers = []
+	for arg in args:
+		if arg.name in ignored_args:
+			continue
+		if arg.type == 'THTensor*':
+			buffers.append((additional_arg_idx, arg.name))
+		additional_arg_idx += 1
+	return buffers
 
 def _make_function_class(class_name, update_output, update_grad_input, acc_grad_parameters):
 	def has_argument(fn, name):
@@ -294,20 +326,20 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 	param_args = {'weight', 'bias'}
 	ignored_args = {'weight', 'bias', 'gradWeight', 'gradBias', 'output'}
 	expected_params = [arg for arg in update_output.arguments[3:]
-                       if arg.name in param_args]
+					   if arg.name in param_args]
 	buffers = {}
 	buffers['update_output'] = _find_buffers(update_output.arguments[3:],
-	                                         ignored_args)
+											 ignored_args)
 	buffers['update_grad_input'] = _find_buffers(
-	    update_grad_input.arguments[4:], ignored_args)
+		update_grad_input.arguments[4:], ignored_args)
 	if acc_grad_parameters is not None:
-	    buffers['acc_grad_parameters'] = _find_buffers(
-	        acc_grad_parameters.arguments[3:], ignored_args)
+		buffers['acc_grad_parameters'] = _find_buffers(
+			acc_grad_parameters.arguments[3:], ignored_args)
 
 	full_args = update_output.arguments[3:]
 	args = [arg for arg in full_args if "Tensor" not in arg.type]
 
-	tensor_idxs = [idx for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
+	tensor_idxs = [(idx, arg.is_optional) for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
 	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	#added_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	added_args = full_args
@@ -318,28 +350,36 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 	if len(grad_input_args) > len(args):
 		args = grad_input_args
 
-	for i, idx in enumerate(tensor_idxs):
-		output_args.insert(idx, "&mut input_list[{}].clone()".format(i+1))
+	for i, (idx, opt) in enumerate(tensor_idxs):
+		if opt:
+			output_args.insert(idx, "&mut Some(input_list[{}].clone())".format(i+1))
+		else:
+			output_args.insert(idx, "&mut input_list[{}].clone()".format(i+1))
 
 	ga_start = 5 if save_output else 4
 
-	tensor_idxs_input = [idx for idx, arg in enumerate(update_grad_input.arguments[ga_start:]) if "Tensor" in arg.type]
-	for i, idx in enumerate(tensor_idxs_input):
+	tensor_idxs_input = [(idx, arg.is_optional) for idx, arg in enumerate(update_grad_input.arguments[ga_start:]) if "Tensor" in arg.type]
+	for i, (idx, opt) in enumerate(tensor_idxs_input):
+		offset = i+1 
 		if save_output:
-			input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
+			offset += 1
+		if opt:
+			input_args.insert(idx, "&mut Some(saved[{}].clone())".format(offset))
 		else:
-			input_args.insert(idx, "&mut saved[{}].clone()".format(i+1))
+			input_args.insert(idx, "&mut saved[{}].clone()".format(offset))
 
 	is_inplace = update_output.arguments[-1].name == 'inplace'
 	needs_args = len(args) >  0 or len(grad_input_args) > 0
 
+	skip_grad_output_unwrap = update_grad_input.arguments[2].is_optional
+	skip_input_unwrap = update_grad_input.arguments[1].is_optional
 	def initialize_buffers(fn_name):
 		print(class_name)
 		print(full_args)
 		additional_args = added_args
 		for idx, name in buffers[fn_name]:
-            # TODO: some buffers are necessary only for update output and can be
-            # freed right afterwards
+			# TODO: some buffers are necessary only for update output and can be
+			# freed right afterwards
 			buffer = buffers[name]
 			print(buffer)
 			additional_args = additional_args[:idx] + [buffer] + additional_args[idx:]
@@ -375,7 +415,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		return forward
 
 	def build_backward():
-		input = "& mut input, " if needs_input else ""
+		input = "&mut input, " if needs_input else ""
 		backward = "\t\tlet mut saved = self.saved_tensors();\n"
 		# XXX acknowledge that this is incomplete
 		backward += '\t\tpanic!("backward will not work properly until save_for is done correctly.");\n' 
@@ -384,7 +424,10 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 			backward += "\t\tlet (mut input, mut output) = (saved[0].clone(), saved[1].clone());\n"
 		else:
 			backward += "\t\tlet mut input = saved[0].clone();\n"
-		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
+		if skip_grad_output_unwrap:
+			backward += "\t\tlet mut grad_output = grad_output_list.remove(0);\n"
+		else:
+			backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet needs_input_grad = self.needs_input_grad().clone();\n"
 		backward += "\t\tlet mut grad_input_result : Option<TensorKind> = None;\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
@@ -484,30 +527,30 @@ def generate_function_classes():
 		'unfolded',
 	}
 	name_remap = {
-        'TemporalConvolution': 'Conv1d',
-        'SpatialDilatedConvolution': 'DilatedConv2d',
-        'SpatialMaxUnpooling': 'MaxUnpool2d',
-        'SpatialReflectionPadding': 'ReflectionPad2d',
-        'SpatialReplicationPadding': 'ReplicationPad2d',
-        'VolumetricReplicationPadding': 'ReplicationPad3d',
-        'VolumetricMaxUnpooling': 'MaxUnpool3d',
-        'SoftMax': 'Softmax',
-        'LogSoftMax': 'LogSoftmax',
-        'HardTanh': 'Hardtanh',
-        'HardShrink': 'Hardshrink',
-        'SoftPlus': 'Softplus',
-        'SoftShrink': 'Softshrink',
-        'MSECriterion': 'MSELoss',
-        'AbsCriterion': 'L1Loss',
-        'BCECriterion': '_BCELoss',  # TODO: move the glue code into THNN
-        'ClassNLLCriterion': 'NLLLoss',
-        'DistKLDivCriterion': 'KLDivLoss',
-        'SpatialClassNLLCriterion': 'NLLLoss2d',
-        'MultiLabelMarginCriterion': 'MultiLabelMarginLoss',
-        'MultiMarginCriterion': 'MultiMarginLoss',
-        'SmoothL1Criterion': 'SmoothL1Loss',
-        'SoftMarginCriterion': 'SoftMarginLoss',
-    }
+		'TemporalConvolution': 'Conv1d',
+		'SpatialDilatedConvolution': 'DilatedConv2d',
+		'SpatialMaxUnpooling': 'MaxUnpool2d',
+		'SpatialReflectionPadding': 'ReflectionPad2d',
+		'SpatialReplicationPadding': 'ReplicationPad2d',
+		'VolumetricReplicationPadding': 'ReplicationPad3d',
+		'VolumetricMaxUnpooling': 'MaxUnpool3d',
+		'SoftMax': 'Softmax',
+		'LogSoftMax': 'LogSoftmax',
+		'HardTanh': 'Hardtanh',
+		'HardShrink': 'Hardshrink',
+		'SoftPlus': 'Softplus',
+		'SoftShrink': 'Softshrink',
+		'MSECriterion': 'MSELoss',
+		'AbsCriterion': 'L1Loss',
+		'BCECriterion': '_BCELoss',  # TODO: move the glue code into THNN
+		'ClassNLLCriterion': 'NLLLoss',
+		'DistKLDivCriterion': 'KLDivLoss',
+		'SpatialClassNLLCriterion': 'NLLLoss2d',
+		'MultiLabelMarginCriterion': 'MultiLabelMarginLoss',
+		'MultiMarginCriterion': 'MultiMarginLoss',
+		'SmoothL1Criterion': 'SmoothL1Loss',
+		'SoftMarginCriterion': 'SoftMarginLoss',
+	}
 
 	classes_to_generate -= exceptions
 	# make end result deterministic
@@ -517,47 +560,47 @@ def generate_function_classes():
 		update_grad_input = function_by_name[fn + '_updateGradInput']
 		acc_grad_parameters = function_by_name.get(fn + '_accGradParameters')
 		class_name = name_remap.get(fn, fn)
-        # This has to call a function to retain correct references to functions
+		# This has to call a function to retain correct references to functions
 		if 'Criterion' in fn:
 			auto += _make_function_class_criterion(class_name, update_output,
-                                                 update_grad_input, acc_grad_parameters)
+												 update_grad_input, acc_grad_parameters)
 		else:
 			auto += _make_function_class(class_name, update_output,
-                                       update_grad_input, acc_grad_parameters)
+									   update_grad_input, acc_grad_parameters)
 	with open('src/nn/_functions/thnn/auto.rs', 'w') as f:
 		f.write(auto)
 
 def wrap_function(name, type, arguments):
-    cname = 'THNN_' + type + name
-    declaration = ''
-    declaration += cname + \
-        '(' + ', '.join(TYPE_TRANSFORMS[type].get(arg.type, arg.type) for arg in arguments) + ');\n'
-    declaration += FUNCTION_TEMPLATE.substitute(name=type + name, cname=cname)
-    indent = ' ' * 4
-    dict_indent = ' ' * 6
-    prefix = indent + '- '
-    for arg in arguments:
-        if not arg.is_optional:
-            declaration += prefix + TYPE_TRANSFORMS[type].get(arg.type, arg.type) + ' ' + arg.name + '\n'
-        else:
-            t = TYPE_TRANSFORMS[type].get(arg.type, arg.type)
-            declaration += prefix + 'type: ' + t + '\n' + \
-                dict_indent + 'name: ' + arg.name + '\n' + \
-                dict_indent + 'nullable: True' + '\n'
-    declaration += ']]\n\n\n'
-    return declaration
+	cname = 'THNN_' + type + name
+	declaration = ''
+	declaration += cname + \
+		'(' + ', '.join(TYPE_TRANSFORMS[type].get(arg.type, arg.type) for arg in arguments) + ');\n'
+	declaration += FUNCTION_TEMPLATE.substitute(name=type + name, cname=cname)
+	indent = ' ' * 4
+	dict_indent = ' ' * 6
+	prefix = indent + '- '
+	for arg in arguments:
+		if not arg.is_optional:
+			declaration += prefix + TYPE_TRANSFORMS[type].get(arg.type, arg.type) + ' ' + arg.name + '\n'
+		else:
+			t = TYPE_TRANSFORMS[type].get(arg.type, arg.type)
+			declaration += prefix + 'type: ' + t + '\n' + \
+				dict_indent + 'name: ' + arg.name + '\n' + \
+				dict_indent + 'nullable: True' + '\n'
+	declaration += ']]\n\n\n'
+	return declaration
 
 def wrap_nn():
-    #wrapper = '#include <TH/TH.h>\n\n\n'
-    wrapper = ''
-    nn_functions = thnn_utils.parse_header(thnn_utils.THNN_H_PATH)
-    for fn in nn_functions:
-    	wrapper += wrap_function_trait(fn.name, fn.arguments)
-    for fn in nn_functions:
-        for t in ['Float', 'Double']:
-            wrapper += wrap_function(fn.name, t, fn.arguments)
-    with open('work/THNN.cwrap', 'w') as f:
-        f.write(wrapper)
+	#wrapper = '#include <TH/TH.h>\n\n\n'
+	wrapper = ''
+	nn_functions = thnn_utils.parse_header(thnn_utils.THNN_H_PATH)
+	for fn in nn_functions:
+		wrapper += wrap_function_trait(fn.name, fn.arguments)
+	for fn in nn_functions:
+		for t in ['Float', 'Double']:
+			wrapper += wrap_function(fn.name, t, fn.arguments)
+	with open('work/THNN.cwrap', 'w') as f:
+		f.write(wrapper)
 #    cwrap('torch/csrc/nn/THNN.cwrap', plugins=[
 #        StandaloneExtension('torch._thnn._THNN'),
 #        NullableArguments(),
@@ -565,19 +608,19 @@ def wrap_nn():
 
 
 def wrap_cunn():
-    wrapper = '#include <TH/TH.h>\n'
-    wrapper += '#include <THC/THC.h>\n\n\n'
-    cunn_functions = thnn_utils.parse_header(thnn_utils.THCUNN_H_PATH)
-    for fn in cunn_functions:
-        for t in ['CudaHalf', 'Cuda', 'CudaDouble']:
-            wrapper += wrap_function(fn.name, t, fn.arguments)
-    with open('torch/csrc/nn/THCUNN.cwrap', 'w') as f:
-        f.write(wrapper)
-    cwrap('torch/csrc/nn/THCUNN.cwrap', plugins=[
-        StandaloneExtension('torch._thnn._THCUNN'),
-        NullableArguments(),
-        AutoGPU(has_self=False),
-    ])
+	wrapper = '#include <TH/TH.h>\n'
+	wrapper += '#include <THC/THC.h>\n\n\n'
+	cunn_functions = thnn_utils.parse_header(thnn_utils.THCUNN_H_PATH)
+	for fn in cunn_functions:
+		for t in ['CudaHalf', 'Cuda', 'CudaDouble']:
+			wrapper += wrap_function(fn.name, t, fn.arguments)
+	with open('torch/csrc/nn/THCUNN.cwrap', 'w') as f:
+		f.write(wrapper)
+	cwrap('torch/csrc/nn/THCUNN.cwrap', plugins=[
+		StandaloneExtension('torch._thnn._THCUNN'),
+		NullableArguments(),
+		AutoGPU(has_self=False),
+	])
 
 GENERIC_FUNCTION_TEMPLATE = Template("""\
 [[
@@ -587,49 +630,49 @@ GENERIC_FUNCTION_TEMPLATE = Template("""\
 """)
 
 def wrap_generic_function(name, backends):
-    declaration = ''
-    declaration += GENERIC_FUNCTION_TEMPLATE.substitute(name=name)
-    for backend in backends:
-        declaration += '    - cname: ' + name + '\n'
-        declaration += '      backend: ' + backend['name'] + '\n'
-        declaration += '      arguments:\n'
-        for arg in backend['arguments']:
-            declaration += '       - arg: ' + arg.type + ' ' + arg.name + '\n'
-            if arg.is_optional:
-                declaration += '         optional: True\n'
-    declaration += ']]\n\n\n'
-    return declaration
+	declaration = ''
+	declaration += GENERIC_FUNCTION_TEMPLATE.substitute(name=name)
+	for backend in backends:
+		declaration += '    - cname: ' + name + '\n'
+		declaration += '      backend: ' + backend['name'] + '\n'
+		declaration += '      arguments:\n'
+		for arg in backend['arguments']:
+			declaration += '       - arg: ' + arg.type + ' ' + arg.name + '\n'
+			if arg.is_optional:
+				declaration += '         optional: True\n'
+	declaration += ']]\n\n\n'
+	return declaration
 
 
 def wrap_generic():
-    from collections import OrderedDict
-    defs = OrderedDict()
+	from collections import OrderedDict
+	defs = OrderedDict()
 
-    def should_wrap_function(name):
-        if name.startswith('LookupTable_'):
-            return False
-        return (name.endswith('updateOutput') or
-                name.endswith('updateGradInput') or
-                name.endswith('accGradParameters') or
-                name.endswith('backward'))
+	def should_wrap_function(name):
+		if name.startswith('LookupTable_'):
+			return False
+		return (name.endswith('updateOutput') or
+				name.endswith('updateGradInput') or
+				name.endswith('accGradParameters') or
+				name.endswith('backward'))
 
-    def add_functions(name, functions):
-        for fn in functions:
-            if not should_wrap_function(fn.name):
-                continue
-            if fn.name not in defs:
-                defs[fn.name] = []
-            defs[fn.name] += [{
-                'name': name,
-                'arguments': fn.arguments[1:],
-            }]
+	def add_functions(name, functions):
+		for fn in functions:
+			if not should_wrap_function(fn.name):
+				continue
+			if fn.name not in defs:
+				defs[fn.name] = []
+			defs[fn.name] += [{
+				'name': name,
+				'arguments': fn.arguments[1:],
+			}]
 
-    add_functions('nn', thnn_utils.parse_header(thnn_utils.THNN_H_PATH))
-    add_functions('cunn', thnn_utils.parse_header(thnn_utils.THCUNN_H_PATH))
+	add_functions('nn', thnn_utils.parse_header(thnn_utils.THNN_H_PATH))
+	add_functions('cunn', thnn_utils.parse_header(thnn_utils.THCUNN_H_PATH))
 
-    wrapper = ''
-    for name, backends in defs.items():
-        wrapper += wrap_generic_function(name, backends)
+	wrapper = ''
+	for name, backends in defs.items():
+		wrapper += wrap_generic_function(name, backends)
 #    with open('target/work/THNN_generic.cwrap', 'w') as f:
 #        f.write(wrapper)
 
