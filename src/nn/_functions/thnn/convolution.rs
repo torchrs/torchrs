@@ -89,6 +89,7 @@ impl Default for Conv3dFArgs {
 impl<'a> From<&'a mut Conv2dFArgs> for ConvNdArgs {
     fn from(input: &'a mut Conv2dFArgs) -> Self {
         ConvNdArgsBuilder::default()
+            .kernel_size(input.kernel_size.clone())
             .stride(input.stride.clone())
             .padding(input.padding.clone())
             .dilation(input.dilation.clone())
