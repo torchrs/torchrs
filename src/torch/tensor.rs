@@ -130,7 +130,7 @@ impl<S: NumLimits, D: NumLimits> From<Vec<Tensor<S>>> for THVec<D> {
         let mut d: Vec<D> = Vec::with_capacity(input.len() * input[0].len());
         let len = input[0].len();
         let mut tmp: Vec<S> = Vec::with_capacity(len);
-        for t in input {
+        for t in &input {
             t.get_storage(&mut tmp);
             for j in 0..len {
                 d.push(<D as ::num::NumCast>::from(tmp[j]).unwrap());
