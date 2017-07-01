@@ -287,8 +287,6 @@ impl<T: NumLimits> Index<i32> for Tensor<T> {
     }
 }
 
-
-
 impl<T: NumLimits> Tensor<T> {
     pub fn new<S>(&self, args: S) -> Self
         where S: Into<THVec<T>>
@@ -314,9 +312,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn cast<D>(&self) -> Tensor<D>
         where D: NumLimits
     {
-        println!("construct tensor");
         let t: Tensor<D> = torch::tensor(self.size());
-        println!("cast values");
         let s: Vec<D> = self.value
             .borrow()
             .storage()
@@ -324,10 +320,15 @@ impl<T: NumLimits> Tensor<T> {
             .iter()
             .map(|v| <D as num::NumCast>::from(*v).unwrap())
             .collect();
-        println!("copy values");
         t.value.borrow_mut().set_storage(s.as_slice());
-        println!("return t");
         t
+    }
+    pub fn get_storage(&self, data: &mut Vec<T>) {
+        let storage = self.value.borrow().storage().to_vec();
+        data.truncate(0);
+        for i in 0..storage.len() {
+            data.push(storage[i]);
+        }
     }
 }
 

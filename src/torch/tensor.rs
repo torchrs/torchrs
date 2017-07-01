@@ -115,13 +115,31 @@ impl From<Vec<usize>> for THDims {
         THDims::new(input)
     }
 }
+impl<S: NumLimits, D: NumLimits> From<Tensor<S>> for THVec<D> {
+    fn from(input: Tensor<S>) -> Self {
+        unimplemented!()
+    }
+}
+impl<T: NumLimits> From<Vec<THVec<T>>> for THVec<T> {
+    fn from(input: Vec<THVec<T>>) -> Self {
+        unimplemented!()
+    }
+}
 impl<S: NumLimits, D: NumLimits> From<Vec<Tensor<S>>> for THVec<D> {
     fn from(input: Vec<Tensor<S>>) -> Self {
-        /*
-        let v = input.iter().flat_map(|d| d.iter()).map(|d| *d).collect();
-        THVec::new(2, v)
-        */
-        unimplemented!()
+        let mut d: Vec<D> = Vec::with_capacity(input.len() * input[0].len());
+        let len = input[0].len();
+        let mut tmp: Vec<S> = Vec::with_capacity(len);
+        for t in input {
+            t.get_storage(&mut tmp);
+            for j in 0..len {
+                d.push(<D as ::num::NumCast>::from(tmp[j]).unwrap());
+            }
+        }
+        let mut sizes = input[0].size();
+        let mut dims = vec![input.len()];
+        dims.append(&mut sizes);
+        THVec::new(dims, d)
     }
 }
 impl From<THVecGeneric> for THVec<u8> {
