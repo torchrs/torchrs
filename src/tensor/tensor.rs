@@ -11,7 +11,7 @@ use storage::*;
 use ::*;
 pub use tensor::tensor_ops::*;
 use rand;
-use {Ixs, RcMut};
+use RcMut;
 
 pub struct THVec<T> {
     pub data: Vec<T>,
