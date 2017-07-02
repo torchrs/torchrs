@@ -384,18 +384,17 @@ impl<T: NumLimits> From<usize> for Variable<T> {
 #[derive(Builder)]
 #[builder(pattern="owned")]
 pub struct VariableArgs {
+    #[builder(default="None")]
     pub creator: Option<Function>,
+    #[builder(default="false")]
     pub volatile: bool,
+    #[builder(default="true")]
     pub requires_grad: bool,
 }
 
 impl Default for VariableArgs {
     fn default() -> Self {
-        VariableArgs {
-            creator: None,
-            volatile: false,
-            requires_grad: true,
-        }
+        VariableArgsBuilder::default().build().unwrap()
     }
 }
 impl VariableArgs {
