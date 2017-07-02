@@ -264,131 +264,127 @@ fn compute_grad_input(input: &mut TensorKind,
     let dilated = args.is_dilated();
     let mut backend = input.backend();
 
-    if dilated {
-        if !args.transposed {
-            /* dilated && !transposed */
-            if dim == 4 {
-                backend.SpatialDilatedConvolution_updateGradInput(input,
-                                                                  grad_output,
-                                                                  &mut grad_input,
-                                                                  weight,
-                                                                  columns,
-                                                                  args.kernel_size[1],
-                                                                  args.kernel_size[0],
-                                                                  args.stride[1],
-                                                                  args.stride[0],
-                                                                  args.padding[1],
-                                                                  args.padding[0],
-                                                                  args.dilation[1],
-                                                                  args.dilation[0]);
-            } else if dim == 5 {
-                backend.VolumetricDilatedConvolution_updateGradInput(input,
-                                                                     grad_output,
-                                                                     &mut grad_input,
-                                                                     weight,
-                                                                     columns,
-                                                                     args.kernel_size[0],
-                                                                     args.kernel_size[2],
-                                                                     args.kernel_size[1],
-                                                                     args.stride[0],
-                                                                     args.stride[2],
-                                                                     args.stride[1],
-                                                                     args.padding[0],
-                                                                     args.padding[2],
-                                                                     args.padding[1],
-                                                                     args.dilation[0],
-                                                                     args.dilation[2],
-                                                                     args.dilation[1]);
-            }
-        } else {
-            panic!("unsupported ConvNdBackward parameters")
-        }
-    } else
-    /* !dilated */
-    {
-        if args.transposed {
-            /* !dilated && transposed */
-            if dim == 4 {
-                backend.SpatialFullConvolution_updateGradInput(input,
-                                                               grad_output,
-                                                               &mut grad_input,
-                                                               weight,
-                                                               columns,
-                                                               args.kernel_size[1],
-                                                               args.kernel_size[0],
-                                                               args.stride[1],
-                                                               args.stride[0],
-                                                               args.padding[1],
-                                                               args.padding[0],
-                                                               args.output_padding[1],
-                                                               args.output_padding[0]);
-            } else if dim == 5 {
-                backend.VolumetricFullConvolution_updateGradInput(input,
-                                                                  grad_output,
-                                                                  &mut grad_input,
-                                                                  weight,
-                                                                  columns,
-                                                                  ones,
-                                                                  args.stride[0],
-                                                                  args.stride[2],
-                                                                  args.stride[1],
-                                                                  args.padding[0],
-                                                                  args.padding[2],
-                                                                  args.padding[1],
-                                                                  args.output_padding[0],
-                                                                  args.output_padding[2],
-                                                                  args.output_padding[1]);
-            } else {
-                panic!("unsupported ConvNdBackward parameters")
-            }
-        } else
-        /* !transposed */
-        {
-            /* !dilated && !transposed */
-            if dim == 4 {
-                backend.SpatialConvolutionMM_updateGradInput(input,
-                                                             grad_output,
-                                                             &mut grad_input,
-                                                             weight,
-                                                             columns,
-                                                             ones,
-                                                             args.kernel_size[1],
-                                                             args.kernel_size[0],
-                                                             args.stride[1],
-                                                             args.stride[0],
-                                                             args.padding[1],
-                                                             args.padding[0]);
-            } else if dim == 5 && input.is_cuda() {
-                backend.VolumetricConvolution_updateGradInput(input,
+    if dilated && !args.transposed {
+        /* dilated && !transposed */
+        if dim == 4 {
+            backend.SpatialDilatedConvolution_updateGradInput(input,
                                                               grad_output,
                                                               &mut grad_input,
                                                               weight,
                                                               columns,
+                                                              args.kernel_size[1],
+                                                              args.kernel_size[0],
+                                                              args.stride[1],
+                                                              args.stride[0],
+                                                              args.padding[1],
+                                                              args.padding[0],
+                                                              args.dilation[1],
+                                                              args.dilation[0]);
+        } else if dim == 5 {
+            backend.VolumetricDilatedConvolution_updateGradInput(input,
+                                                                 grad_output,
+                                                                 &mut grad_input,
+                                                                 weight,
+                                                                 columns,
+                                                                 args.kernel_size[0],
+                                                                 args.kernel_size[2],
+                                                                 args.kernel_size[1],
+                                                                 args.stride[0],
+                                                                 args.stride[2],
+                                                                 args.stride[1],
+                                                                 args.padding[0],
+                                                                 args.padding[2],
+                                                                 args.padding[1],
+                                                                 args.dilation[0],
+                                                                 args.dilation[2],
+                                                                 args.dilation[1]);
+        } else {
+            panic!("unsupported ConvNdBackward parameters")
+        }
+    } else if dilated && args.transposed {
+        panic!("unsupported ConvNdBackward parameters")
+    } else if !dilated && args.transposed {
+        /* !dilated && transposed */
+        if dim == 4 {
+            backend.SpatialFullConvolution_updateGradInput(input,
+                                                           grad_output,
+                                                           &mut grad_input,
+                                                           weight,
+                                                           columns,
+                                                           args.kernel_size[1],
+                                                           args.kernel_size[0],
+                                                           args.stride[1],
+                                                           args.stride[0],
+                                                           args.padding[1],
+                                                           args.padding[0],
+                                                           args.output_padding[1],
+                                                           args.output_padding[0]);
+        } else if dim == 5 {
+            backend.VolumetricFullConvolution_updateGradInput(input,
+                                                              grad_output,
+                                                              &mut grad_input,
+                                                              weight,
+                                                              columns,
+                                                              ones,
                                                               args.stride[0],
                                                               args.stride[2],
                                                               args.stride[1],
                                                               args.padding[0],
                                                               args.padding[2],
-                                                              args.padding[1]);
-            } else if dim == 5 {
-                backend.VolumetricConvolutionMM_updateGradInput(input,
-                                                                grad_output,
-                                                                &mut grad_input,
-                                                                weight,
-                                                                columns,
-                                                                ones,
-                                                                args.kernel_size[0],
-                                                                args.kernel_size[2],
-                                                                args.kernel_size[1],
-                                                                args.stride[0],
-                                                                args.stride[2],
-                                                                args.stride[1],
-                                                                args.padding[0],
-                                                                args.padding[2],
-                                                                args.padding[1]);
-            } else {
-                panic!("unsupported ConvNdBackward parameters")
-            }
+                                                              args.padding[1],
+                                                              args.output_padding[0],
+                                                              args.output_padding[2],
+                                                              args.output_padding[1]);
+        } else {
+            panic!("unsupported ConvNdBackward parameters")
+        }
+    } else
+    /* !transposed */
+    {
+        /* !dilated && !transposed */
+        if dim == 4 {
+            backend.SpatialConvolutionMM_updateGradInput(input,
+                                                         grad_output,
+                                                         &mut grad_input,
+                                                         weight,
+                                                         columns,
+                                                         ones,
+                                                         args.kernel_size[1],
+                                                         args.kernel_size[0],
+                                                         args.stride[1],
+                                                         args.stride[0],
+                                                         args.padding[1],
+                                                         args.padding[0]);
+        } else if dim == 5 && input.is_cuda() {
+            backend.VolumetricConvolution_updateGradInput(input,
+                                                          grad_output,
+                                                          &mut grad_input,
+                                                          weight,
+                                                          columns,
+                                                          args.stride[0],
+                                                          args.stride[2],
+                                                          args.stride[1],
+                                                          args.padding[0],
+                                                          args.padding[2],
+                                                          args.padding[1]);
+        } else if dim == 5 {
+            backend.VolumetricConvolutionMM_updateGradInput(input,
+                                                            grad_output,
+                                                            &mut grad_input,
+                                                            weight,
+                                                            columns,
+                                                            ones,
+                                                            args.kernel_size[0],
+                                                            args.kernel_size[2],
+                                                            args.kernel_size[1],
+                                                            args.stride[0],
+                                                            args.stride[2],
+                                                            args.stride[1],
+                                                            args.padding[0],
+                                                            args.padding[2],
+                                                            args.padding[1]);
+        } else {
+            panic!("unsupported ConvNdBackward parameters")
         }
     }
 
