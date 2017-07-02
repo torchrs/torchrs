@@ -62,13 +62,16 @@ macro_rules! typecast {
 #[macro_export]
 macro_rules! impl_func {
 	($name:ident) => (
-		#[derive(Clone)]
-		pub struct $name {
-    		delegate: Function,
-		}
-		impl $name {
+        #[derive(Clone)]
+        pub struct $name {
+            delegate: Function,
+            saved_tensors: Vec<::tensor::TensorKind>,
+        }
+        impl $name {
     		pub fn new() -> FIWrap<Self> {
-        		FIWrap::new($name { delegate: Function::new() })
+                FIWrap::new($name {
+                    delegate: Function::new(),
+                    saved_tensors: Vec::new() })
     		}
 		}
 		impl FuncDelegate for $name {
@@ -89,6 +92,7 @@ macro_rules! impl_func_args {
 pub struct $name {
     delegate: Function,
     args: $args,
+    saved_tensors: Vec<::tensor::TensorKind>,
 }
 
 impl $name {
@@ -96,6 +100,7 @@ impl $name {
         FIWrap::new($name {
                         delegate: Function::new(),
                         args: args.clone(),
+                        saved_tensors: Vec::new(),
                     })
     }
 }
