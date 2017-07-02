@@ -99,7 +99,7 @@ impl TensorKind {
         match *self {
             /* XXX avoid repeated boxing on every call */
             TensorKind::FloatTensor(_) => Box::new(nn::FloatBackend.clone()),
-            _ => panic!("no corresponding backend"),
+            _ => panic!("no corresponding backend")
         }
     }
     pub fn len(&self) -> usize {
@@ -358,6 +358,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
 
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
+    fn copy(&mut self, src: &RefTI<T>);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
@@ -528,20 +529,11 @@ macro_rules! impl_tensor_impl {
         }
 
         impl TensorImpl<$type> for $name {
-            fn new(&self) -> RefTI<$type> {
-                RcMutNew($name ::new())
-            }
-            fn len(&self) -> usize {
-                self.len()
-            }
             fn add(&self, value: $type, output: &TIArg<$type>) {
                 let out = typecast!(output.inner(), $thname);
                 unsafe {
                     concat_idents!(TH, $name, _add)(out, self.t, value);
                 };
-            }
-            fn inner(&self) -> *mut ::std::os::raw::c_void {
-                self.t as *mut ::std::os::raw::c_void
             }
             fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
                 let out = typecast!(output.inner(), $thname);
@@ -550,26 +542,18 @@ macro_rules! impl_tensor_impl {
                     concat_idents!($thname, _add)(out, rhsp, value);
                 };
             }
-            fn view(&self, dims: &[isize]) -> RefTI<$type> {
-                let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
-                let size = LongStorage::with_data(dims_long.as_slice());
-                let inferred_size = unsafe {
-                    let numel = concat_idents!($thname, _nElement)(self.t);
-                    let p = THLongStorage_newInferSize(size.t, numel);
-                    LongStorage {t: p}
-                };
-                let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
-                let inf_dims : Vec<isize> = inferred_size.iter().map(|t| *t as isize).collect();
-                let t = $name :: from_parts(t, self.storage.clone(), inf_dims);
-                RcMutNew(t)
+            fn copy(&mut self, src: &RefTI<$type>) {
+                let t: *mut $thname = src.borrow_mut().inner() as *mut $thname;
+                unsafe {concat_idents!($thname, _copy)(self.t, t)}
             }
-            fn to_rust_tensor(&self) -> RustTensor<$type> {
-                self.to_rust_tensor()
+            fn inner(&self) -> *mut ::std::os::raw::c_void {
+                self.t as *mut ::std::os::raw::c_void
             }
-            fn uniform_(&mut self, range: (f64, f64)) {
-                let g = Generator::new();
-                #[allow(unused_unsafe)]
-                unsafe { concat_idents!($thname, _uniform)(self.t, g.t, range.0, range.1) };
+            fn len(&self) -> usize {
+                self.len()
+            }
+            fn new(&self) -> RefTI<$type> {
+                RcMutNew($name ::new())
             }
             fn size(&self) -> Vec<usize> {
                 self.dims.iter().map(|v| *v as usize).collect()
@@ -628,10 +612,31 @@ macro_rules! impl_tensor_impl {
                     self.dims.remove(d);
                 }
             }
+            fn to_rust_tensor(&self) -> RustTensor<$type> {
+                self.to_rust_tensor()
+            }
+            fn uniform_(&mut self, range: (f64, f64)) {
+                let g = Generator::new();
+                #[allow(unused_unsafe)]
+                unsafe { concat_idents!($thname, _uniform)(self.t, g.t, range.0, range.1) };
+            }
             fn unsqueeze(&mut self, dim: usize) {
                 let p = ::std::ptr::null_mut();
                 unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, dim as i32) };
                 self.dims.insert(dim, 1);
+            }
+            fn view(&self, dims: &[isize]) -> RefTI<$type> {
+                let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
+                let size = LongStorage::with_data(dims_long.as_slice());
+                let inferred_size = unsafe {
+                    let numel = concat_idents!($thname, _nElement)(self.t);
+                    let p = THLongStorage_newInferSize(size.t, numel);
+                    LongStorage {t: p}
+                };
+                let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
+                let inf_dims : Vec<isize> = inferred_size.iter().map(|t| *t as isize).collect();
+                let t = $name :: from_parts(t, self.storage.clone(), inf_dims);
+                RcMutNew(t)
             }
             fn zero(&mut self) {
                 unsafe { concat_idents!($thname, _zero)(self.t) };
