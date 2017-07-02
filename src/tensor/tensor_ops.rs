@@ -293,7 +293,7 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow_mut()
     }
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
-        unimplemented!()
+        self.value.borrow().inner()
     }
     pub fn int(&mut self) -> &mut Self {
         unimplemented!()

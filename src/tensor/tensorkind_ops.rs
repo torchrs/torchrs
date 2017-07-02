@@ -346,6 +346,9 @@ impl TensorKind {
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
         unimplemented!()
     }
+    pub fn inner(&self) -> *mut ::std::os::raw::c_void {
+        impl_tk_dispatch_self_ref_other!(self, t, t.inner())
+    }
     pub fn int(&mut self) -> &mut Self {
         unimplemented!()
     }
