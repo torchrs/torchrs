@@ -96,10 +96,11 @@ impl TensorKind {
     }
 
     pub fn backend(&self) -> Box<nn::BackendIntf> {
-        unimplemented!()
-    }
-    pub fn inner(&self) -> *mut ::std::os::raw::c_void {
-        unimplemented!()
+        match *self {
+            /* XXX avoid repeated boxing on every call */
+            TensorKind::FloatTensor(_) => Box::new(nn::FloatBackend.clone()),
+            _ => panic!("no corresponding backend"),
+        }
     }
     pub fn len(&self) -> usize {
         unimplemented!()
