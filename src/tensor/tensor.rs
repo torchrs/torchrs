@@ -99,7 +99,7 @@ impl TensorKind {
         match *self {
             /* XXX avoid repeated boxing on every call */
             TensorKind::FloatTensor(_) => Box::new(nn::FloatBackend.clone()),
-            _ => panic!("no corresponding backend")
+            _ => panic!("no corresponding backend"),
         }
     }
     pub fn len(&self) -> usize {
@@ -428,7 +428,6 @@ macro_rules! impl_tensor_impl {
         pub struct $name {
             t: *mut $thname,
             storage: $storage_name,
-            dims: Vec<isize>,
         }
         impl $name {
             pub fn new() -> Self {
@@ -436,15 +435,13 @@ macro_rules! impl_tensor_impl {
                     $name {
                         t: concat_idents!($thname, _new)(),
                         storage: $storage_name ::new(),
-                        dims: Vec::new(),
                     }
                 }
             }
-            fn from_parts(t: *mut $thname, storage: $storage_name, dims: Vec<isize>) -> Self {
+            fn from_parts(t: *mut $thname, storage: $storage_name) -> Self {
                 $name {
                     t: t,
                     storage: storage,
-                    dims: dims,
                 }
             }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
@@ -498,7 +495,6 @@ macro_rules! impl_tensor_impl {
                 $name {
                     t: t,
                     storage: storage,
-                    dims: dims.iter().map(|t| *t as isize).collect(),
                  }
             }
             pub fn randn<D>(dims: D) -> Self
@@ -516,8 +512,7 @@ macro_rules! impl_tensor_impl {
                 t as usize
             }
             fn len(&self) -> usize {
-                let t: isize = self.dims.iter().product();
-                t as usize
+                self.size().iter().product()
             }
             fn set_storage(&mut self, v: &[$type]) {
                 let storage_offset = self.storage_offset();
@@ -556,23 +551,30 @@ macro_rules! impl_tensor_impl {
                 RcMutNew($name ::new())
             }
             fn size(&self) -> Vec<usize> {
-                self.dims.iter().map(|v| *v as usize).collect()
+                let mut v = Vec::new();
+                let d = unsafe { std::slice::from_raw_parts((*self.t).size,
+                                                            (*self.t).nDimension as usize)};
+                for i in d {
+                    v.push(*i as usize);
+                }
+                v
             }
             fn s(&self, dim: &[usize]) -> Tensor<$type> {
                 let mut increment = self.storage.len() - self.storage_offset();
-                if self.dims.len() < dim.len() {
+                let sizes = self.size();
+                if sizes.len() < dim.len() {
                     panic!("bad slice index {:?}", dim);
                 }
                /* calculate new storage offset and validate */
                 for i in 0..dim.len() {
-                    if dim[i] as isize >= self.dims[i] {
-                        panic!("{} out of range {:?}", dim[i], self.dims[i]);
+                    if dim[i] >= sizes[i] {
+                        panic!("{} out of range {:?}", dim[i], sizes[i]);
                     }
                 }
                 let mut offset = 0;
-                let mut new_dims = self.dims.clone();
+                let mut new_dims = sizes.clone();
                 for i in 0..dim.len() {
-                    increment /= self.dims[i] as usize;
+                    increment /= sizes[i];
                     offset += dim[i] * increment;
                     new_dims.remove(0);
                 }
@@ -585,7 +587,7 @@ macro_rules! impl_tensor_impl {
                                                              sizes.t,
                                                              std::ptr::null_mut())
                 };
-                let t = $name :: from_parts(t, storage, new_dims);
+                let t = $name :: from_parts(t, storage);
                 Tensor { value: RcMutNew(t) }
             }
             fn storage(&self) -> &[$type] {
@@ -599,7 +601,7 @@ macro_rules! impl_tensor_impl {
                 if let Some(t) = dim {
                     dims.push(t)
                 } else {
-                    for (i, d) in self.dims.iter().enumerate() {
+                    for (i, d) in self.size().iter().enumerate() {
                         if *d == 1 {
                             dims.push(i);
                         }
@@ -609,7 +611,6 @@ macro_rules! impl_tensor_impl {
                 for d in dims {
                     let p = ::std::ptr::null_mut();
                     unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
-                    self.dims.remove(d);
                 }
             }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
@@ -623,7 +624,6 @@ macro_rules! impl_tensor_impl {
             fn unsqueeze(&mut self, dim: usize) {
                 let p = ::std::ptr::null_mut();
                 unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, dim as i32) };
-                self.dims.insert(dim, 1);
             }
             fn view(&self, dims: &[isize]) -> RefTI<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
@@ -634,8 +634,7 @@ macro_rules! impl_tensor_impl {
                     LongStorage {t: p}
                 };
                 let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
-                let inf_dims : Vec<isize> = inferred_size.iter().map(|t| *t as isize).collect();
-                let t = $name :: from_parts(t, self.storage.clone(), inf_dims);
+                let t = $name :: from_parts(t, self.storage.clone());
                 RcMutNew(t)
             }
             fn zero(&mut self) {
@@ -653,16 +652,17 @@ macro_rules! impl_tensor_impl {
             fn index(&self, idx: &'a [isize]) -> &Self::Output {
                 let mut index = 0;
                 let lastidx = max(0, idx.len() as isize - 1) as usize;
-                if idx.len() != self.dims.len() {
+                let dims = self.size();
+                if idx.len() != dims.len() {
                     panic!("bad dimlen")
                 }
                 for i in 0..lastidx {
-                    if idx[i] >= self.dims[i] {
+                    if idx[i] >= dims[i] as isize {
                         panic!("bad dimlen")
                     }
-                    index += (idx[i] * self.dims[i]) as usize;
+                    index += (idx[i] as usize * dims[i]);
                 }
-                if idx[lastidx] >= self.dims[lastidx] {
+                if idx[lastidx] >= dims[lastidx] as isize {
                     panic!("bad dimlen")
                 }
                 index += idx[lastidx] as usize;
@@ -674,16 +674,17 @@ macro_rules! impl_tensor_impl {
             fn index_mut(&mut self, idx: &'a [isize]) -> &mut Self::Output {
                 let mut index = 0;
                 let lastidx = max(0, idx.len() as isize - 1) as usize;
-                if idx.len() != self.dims.len() {
+                let dims = self.size();
+                if idx.len() != dims.len() {
                     panic!("bad dimlen")
                 }
                 for i in 0..lastidx {
-                    if idx[i] >= self.dims[i] {
+                    if idx[i] >= dims[i] as isize {
                         panic!("bad dimlen")
                     }
-                    index += (idx[i] * self.dims[i]) as usize;
+                    index += (idx[i] as usize * dims[i]);
                 }
-                if idx[lastidx] >= self.dims[lastidx] {
+                if idx[lastidx] >= dims[lastidx] as isize {
                     panic!("bad dimlen")
                 }
                 index += idx[lastidx] as usize;
@@ -693,10 +694,11 @@ macro_rules! impl_tensor_impl {
         impl Index<usize> for $name {
             type Output = $type;
             fn index(&self, idx: usize) -> &Self::Output {
-                if self.dims.len() != 1 {
+                let dims = self.size();
+                if dims.len() != 1 {
                     panic!("bad index size")
                 };
-                if self.dims[0] <= idx as isize {
+                if dims[0] <= idx {
                     panic!("idx {} out of range", idx)
                 };
                 &self.storage[self.storage_offset() + idx]
