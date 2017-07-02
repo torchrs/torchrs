@@ -199,13 +199,15 @@ impl TensorKind {
     }
     // perform deep copy
     pub fn copy(&self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref!(self, t, t.copy().into())
     }
     pub fn copy_(&mut self, src: &Self) -> &mut Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.copy_(src.into());});
+        self
     }
     pub fn copy_async_(&mut self, src: &Self) -> &mut Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.copy_async_(src.into());});
+        self
     }
     pub fn cos<T: NumLimits>(&self) -> Self {
         unimplemented!()
@@ -347,7 +349,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
-    	impl_tk_dispatch_self_ref_other!(self, t, t.inner())
+        impl_tk_dispatch_self_ref_other!(self, t, t.inner())
     }
     pub fn int(&mut self) -> &mut Self {
         unimplemented!()
@@ -608,7 +610,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn size(&self) -> Vec<usize> {
-    	impl_tk_dispatch_self_ref_other!(self, t, t.size())
+        impl_tk_dispatch_self_ref_other!(self, t, t.size())
     }
     pub fn sort(&self, dim: Option<i32>, descending: bool) -> (Self, Tensor<i64>) {
         unimplemented!()
@@ -620,11 +622,11 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn squeeze(&self, dim: Option<usize>) -> Self {
-    	impl_tk_dispatch_self_ref!(self, t, t.squeeze(dim))
+        impl_tk_dispatch_self_ref!(self, t, t.squeeze(dim))
     }
     pub fn squeeze_(&mut self, dim: Option<usize>) -> &mut Self {
-    	impl_tk_dispatch_self_ref_other_mut!(self, t, {t.squeeze_(dim);});
-    	self
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.squeeze_(dim);});
+        self
     }
     pub fn std<T: NumLimits>(&self) -> T {
         unimplemented!()
@@ -724,11 +726,11 @@ impl TensorKind {
         self
     }
     pub fn unsqueeze(&self, dim: usize) -> Self {
-    	impl_tk_dispatch_self_ref!(self, t, t.unsqueeze(dim))
+        impl_tk_dispatch_self_ref!(self, t, t.unsqueeze(dim))
     }
     pub fn unsqueeze_(&mut self, dim: usize) -> &mut Self {
-    	impl_tk_dispatch_self_ref_other_mut!(self, t, {t.unsqueeze(dim);});
-    	self
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.unsqueeze(dim);});
+        self
     }
     pub fn var<T: NumLimits>(&self) -> T {
         unimplemented!()
