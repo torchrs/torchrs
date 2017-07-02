@@ -22,6 +22,7 @@ static RAW_FOLDER: &str = "raw";
 static PROCESSED_FOLDER: &str = "processed";
 static TRAINING_FILE: &str = "training.pt";
 static TEST_FILE: &str = "test.pt";
+static NCHANNELS: isize = 1;
 
 fn create_dir_f(arg: PathBuf) -> io::Result<()> {
     let result = fs::create_dir(arg);
@@ -104,6 +105,7 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
     let data = unsafe { fp.as_slice() };
     let mut images: Vec<Vec<u8>> = Vec::with_capacity(length);
     let mut idx = 16;
+    // XXX transpose here to be H x W ?
     for _ in 0..length {
         let mut img = Vec::with_capacity(nrows * ncols);
         for _ in 0..nrows * ncols {
@@ -112,7 +114,7 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
         }
         images.push(img)
     }
-    Ok(torch::byte_tensor(images).view(&[-1, 28, 28]).into())
+    Ok(torch::byte_tensor(images).view(&[-1, NCHANNELS, 28, 28]).into())
 }
 
 fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
@@ -189,7 +191,6 @@ impl<T: NumLimits> MNIST<T> {
         }
     }
     fn index(&self, idx: usize) -> Sample<u8> {
-        println!("index called idx: {}", idx);
         let img = self.data.s([idx]);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into()).into()
