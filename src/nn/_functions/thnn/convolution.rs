@@ -116,8 +116,6 @@ fn compute_output(input: &mut TensorKind,
                   ones: &mut TensorKind,
                   args: &ConvNdArgs)
                   -> TensorKind {
-
-    unimplemented!();
     let mut output = input.new(());
     let dim = input.size().len();
     let dilated = args.is_dilated();
