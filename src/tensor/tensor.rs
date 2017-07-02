@@ -550,8 +550,14 @@ macro_rules! impl_tensor_impl {
             fn view(&self, dims: &[isize]) -> RefTI<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
                 let size = LongStorage::with_data(dims_long.as_slice());
-                let t = unsafe { concat_idents!($thname, _newView)(self.t, size.t)  };
-                let t = $name :: from_parts(t, self.storage.clone(), dims.to_vec());
+                let inferred_size = unsafe {
+                    let numel = concat_idents!($thname, _nElement)(self.t);
+                    let p = THLongStorage_newInferSize(size.t, numel);
+                    LongStorage {t: p}
+                };
+                let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
+                let inf_dims : Vec<isize> = inferred_size.iter().map(|t| *t as isize).collect();
+                let t = $name :: from_parts(t, self.storage.clone(), inf_dims);
                 RcMutNew(t)
             }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
