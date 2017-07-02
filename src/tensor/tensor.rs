@@ -551,13 +551,9 @@ macro_rules! impl_tensor_impl {
                 RcMutNew($name ::new())
             }
             fn size(&self) -> Vec<usize> {
-                let mut v = Vec::new();
-                let d = unsafe { std::slice::from_raw_parts((*self.t).size,
+                let d = unsafe { std::slice::from_raw_parts((*self.t).size as *mut usize,
                                                             (*self.t).nDimension as usize)};
-                for i in d {
-                    v.push(*i as usize);
-                }
-                v
+                d.to_vec()
             }
             fn s(&self, dim: &[usize]) -> Tensor<$type> {
                 let mut increment = self.storage.len() - self.storage_offset();
