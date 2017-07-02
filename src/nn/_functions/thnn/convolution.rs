@@ -120,7 +120,6 @@ fn compute_output(input: &mut TensorKind,
     let dim = input.size().len();
     let dilated = args.is_dilated();
     let mut backend = input.backend();
-
     if dilated {
         if !args.transposed && dim == 4 {
             backend.SpatialDilatedConvolution_updateOutput(input,
@@ -562,7 +561,7 @@ impl ConvNd {
         let mut input = inputs.remove(0);
         let mut weight = inputs.remove(0);
         let (mut ones, mut columns) = (input.new(()), input.new(()));
-        let mut save_list = vec![columns.clone(), ones.clone(), input.clone(), weight.clone()];
+        let mut save_list = vec![input.clone(), weight.clone()];
         let mut bias = if inputs.len() > 2 {
             let b = inputs.remove(0);
             save_list.push(b.clone());
@@ -571,6 +570,8 @@ impl ConvNd {
             None
         };
         self.save_for_backward(&save_list);
+        self.saved_tensors.push(ones.clone());
+        self.saved_tensors.push(columns.clone());
         let k = input.size().len();
         if k == 3 {
             self.view1d_as_2d();
