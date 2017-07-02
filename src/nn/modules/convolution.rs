@@ -80,7 +80,8 @@ impl<T: NumLimits> Conv2d<T> {
         };
         Conv2d {
                 delegate: Module::new(),
-                weight: Parameter::new((args.out_features, args.in_features)),
+                weight: Parameter::new([args.out_features / args.groups as usize, args.in_features,
+                    args.kernel_size.0 as usize, args.kernel_size.1 as usize]),
                 bias: bias,
                 args: fargs,
             }
