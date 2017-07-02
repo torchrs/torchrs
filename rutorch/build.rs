@@ -6,8 +6,10 @@ use std::path::PathBuf;
 fn main() {
     let torch_path = env::var("TORCH_PATH").expect("TORCH_PATH not defined");
     println!("cargo:rustc-link-search=native={}/torch/lib/build/TH", torch_path);
+    println!("cargo:rustc-link-search=native={}/torch/lib/build/THNN", torch_path);
     //println!("cargo:rustc-link-search=native={}/build/lib.linux-x86_64-3.6/torch/lib", torch_path);
     println!("cargo:rustc-link-lib=TH");
+    println!("cargo:rustc-link-lib=THNN");
 
     //let cuda_path = env::var("CUDA_PATH").expect("CUDA_PATH not defined");
     //let mut inc = String::from("-I");
