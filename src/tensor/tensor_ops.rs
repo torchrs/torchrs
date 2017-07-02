@@ -141,10 +141,13 @@ impl<T: NumLimits> Tensor<T> {
     }
     // perform deep copy
     pub fn copy(&self) -> Self {
-        unimplemented!()
+        let mut t = self.new(());
+        t.copy_(self);
+        t
     }
     pub fn copy_(&mut self, src: &Self) -> &mut Self {
-        unimplemented!()
+        self.value.borrow_mut().copy(&src.value);
+        self
     }
     pub fn copy_async_(&mut self, src: &Self) -> &mut Self {
         unimplemented!()
