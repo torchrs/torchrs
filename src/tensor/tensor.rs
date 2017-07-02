@@ -68,21 +68,27 @@ impl TensorKind {
                 let tv: THVecGeneric = args.into();
                 let tv: THVec<f32> = tv.into();
                 let mut newt: Tensor<f32> = t.new(tv.dims);
-                newt.set(tv.data);
+                if tv.data.len() != 0 {
+                    newt.set(tv.data);
+                }
                 newt.into()
             }
             TensorKind::LongTensor(ref t) => {
                 let tv: THVecGeneric = args.into();
                 let tv: THVec<i64> = tv.into();
                 let mut newt: Tensor<i64> = t.new(tv.dims);
-                newt.set(tv.data);
+                if tv.data.len() != 0 {
+                    newt.set(tv.data);
+                }
                 newt.into()
             }
             TensorKind::ByteTensor(ref t) => {
                 let tv: THVecGeneric = args.into();
                 let tv: THVec<u8> = tv.into();
                 let mut newt: Tensor<u8> = t.new(tv.dims);
-                newt.set(tv.data);
+                if tv.data.len() != 0 {
+                    newt.set(tv.data);
+                }
                 newt.into()
             }
 
