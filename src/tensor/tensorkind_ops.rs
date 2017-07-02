@@ -347,7 +347,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
-        impl_tk_dispatch_self_ref_other!(self, t, t.inner())
+    	impl_tk_dispatch_self_ref_other!(self, t, t.inner())
     }
     pub fn int(&mut self) -> &mut Self {
         unimplemented!()
@@ -608,7 +608,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn size(&self) -> Vec<usize> {
-        impl_tk_dispatch_self_ref_other!(self, t, t.size())
+    	impl_tk_dispatch_self_ref_other!(self, t, t.size())
     }
     pub fn sort(&self, dim: Option<i32>, descending: bool) -> (Self, Tensor<i64>) {
         unimplemented!()
@@ -619,11 +619,12 @@ impl TensorKind {
     pub fn sqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn squeeze(&self, dim: Option<i32>) -> Self {
-        unimplemented!()
+    pub fn squeeze(&self, dim: Option<usize>) -> Self {
+    	impl_tk_dispatch_self_ref!(self, t, t.squeeze(dim))
     }
-    pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
-        unimplemented!()
+    pub fn squeeze_(&mut self, dim: Option<usize>) -> &mut Self {
+    	impl_tk_dispatch_self_ref_other_mut!(self, t, {t.squeeze_(dim);});
+    	self
     }
     pub fn std<T: NumLimits>(&self) -> T {
         unimplemented!()
@@ -722,11 +723,12 @@ impl TensorKind {
         impl_tk_dispatch_self_ref_other_mut!(self, v, {v.uniform_(range);});
         self
     }
-    pub fn unsqueeze(&self, dim: i32) -> Self {
-        unimplemented!()
+    pub fn unsqueeze(&self, dim: usize) -> Self {
+    	impl_tk_dispatch_self_ref!(self, t, t.unsqueeze(dim))
     }
-    pub fn unsqueeze_(&mut self, dim: i32) -> &mut Self {
-        unimplemented!()
+    pub fn unsqueeze_(&mut self, dim: usize) -> &mut Self {
+    	impl_tk_dispatch_self_ref_other_mut!(self, t, {t.unsqueeze(dim);});
+    	self
     }
     pub fn var<T: NumLimits>(&self) -> T {
         unimplemented!()

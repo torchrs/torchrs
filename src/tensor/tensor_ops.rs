@@ -566,11 +566,14 @@ impl<T: NumLimits> Tensor<T> {
     pub fn sqrt_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn squeeze(&self, dim: Option<i32>) -> Self {
-        unimplemented!()
+    pub fn squeeze(&self, dim: Option<usize>) -> Self {
+        let mut t = self.copy();
+        t.squeeze_(dim);
+        t
     }
-    pub fn squeeze_(&mut self, dim: Option<i32>) -> &mut Self {
-        unimplemented!()
+    pub fn squeeze_(&mut self, dim: Option<usize>) -> &mut Self {
+        self.value.borrow_mut().squeeze(dim);
+        self
     }
     pub fn std(&self) -> f32 {
         unimplemented!()
@@ -669,11 +672,14 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow_mut().uniform_(range);
         self
     }
-    pub fn unsqueeze(&self, dim: i32) -> Self {
-        unimplemented!()
+    pub fn unsqueeze(&self, dim: usize) -> Self {
+        let mut t = self.copy();
+        t.unsqueeze_(dim);
+        t
     }
-    pub fn unsqueeze_(&mut self, dim: i32) -> &mut Self {
-        unimplemented!()
+    pub fn unsqueeze_(&mut self, dim: usize) -> &mut Self {
+        self.value.borrow_mut().unsqueeze(dim);
+        self
     }
     pub fn var(&self) -> f32 {
         unimplemented!()

@@ -364,6 +364,8 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn storage(&self) -> &[T];
+    fn squeeze(&mut self, dim: Option<usize>);
+    fn unsqueeze(&mut self, dim: usize);
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
     fn view(&self, dims: &[isize]) -> RefTI<T>;
@@ -607,6 +609,29 @@ macro_rules! impl_tensor_impl {
             }
             fn set_storage(&mut self, v: &[$type]) {
                 self.set_storage(v)
+            }
+            fn squeeze(&mut self, dim: Option<usize>) {
+                let mut dims = Vec::new();
+                if let Some(t) = dim {
+                    dims.push(t)
+                } else {
+                    for (i, d) in self.dims.iter().enumerate() {
+                        if *d == 1 {
+                            dims.push(i);
+                        }
+                    }
+                    dims.reverse();
+                }
+                for d in dims {
+                    let p = ::std::ptr::null_mut();
+                    unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
+                    self.dims.remove(d);
+                }
+            }
+            fn unsqueeze(&mut self, dim: usize) {
+                let p = ::std::ptr::null_mut();
+                unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, dim as i32) };
+                self.dims.insert(dim, 1);
             }
             fn zero(&mut self) {
                 unsafe { concat_idents!($thname, _zero)(self.t) };
