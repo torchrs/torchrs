@@ -114,7 +114,9 @@ fn read_image_file(path: PathBuf) -> io::Result<TensorKind> {
         }
         images.push(img)
     }
-    Ok(torch::byte_tensor(images).view(&[-1, NCHANNELS, 28, 28]).into())
+    Ok(torch::byte_tensor(images)
+           .view(&[-1, NCHANNELS, 28, 28])
+           .into())
 }
 
 fn read_label_file(path: PathBuf) -> io::Result<TensorKind> {
