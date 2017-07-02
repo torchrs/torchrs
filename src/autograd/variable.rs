@@ -462,11 +462,11 @@ impl VarKind {
         let mut self__ = &mut self_;
         impl_var_mut_dispatch!(self__, v, v.data_into())
     }
-    pub fn tid(&mut self) -> TensorId {
+    pub fn tid(&self) -> TensorId {
         use self::VarKind::{FloatVariable, LongVariable};
         match *self {
-            FloatVariable(ref mut v) => v.data().id(),
-            LongVariable(ref mut v) => v.data().id(),
+            FloatVariable(ref v) => v.tid(),
+            LongVariable(ref v) => v.tid(),
         }
     }
     pub fn requires_nograd(&mut self) {
@@ -511,6 +511,9 @@ impl<T: NumLimits> Variable<T> {
     }
     pub fn data_borrow(&self) -> &Tensor<T> {
         &self.borrow().data
+    }
+    pub fn tid(&self) -> usize {
+        self.borrow().data.id()
     }
     pub fn apply(&mut self, callback: fn(&mut Tensor<T>)) {
         callback(&mut self.access().data);
