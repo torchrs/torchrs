@@ -362,9 +362,12 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
     fn div(&mut self, src: *mut ::std::os::raw::c_void, value: T);
+    fn divt(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn len(&self) -> usize;
+    fn mul(&mut self, src: *mut ::std::os::raw::c_void, value: T);
+    fn mult(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
     fn s(&self, dim: &[usize]) -> Tensor<T>;
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
@@ -556,6 +559,11 @@ macro_rules! impl_tensor_impl {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _div)(self.t, srcp, value)};
             }
+            fn divt(&mut self,
+                    src: *mut ::std::os::raw::c_void,
+                    value: *mut ::std::os::raw::c_void) {
+                unimplemented!()
+            }
             fn expand(&self, dims: &[usize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
                 let size = LongStorage::with_data(dims_long.as_slice());
@@ -570,6 +578,16 @@ macro_rules! impl_tensor_impl {
             }
             fn len(&self) -> usize {
                 self.len()
+            }
+            fn mul(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+                unimplemented!()
+            }
+            fn mult(&mut self,
+                    src: *mut ::std::os::raw::c_void,
+                    value: *mut ::std::os::raw::c_void) {
+                let srcp = src as *mut $thname;
+                let valuep = value as *mut $thname;
+                unsafe { concat_idents!($thname, _cmul)(self.t, valuep, srcp)};
             }
             fn new(&self) -> RefTI<$type> {
                 RcMutNew($name ::new())

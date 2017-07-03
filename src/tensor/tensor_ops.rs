@@ -403,16 +403,30 @@ impl<T: NumLimits> Tensor<T> {
     // mode
     //
     pub fn mul(&self, rhs: T) -> Self {
-        unimplemented!()
+        let mut t = self.new(());
+        t.value.borrow_mut().mul(self.value.borrow().inner(), rhs);
+        t
     }
     pub fn mul_(&mut self, rhs: T) -> &mut Self {
-        unimplemented!()
+        {
+            let mut selfcell = self.value.borrow_mut();
+            let srcp = selfcell.inner();
+            selfcell.mul(srcp, rhs);
+        }
+        self
     }
     pub fn mult(&self, rhs: &Self) -> Self {
-        unimplemented!()
+        let mut t = self.new(());
+        t.value.borrow_mut().mult(self.inner(), rhs.inner());
+        t
     }
     pub fn mult_(&mut self, rhs: &Self) -> &mut Self {
-        unimplemented!()
+        {
+            let mut selfcell = self.value.borrow_mut();
+            let srcp = selfcell.inner();
+            selfcell.mult(srcp, rhs.inner());
+        }
+        self
     }
     //
     // multinomial

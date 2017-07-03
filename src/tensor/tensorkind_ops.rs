@@ -244,35 +244,61 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn div<T: NumLimits>(&self, value: T) -> Self {
-        (self.into(): &Tensor<T>).div(value).into()
+        match *self {
+            TensorKind::FloatTensor(ref t) => {
+                let value = <f32 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+            TensorKind::LongTensor(ref t) => {
+                let value = <i64 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+            TensorKind::ByteTensor(ref t) => {
+                let value = <u8 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+        }
     }
     pub fn div_<T: NumLimits>(&mut self, value: T) -> &mut Self {
-        (self.into(): &mut Tensor<T>).div_(value);
+        match *self {
+            TensorKind::FloatTensor(ref mut t) => {
+                let value = <f32 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+            TensorKind::LongTensor(ref mut t) => {
+                let value = <i64 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+            TensorKind::ByteTensor(ref mut t) => {
+                let value = <u8 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+        };
         self
     }
     pub fn divt<T: NumLimits>(&self, value: &Self) -> Self {
-
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other!(self, t, t.divt(value.into()).into())
     }
     pub fn divt_(&mut self, value: &Self) -> &mut Self {
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.divt_(value.into());});
+        self
+    }
+    pub fn dot(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn dot<T: NumLimits>(&self, other: &Self) -> Self {
+    pub fn double(&self) -> Self {
         unimplemented!()
     }
-    pub fn double<T: NumLimits>(&self) -> Self {
+    pub fn eig(&self, eigenvectors: bool) -> (Self, Self) {
         unimplemented!()
     }
-    pub fn eig<T: NumLimits>(&self, eigenvectors: bool) -> (Self, Self) {
-        unimplemented!()
-    }
-    pub fn element_size<T: NumLimits>(&self) -> i32 {
+    pub fn element_size(&self) -> i32 {
         unimplemented!()
     }
     pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
         unimplemented!()
     }
-    pub fn eq_tensor_<T: NumLimits>(&self, other: &Self) -> Self {
+    pub fn eq_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
     }
     pub fn exp<T: NumLimits>(&self) -> Self {
@@ -295,17 +321,18 @@ impl TensorKind {
     pub fn float(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn floor<T: NumLimits>(&self) -> Self {
+    pub fn floor(&self) -> Self {
         unimplemented!()
     }
     pub fn floor_(&mut self) -> &mut Self {
         unimplemented!()
     }
     pub fn fmod<T: NumLimits>(&self, divisor: T) -> Self {
-        unimplemented!()
+        (self.into(): &Tensor<T>).fmod(divisor).into()
     }
     pub fn fmod_<T: NumLimits>(&mut self, divisor: T) -> &mut Self {
-        unimplemented!()
+        (self.into(): &mut Tensor<T>).fmod_(divisor);
+        self
     }
     pub fn frac(&self) -> Self {
         unimplemented!()
@@ -446,16 +473,18 @@ impl TensorKind {
     // mode
     //
     pub fn mul<T: NumLimits>(&self, rhs: T) -> Self {
-        unimplemented!()
+        (self.into(): &Tensor<T>).mul(rhs).into()
     }
     pub fn mul_<T: NumLimits>(&mut self, rhs: T) -> &mut Self {
-        unimplemented!()
+        (self.into(): &mut Tensor<T>).div(rhs);
+        self
     }
     pub fn mult(&self, rhs: &Self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref!(self, t, t.mult(rhs.into()).into())
     }
     pub fn mult_(&mut self, rhs: &Self) -> &mut Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.mult(rhs.into());});
+        self
     }
     //
     // multinomial
