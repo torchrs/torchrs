@@ -17,7 +17,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn add(&self, rhs: T) -> Self {
-        let mut t = self.new(());
+        let mut t = self.copy();
         t.value
             .borrow_mut()
             .add(self.value.borrow_mut().inner(), rhs);
@@ -32,7 +32,7 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
-        let mut t = self.new(());
+        let mut t = self.copy();
         t.value.borrow_mut().addt(self.inner(), rhs.inner());
         t
     }
@@ -44,10 +44,10 @@ impl<T: NumLimits> Tensor<T> {
         }
         self
     }
-    pub fn addbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
+    pub fn addbmm(&self, beta: T, alpha: T, batch1: &Self, batch2: &Self) -> Self {
         unimplemented!()
     }
-    pub fn addbmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
+    pub fn addbmm_(&mut self, beta: T, alpha: T, batch1: &Self, batch2: &Self) -> &mut Self {
         unimplemented!()
     }
     pub fn addcdiv(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
@@ -62,11 +62,18 @@ impl<T: NumLimits> Tensor<T> {
     pub fn addcmul_(&mut self, value: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn addmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
-        unimplemented!()
+    pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
+        let mut t = self.copy();
+        t.value
+            .borrow_mut()
+            .addmm(beta, alpha, mat1.inner(), mat2.inner());
+        t
     }
-    pub fn addmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
-        unimplemented!()
+    pub fn addmm_(&mut self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> &mut Self {
+        self.value
+            .borrow_mut()
+            .addmm(beta, alpha, mat1.inner(), mat2.inner());
+        self
     }
     pub fn addmv(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
         unimplemented!()
@@ -131,10 +138,10 @@ impl<T: NumLimits> Tensor<T> {
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
         unimplemented!()
     }
-    pub fn clamp(&self, min: f32, max: f32) -> Self {
+    pub fn clamp(&self, min: T, max: T) -> Self {
         unimplemented!()
     }
-    pub fn clamp_(&mut self, min: f32, max: f32) -> &mut Self {
+    pub fn clamp_(&mut self, min: T, max: T) -> &mut Self {
         unimplemented!()
     }
     pub fn contiguous(&self) -> Self {
@@ -187,7 +194,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn div(&self, value: T) -> Self {
-        let mut t = self.new(());
+        let mut t = self.copy();
         t.value
             .borrow_mut()
             .div(self.value.borrow_mut().inner(), value);
@@ -395,13 +402,15 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn mm(&self, rhs: &Self) -> Self {
-        unimplemented!()
+        let out = self.new([self.size()[0], rhs.size()[1]]);
+        out.value.borrow_mut().mm(self.inner(), rhs.inner());
+        out
     }
     //
     // mode
     //
     pub fn mul(&self, rhs: T) -> Self {
-        let mut t = self.new(());
+        let mut t = self.copy();
         t.value.borrow_mut().mul(self.value.borrow().inner(), rhs);
         t
     }
@@ -414,7 +423,7 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn mult(&self, rhs: &Self) -> Self {
-        let mut t = self.new(());
+        let mut t = self.copy();
         t.value.borrow_mut().mult(self.inner(), rhs.inner());
         t
     }
@@ -491,7 +500,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn pow_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn prod(&self) -> f32 {
+    pub fn prod<R: NumLimits>(&self) -> R {
         unimplemented!()
     }
     //
@@ -621,11 +630,17 @@ impl<T: NumLimits> Tensor<T> {
     pub fn sub_(&mut self, rhs: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn sum(&self) -> f32 {
+    pub fn sum<R: NumLimits>(&self) -> R {
         unimplemented!()
     }
-    pub fn sum_reduce(&self, dim: i32, keepdim: bool) -> Self {
-        unimplemented!()
+    pub fn sum_reduce(&self, dim: usize, keepdim: bool) -> Self {
+        let mut dims = self.size();
+        dims[dim] = 1;
+        let out = self.new(dims);
+        out.value
+            .borrow_mut()
+            .sum_reduce(self.inner(), dim, keepdim);
+        out
     }
     pub fn svd(&self, some: bool) -> (Self, Self, Self) {
         unimplemented!()

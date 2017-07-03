@@ -57,6 +57,7 @@ pub type OptTensorKindList = Vec<Option<TensorKind>>;
 pub type RefTensorList<'a, T> = Vec<&'a mut Tensor<T>>;
 pub type RefTensorKindList<'a> = Vec<&'a TensorKind>;
 pub type TensorId = usize;
+type voidp = ::std::os::raw::c_void;
 
 
 impl TensorKind {
@@ -356,22 +357,25 @@ pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn new(&self) -> RefTI<T>;
 
-    fn add(&mut self, src: *mut ::std::os::raw::c_void, value: T);
-    fn addt(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
+    fn add(&mut self, src: *mut voidp, value: T);
+    fn addmm(&mut self, beta: T, alpha: T, mat1: *mut voidp, mat2: *mut voidp);
+    fn addt(&mut self, src: *mut voidp, value: *mut voidp);
     fn bernoulli(&mut self, p: f64);
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
-    fn div(&mut self, src: *mut ::std::os::raw::c_void, value: T);
-    fn divt(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
+    fn div(&mut self, src: *mut voidp, value: T);
+    fn divt(&mut self, src: *mut voidp, value: *mut voidp);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
-    fn inner(&self) -> *mut ::std::os::raw::c_void;
+    fn inner(&self) -> *mut voidp;
     fn len(&self) -> usize;
-    fn mul(&mut self, src: *mut ::std::os::raw::c_void, value: T);
-    fn mult(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
+    fn mm(&mut self, A: *mut voidp, B: *mut voidp);
+    fn mul(&mut self, src: *mut voidp, value: T);
+    fn mult(&mut self, src: *mut voidp, value: *mut voidp);
     fn s(&self, dim: &[usize]) -> Tensor<T>;
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn storage(&self) -> &[T];
+    fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool);
     fn squeeze(&mut self, dim: Option<usize>);
     fn unsqueeze(&mut self, dim: usize);
     fn t(&self) -> Tensor<T>;
@@ -533,13 +537,16 @@ macro_rules! impl_tensor_impl {
         }
 
         impl TensorImpl<$type> for $name {
-            fn add(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+            fn add(&mut self, src: *mut voidp, value: $type) {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _add)(self.t, srcp, value)};
             }
+            fn addmm(&mut self, beta: $type, alpha: $type, mat1: *mut voidp, mat2: *mut voidp) {
+                unimplemented!()
+            }
             fn addt(&mut self,
-                    src: *mut ::std::os::raw::c_void,
-                    value: *mut ::std::os::raw::c_void) {
+                    src: *mut voidp,
+                    value: *mut voidp) {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
                 unsafe { concat_idents!($thname, _cadd)(self.t, valuep, 1 as $type, srcp)};
@@ -555,13 +562,13 @@ macro_rules! impl_tensor_impl {
             fn dim(&self) -> i32 {
                 unsafe {(*self.t).nDimension}
             }
-            fn div(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+            fn div(&mut self, src: *mut voidp, value: $type) {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _div)(self.t, srcp, value)};
             }
             fn divt(&mut self,
-                    src: *mut ::std::os::raw::c_void,
-                    value: *mut ::std::os::raw::c_void) {
+                    src: *mut voidp,
+                    value: *mut voidp) {
                 unimplemented!()
             }
             fn expand(&self, dims: &[usize]) -> Tensor<$type> {
@@ -573,18 +580,21 @@ macro_rules! impl_tensor_impl {
                 let t = $name :: from_parts(newt, self.storage.clone());
                 Tensor { value: RcMutNew(t) }
             }
-            fn inner(&self) -> *mut ::std::os::raw::c_void {
-                self.t as *mut ::std::os::raw::c_void
+            fn inner(&self) -> *mut voidp {
+                self.t as *mut voidp
             }
             fn len(&self) -> usize {
                 self.len()
             }
-            fn mul(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+            fn mm(&mut self, A: *mut voidp, B: *mut voidp) {
+                unimplemented!()
+            }
+            fn mul(&mut self, src: *mut voidp, value: $type) {
                 unimplemented!()
             }
             fn mult(&mut self,
-                    src: *mut ::std::os::raw::c_void,
-                    value: *mut ::std::os::raw::c_void) {
+                    src: *mut voidp,
+                    value: *mut voidp) {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
                 unsafe { concat_idents!($thname, _cmul)(self.t, valuep, srcp)};
@@ -650,6 +660,9 @@ macro_rules! impl_tensor_impl {
                     let p = ::std::ptr::null_mut();
                     unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
                 }
+            }
+            fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool) {
+                unimplemented!()
             }
             fn t(&self) -> Tensor<$type> {
                 unimplemented!()
