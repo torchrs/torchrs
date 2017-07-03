@@ -6,7 +6,7 @@ use tensor::{TensorKindList, OptTensorKindList, TensorKind, NumLimits};
 #[derive(Builder, Clone)]
 pub struct DropoutArgs {
     #[builder(default="0.5")]
-    pub p: f32,
+    pub p: f64,
     #[builder(default="false")]
     pub training: bool,
     #[builder(default="false")]
