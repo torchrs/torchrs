@@ -189,11 +189,19 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn div(&self, value: T) -> Self {
-
-        unimplemented!()
+        let mut t = self.new(());
+        t.value
+            .borrow_mut()
+            .div(self.value.borrow_mut().inner(), value);
+        t
     }
     pub fn div_(&mut self, value: T) -> &mut Self {
-        unimplemented!()
+        {
+            let mut selfcell = self.value.borrow_mut();
+            let srcp = selfcell.inner();
+            selfcell.div(srcp, value);
+        }
+        self
     }
     pub fn divt(&self, value: &Self) -> Self {
 

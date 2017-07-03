@@ -361,6 +361,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn bernoulli(&mut self, p: f64);
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
+    fn div(&mut self, src: *mut ::std::os::raw::c_void, value: T);
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
@@ -544,11 +545,15 @@ macro_rules! impl_tensor_impl {
                 unsafe { concat_idents!($thname, _bernoulli)(self.t, g.t, p) };
             }
             fn copy(&mut self, src: &RefTI<$type>) {
-                let t: *mut $thname = src.borrow_mut().inner() as *mut $thname;
+                let t = src.borrow_mut().inner() as *mut $thname;
                 unsafe {concat_idents!($thname, _copy)(self.t, t)}
             }
             fn dim(&self) -> i32 {
                 unsafe {(*self.t).nDimension}
+            }
+            fn div(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+                let srcp = src as *mut $thname;
+                unsafe {concat_idents!($thname, _div)(self.t, srcp, value)};
             }
             fn inner(&self) -> *mut ::std::os::raw::c_void {
                 self.t as *mut ::std::os::raw::c_void
@@ -665,7 +670,7 @@ macro_rules! impl_tensor_impl {
                     if idx[i] >= dims[i] as isize {
                         panic!("bad dimlen")
                     }
-                    index += (idx[i] as usize * dims[i]);
+                    index += idx[i] as usize * dims[i];
                 }
                 if idx[lastidx] >= dims[lastidx] as isize {
                     panic!("bad dimlen")
@@ -687,7 +692,7 @@ macro_rules! impl_tensor_impl {
                     if idx[i] >= dims[i] as isize {
                         panic!("bad dimlen")
                     }
-                    index += (idx[i] as usize * dims[i]);
+                    index += idx[i] as usize * dims[i];
                 }
                 if idx[lastidx] >= dims[lastidx] as isize {
                     panic!("bad dimlen")

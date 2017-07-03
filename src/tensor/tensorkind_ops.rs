@@ -1,5 +1,6 @@
 #![allow(unused_variables)]
 use tensor::*;
+use num::NumCast;
 
 macro_rules! impl_tk_dispatch_self_ref {
     ($key:ident, $var:ident, $action:expr ) => {(
@@ -243,10 +244,37 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn div<T: NumLimits>(&self, value: T) -> Self {
-        unimplemented!()
+        match *self {
+            TensorKind::FloatTensor(ref t) => {
+                let value = <f32 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+            TensorKind::LongTensor(ref t) => {
+                let value = <i64 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+            TensorKind::ByteTensor(ref t) => {
+                let value = <u8 as NumCast>::from(value).unwrap();
+                t.div(value).into()
+            }
+        }
     }
     pub fn div_<T: NumLimits>(&mut self, value: T) -> &mut Self {
-        unimplemented!()
+        match *self {
+            TensorKind::FloatTensor(ref mut t) => {
+                let value = <f32 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+            TensorKind::LongTensor(ref mut t) => {
+                let value = <i64 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+            TensorKind::ByteTensor(ref mut t) => {
+                let value = <u8 as NumCast>::from(value).unwrap();
+                t.div_(value);
+            }
+        };
+        self
     }
     pub fn divt<T: NumLimits>(&self, value: &Self) -> Self {
 
