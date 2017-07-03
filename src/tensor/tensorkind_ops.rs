@@ -307,11 +307,13 @@ impl TensorKind {
     pub fn exp_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn expand<T: NumLimits>(&self, dims: &[u32]) -> Self {
-        unimplemented!()
+    pub fn expand<D>(&self, dims: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        impl_tk_dispatch_self_ref!(self, t, t.expand(dims).into())
     }
     pub fn expand_as(&self, tensor: &Self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref!(self, t, t.expand_as(tensor.into()).into())
     }
     pub fn fill_(&mut self) -> &mut Self {
         unimplemented!()

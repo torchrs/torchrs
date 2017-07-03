@@ -234,11 +234,13 @@ impl<T: NumLimits> Tensor<T> {
     pub fn exp_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn expand(&self, dims: &[u32]) -> Self {
-        unimplemented!()
+    pub fn expand<D>(&self, dims: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        self.value.borrow().expand(dims.as_ref())
     }
     pub fn expand_as(&self, tensor: &Self) -> Self {
-        unimplemented!()
+        self.expand(tensor.size())
     }
     pub fn fill_(&mut self) -> &mut Self {
         unimplemented!()

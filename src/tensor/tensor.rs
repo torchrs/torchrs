@@ -362,6 +362,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
     fn div(&mut self, src: *mut ::std::os::raw::c_void, value: T);
+    fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn inner(&self) -> *mut ::std::os::raw::c_void;
     fn len(&self) -> usize;
     fn s(&self, dim: &[usize]) -> Tensor<T>;
@@ -554,6 +555,15 @@ macro_rules! impl_tensor_impl {
             fn div(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _div)(self.t, srcp, value)};
+            }
+            fn expand(&self, dims: &[usize]) -> Tensor<$type> {
+                let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
+                let size = LongStorage::with_data(dims_long.as_slice());
+                let newt = unsafe {
+                    concat_idents!($thname, _newExpand)(self.t, size.t)
+                };
+                let t = $name :: from_parts(newt, self.storage.clone());
+                Tensor { value: RcMutNew(t) }
             }
             fn inner(&self) -> *mut ::std::os::raw::c_void {
                 self.t as *mut ::std::os::raw::c_void
