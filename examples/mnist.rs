@@ -115,12 +115,6 @@ impl<T: tensor::NumLimits> Net<T> {
 }
 impl_mod_delegate!(Net);
 
-// The forward operations could take on one of two implementations.
-// The first supporting a near verbatim version of the python
-// implementation, and the second supporting a slightly more
-// idiomatic to Rust method chaining.
-
-// a) as a near verbatim implementation of the python version
 impl<T: tensor::NumLimits> ModIntf<T> for Net<T> {
     fn forward(&mut self, args: &mut Variable<T>) -> Variable<T> {
         let pool_val = F::MaxPool2dArgs::default();
