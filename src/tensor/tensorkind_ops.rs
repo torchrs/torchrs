@@ -160,11 +160,12 @@ impl TensorKind {
                                   -> &mut Self {
         unimplemented!()
     }
-    pub fn bernoulli<T: NumLimits>(&self, p: T) -> Self {
-        unimplemented!()
+    pub fn bernoulli(&self, p: f64) -> Self {
+        impl_tk_dispatch_self_ref!(self, t, t.bernoulli(p).into())
     }
-    pub fn bernoulli_<T: NumLimits>(&mut self, p: T) -> &mut Self {
-        unimplemented!()
+    pub fn bernoulli_(&mut self, p: f64) -> &mut Self {
+        impl_tk_dispatch_self_ref_other_mut!(self, v, {v.bernoulli(p);});
+        self
     }
     pub fn bmm<T: NumLimits>(&self, other: &Self) -> Self {
         unimplemented!()
@@ -177,7 +178,6 @@ impl TensorKind {
     //
     pub fn ceil(&self) -> Self {
         impl_tk_dispatch_self_ref!(self, t, t.ceil())
-
     }
     pub fn ceil_(&mut self) -> &mut Self {
         unimplemented!()

@@ -103,11 +103,14 @@ impl<T: NumLimits> Tensor<T> {
     pub fn baddbmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
         unimplemented!()
     }
-    pub fn bernoulli(&self, p: T) -> Self {
-        unimplemented!()
+    pub fn bernoulli(&self, p: f64) -> Self {
+        let mut t = self.new(());
+        t.bernoulli_(p);
+        t
     }
-    pub fn bernoulli_(&mut self, p: T) -> &mut Self {
-        unimplemented!()
+    pub fn bernoulli_(&mut self, p: f64) -> &mut Self {
+        self.value.borrow_mut().bernoulli(p);
+        self
     }
     pub fn bmm(&self, other: &Self) -> Self {
         unimplemented!()

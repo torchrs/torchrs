@@ -358,6 +358,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
 
     fn add(&self, value: T, output: &TIArg<T>);
     fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
+    fn bernoulli(&mut self, p: f64);
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
     fn inner(&self) -> *mut ::std::os::raw::c_void;
@@ -537,6 +538,10 @@ macro_rules! impl_tensor_impl {
                 unsafe {
                     concat_idents!($thname, _add)(out, rhsp, value);
                 };
+            }
+            fn bernoulli(&mut self, p: f64) {
+                let g = Generator::new();
+                unsafe { concat_idents!($thname, _bernoulli)(self.t, g.t, p) };
             }
             fn copy(&mut self, src: &RefTI<$type>) {
                 let t: *mut $thname = src.borrow_mut().inner() as *mut $thname;
