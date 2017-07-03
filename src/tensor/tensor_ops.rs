@@ -17,32 +17,30 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn add(&self, rhs: T) -> Self {
-        let inner = self.value.borrow_mut();
-        let output = inner.new();
-        inner.add(rhs, &mut *output.borrow_mut());
-        Tensor { value: output }
+        let mut t = self.new(());
+        t.value
+            .borrow_mut()
+            .add(self.value.borrow_mut().inner(), rhs);
+        t
     }
     pub fn add_(&mut self, rhs: T) -> &mut Self {
-        // Scoped so that we drop the borrow before
-        // returning self
         {
-            let inner = self.value.borrow();
-            inner.add(rhs, &*inner);
+            let mut selfcell = self.value.borrow_mut();
+            let srcp = selfcell.inner();
+            selfcell.add(srcp, rhs);
         }
         self
     }
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
-        let inner = self.value.borrow_mut();
-        let output = inner.new();
-        inner.addt(val, &*rhs.inner_impl(), &mut *output.borrow_mut());
-        Tensor { value: output }
+        let mut t = self.new(());
+        t.value.borrow_mut().addt(self.inner(), rhs.inner());
+        t
     }
     pub fn addt_(&mut self, val: T, rhs: &Self) -> &mut Self {
-        // Scoped so that we drop the borrow before
-        // returning self
         {
-            let inner = self.value.borrow();
-            inner.addt(val, &*rhs.inner_impl(), &*inner);
+            let mut selfcell = self.value.borrow_mut();
+            let srcp = selfcell.inner();
+            selfcell.addt(srcp, rhs.inner());
         }
         self
     }

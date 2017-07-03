@@ -356,8 +356,8 @@ pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn new(&self) -> RefTI<T>;
 
-    fn add(&self, value: T, output: &TIArg<T>);
-    fn addt(&self, value: T, rhs: &TIArg<T>, output: &TIArg<T>);
+    fn add(&mut self, src: *mut ::std::os::raw::c_void, value: T);
+    fn addt(&mut self, src: *mut ::std::os::raw::c_void, value: *mut ::std::os::raw::c_void);
     fn bernoulli(&mut self, p: f64);
     fn copy(&mut self, src: &RefTI<T>);
     fn dim(&self) -> i32;
@@ -533,18 +533,16 @@ macro_rules! impl_tensor_impl {
         }
 
         impl TensorImpl<$type> for $name {
-            fn add(&self, value: $type, output: &TIArg<$type>) {
-                let out = typecast!(output.inner(), $thname);
-                unsafe {
-                    concat_idents!(TH, $name, _add)(out, self.t, value);
-                };
+            fn add(&mut self, src: *mut ::std::os::raw::c_void, value: $type) {
+                let srcp = src as *mut $thname;
+                unsafe {concat_idents!($thname, _add)(self.t, srcp, value)};
             }
-            fn addt(&self, value: $type, rhs: &TIArg<$type>, output: &TIArg<$type>) {
-                let out = typecast!(output.inner(), $thname);
-                let rhsp = typecast!(rhs.inner(), $thname);
-                unsafe {
-                    concat_idents!($thname, _add)(out, rhsp, value);
-                };
+            fn addt(&mut self,
+                    src: *mut ::std::os::raw::c_void,
+                    value: *mut ::std::os::raw::c_void) {
+                let srcp = src as *mut $thname;
+                let valuep = value as *mut $thname;
+                unsafe { concat_idents!($thname, _cadd)(self.t, valuep, 1 as $type, srcp)};
             }
             fn bernoulli(&mut self, p: f64) {
                 let g = Generator::new();
