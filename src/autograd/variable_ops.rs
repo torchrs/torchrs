@@ -671,7 +671,9 @@ impl<T: NumLimits> Variable<T> {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        unimplemented!()
+        let mut v = Variable::new(self.borrow().data.view(dims));
+        v.copy_refs(self);
+        v
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
         unimplemented!()

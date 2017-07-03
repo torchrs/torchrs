@@ -488,6 +488,9 @@ impl<T: NumLimits> Variable<T> {
     pub fn new(data: Tensor<T>) -> Self {
         Variable::new_args(data, &VariableArgs::default())
     }
+    pub fn copy_refs(&mut self, rhs: &Self) {
+        self.access().copy_refs(rhs.access())
+    }
     fn data_into(&mut self) -> TensorKind {
         self.data().clone().into()
     }

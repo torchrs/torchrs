@@ -376,7 +376,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn unsqueeze(&mut self, dim: usize);
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
-    fn view(&self, dims: &[isize]) -> RefTI<T>;
+    fn view(&self, dims: &[isize]) -> Tensor<T>;
     fn zero(&mut self);
 }
 
@@ -663,7 +663,7 @@ macro_rules! impl_tensor_impl {
                 let p = ::std::ptr::null_mut();
                 unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, dim as i32) };
             }
-            fn view(&self, dims: &[isize]) -> RefTI<$type> {
+            fn view(&self, dims: &[isize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
                 let size = LongStorage::with_data(dims_long.as_slice());
                 let inferred_size = unsafe {
@@ -673,7 +673,7 @@ macro_rules! impl_tensor_impl {
                 };
                 let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
                 let t = $name :: from_parts(t, self.storage.clone());
-                RcMutNew(t)
+                Tensor {value: RcMutNew(t) }
             }
             fn zero(&mut self) {
                 unsafe { concat_idents!($thname, _zero)(self.t) };
