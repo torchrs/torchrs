@@ -6,7 +6,7 @@ pub use nn::_functions::{MaxPool2dArgs, DropoutArgs, NLLLossArgs};
 
 
 pub fn max_pool2d<T: NumLimits>(input: Variable<T>,
-                                kernel_size: (u32, u32),
+                                kernel_size: (i32, i32),
                                 args: &MaxPool2dArgs)
                                 -> Variable<T> {
     let mut pool_args = args.v.clone();
