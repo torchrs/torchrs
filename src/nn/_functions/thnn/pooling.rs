@@ -1,15 +1,15 @@
 use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};
-use tensor::{TensorKindList, OptTensorKindList};
+use tensor::{TensorKindList, OptTensorKindList, TensorKind};
 
 #[builder(pattern="owned")]
 #[derive(Builder, Clone)]
 pub struct MaxPoolFArgs {
     // just for code re-use
     #[builder(default="vec![1]")]
-    pub kernel_size: Vec<u32>,
-    pub stride: Vec<u32>,
-    pub padding: Vec<u32>,
-    pub dilation: Vec<u32>,
+    pub kernel_size: Vec<i32>,
+    pub stride: Vec<i32>,
+    pub padding: Vec<i32>,
+    pub dilation: Vec<i32>,
     #[builder(default="false")]
     pub ceil_mode: bool,
     #[builder(default="false")]
@@ -29,7 +29,7 @@ pub struct MaxPool3dArgs {
 impl Default for MaxPool1dArgs {
     fn default() -> Self {
         let args = MaxPoolFArgsBuilder::default()
-            .stride(vec![1])
+            .stride(vec![0])
             .padding(vec![0])
             .dilation(vec![1])
             .build()
@@ -41,7 +41,7 @@ impl Default for MaxPool1dArgs {
 impl Default for MaxPool2dArgs {
     fn default() -> Self {
         let args = MaxPoolFArgsBuilder::default()
-            .stride(vec![1, 1])
+            .stride(vec![0])
             .padding(vec![0, 0])
             .dilation(vec![1, 1])
             .build()
@@ -53,7 +53,7 @@ impl Default for MaxPool2dArgs {
 impl Default for MaxPool3dArgs {
     fn default() -> Self {
         let args = MaxPoolFArgsBuilder::default()
-            .stride(vec![1, 1, 1])
+            .stride(vec![0])
             .padding(vec![0, 0, 0])
             .dilation(vec![1, 1, 1])
             .build()
@@ -65,14 +65,37 @@ impl Default for MaxPool3dArgs {
 impl_func_args!(MaxPool2d, MaxPoolFArgs);
 
 impl FuncIntf for MaxPool2d {
-    fn forward(&mut self, input_: &mut TensorKindList) -> TensorKindList {
-        let input = input_.remove(0);
-        let input2d = input.unsqueeze(2);
-        //        let backend = input.backend();
-        unimplemented!()
-        //let (indices, output) = (input2d.new(()).long(), input2d.new(()));
-
-        //vec![output]
+    fn forward(&mut self, input: &mut TensorKindList) -> TensorKindList {
+        if self.args.stride[0] == 0 {
+            self.args.stride = self.args.kernel_size.clone()
+        }
+        let p = self.args.clone();
+        let mut input = input.remove(0);
+        let mut backend = input.backend();
+        let mut indices: TensorKind = ::torch::long_tensor(input.size()).into();
+        let mut output = input.new(());
+        backend.SpatialDilatedMaxPooling_updateOutput(&mut input,
+                                                      &mut output,
+                                                      &mut indices,
+                                                      p.kernel_size[1],
+                                                      p.kernel_size[0],
+                                                      p.stride[1],
+                                                      p.stride[0],
+                                                      p.padding[1],
+                                                      p.padding[0],
+                                                      p.dilation[1],
+                                                      p.dilation[0],
+                                                      p.ceil_mode);
+        let v = if p.return_indices {
+            self.save_for_backward(&vec![input, indices.clone()]);
+            self.mark_non_differentiable(&vec![indices.clone()]);
+            vec![output, indices]
+        } else {
+            self.save_for_backward(&vec![input]);
+            self.saved_tensors.push(indices);
+            vec![output]
+        };
+        v
     }
     fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
         unimplemented!()
