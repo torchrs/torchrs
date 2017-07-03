@@ -244,36 +244,10 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn div<T: NumLimits>(&self, value: T) -> Self {
-        match *self {
-            TensorKind::FloatTensor(ref t) => {
-                let value = <f32 as NumCast>::from(value).unwrap();
-                t.div(value).into()
-            }
-            TensorKind::LongTensor(ref t) => {
-                let value = <i64 as NumCast>::from(value).unwrap();
-                t.div(value).into()
-            }
-            TensorKind::ByteTensor(ref t) => {
-                let value = <u8 as NumCast>::from(value).unwrap();
-                t.div(value).into()
-            }
-        }
+        (self.into(): &Tensor<T>).div(value).into()
     }
     pub fn div_<T: NumLimits>(&mut self, value: T) -> &mut Self {
-        match *self {
-            TensorKind::FloatTensor(ref mut t) => {
-                let value = <f32 as NumCast>::from(value).unwrap();
-                t.div_(value);
-            }
-            TensorKind::LongTensor(ref mut t) => {
-                let value = <i64 as NumCast>::from(value).unwrap();
-                t.div_(value);
-            }
-            TensorKind::ByteTensor(ref mut t) => {
-                let value = <u8 as NumCast>::from(value).unwrap();
-                t.div_(value);
-            }
-        };
+        (self.into(): &mut Tensor<T>).div_(value);
         self
     }
     pub fn divt<T: NumLimits>(&self, value: &Self) -> Self {
@@ -774,6 +748,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn zero_(&mut self) -> &mut Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.zero_();});
+        self
     }
 }
