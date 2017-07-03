@@ -237,7 +237,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn dim(&self) -> i32 {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other!(self, t, t.dim())
     }
     pub fn dist<T: NumLimits>(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()

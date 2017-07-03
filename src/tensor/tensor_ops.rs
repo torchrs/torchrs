@@ -180,7 +180,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn dim(&self) -> i32 {
-        unimplemented!()
+        self.value.borrow().dim()
     }
     pub fn dist(&self, other: &Self, p: u32) -> f32 {
         unimplemented!()
