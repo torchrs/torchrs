@@ -374,6 +374,8 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn storage(&self) -> &[T];
     fn squeeze(&mut self, dim: Option<usize>);
     fn unsqueeze(&mut self, dim: usize);
+    fn t(&self) -> Tensor<T>;
+    fn t_(&mut self);
     fn to_rust_tensor(&self) -> RustTensor<T>;
     fn uniform_(&mut self, range: (f64, f64));
     fn view(&self, dims: &[isize]) -> Tensor<T>;
@@ -650,6 +652,12 @@ macro_rules! impl_tensor_impl {
                     let p = ::std::ptr::null_mut();
                     unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
                 }
+            }
+            fn t(&self) -> Tensor<$type> {
+                unimplemented!()
+            }
+            fn t_(&mut self) {
+                unimplemented!()
             }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
                 self.to_rust_tensor()

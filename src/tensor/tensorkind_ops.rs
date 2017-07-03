@@ -692,10 +692,11 @@ impl TensorKind {
     // symeig
     //
     pub fn t(&self) -> Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other!(self, t, t.t().into())
     }
     pub fn t_(&mut self) -> &mut Self {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other_mut!(self, t, {t.t_();});
+        self
     }
     pub fn tan(&self) -> Self {
         unimplemented!()

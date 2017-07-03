@@ -636,10 +636,11 @@ impl<T: NumLimits> Tensor<T> {
     // symeig
     //
     pub fn t(&self) -> Self {
-        unimplemented!()
+        self.value.borrow_mut().t()
     }
     pub fn t_(&mut self) -> &mut Self {
-        unimplemented!()
+        self.value.borrow_mut().t_();
+        self
     }
     pub fn tan(&self) -> Self {
         unimplemented!()
