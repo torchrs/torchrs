@@ -649,10 +649,13 @@ impl<T: NumLimits> Tensor<T> {
     // symeig
     //
     pub fn t(&self) -> Self {
-        self.value.borrow_mut().t()
+        let t = self.new(());
+        t.value.borrow_mut().transpose(self.inner(), 1, 0);
+        t
     }
     pub fn t_(&mut self) -> &mut Self {
-        self.value.borrow_mut().t_();
+        let p = self.inner();
+        self.value.borrow_mut().transpose(p, 1, 0);
         self
     }
     pub fn tan(&self) -> Self {
