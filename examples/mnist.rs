@@ -179,7 +179,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
         let mut output = model.f(data);
         test_loss += F::nll_loss(output.clone(), target.clone(), &F::NLLLossArgs::default());
         let pred = output.data().max_reduce(1).1;
-        correct += pred.eq_tensor(&*target.data()).cpu().sum() as u32;
+        correct += pred.eq_tensor(&*target.data()).cpu().sum::<u32>();
     }
     test_loss /= test_loader.len() as f32;
     println!("\nTest set: Average loss: {:.4}, Accuracy: {}/{} ({:.0}%)\n",
