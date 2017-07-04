@@ -63,16 +63,17 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
-        let mut t = self.copy();
+        let mut t = self.new(());
         t.value
             .borrow_mut()
-            .addmm(beta, alpha, mat1.inner(), mat2.inner());
+            .addmm(self.inner(), beta, alpha, mat1.inner(), mat2.inner());
         t
     }
     pub fn addmm_(&mut self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> &mut Self {
+        let p = self.inner();
         self.value
             .borrow_mut()
-            .addmm(beta, alpha, mat1.inner(), mat2.inner());
+            .addmm(p, beta, alpha, mat1.inner(), mat2.inner());
         self
     }
     pub fn addmv(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {

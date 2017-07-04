@@ -359,7 +359,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn new(&self) -> RefTI<T>;
 
     fn add(&mut self, src: *mut voidp, value: T);
-    fn addmm(&mut self, beta: T, alpha: T, mat1: *mut voidp, mat2: *mut voidp);
+    fn addmm(&mut self, src: *mut voidp, beta: T, alpha: T, mat1: *mut voidp, mat2: *mut voidp);
     fn addt(&mut self, src: *mut voidp, value: *mut voidp);
     fn bernoulli(&mut self, p: f64);
     fn copy(&mut self, src: &RefTI<T>);
@@ -541,8 +541,21 @@ macro_rules! impl_tensor_impl {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _add)(self.t, srcp, value)};
             }
-            fn addmm(&mut self, beta: $type, alpha: $type, mat1: *mut voidp, mat2: *mut voidp) {
-                unimplemented!()
+            fn addmm(&mut self,
+                    src: *mut voidp,
+                    beta: $type,
+                    alpha: $type,
+                    mat1: *mut voidp,
+                    mat2: *mut voidp) {
+                let (srcp, mat1p, mat2p) = (src as *mut $thname, mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addmm)(self.t,
+                                                    beta,
+                                                    srcp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
             }
             fn addt(&mut self,
                     src: *mut voidp,
