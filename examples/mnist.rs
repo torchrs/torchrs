@@ -146,7 +146,7 @@ fn train(model: &mut Net<f32>,
         };
         optimizer.zero_grad(model);
         let output = model.f(data.clone());
-        let mut loss = F::nll_loss(output, target, &F::NLLLossArgs::default());
+        let mut loss = F::nll_loss(output, target, None, &F::NLLLossArgs::default());
         loss.backward();
         optimizer.step(model);
         model.free_graph();
@@ -177,7 +177,10 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
             (Variable::new_args(data.clone(), &varargs), Variable::new(target.clone()))
         };
         let mut output = model.f(data);
-        test_loss += F::nll_loss(output.clone(), target.clone(), &F::NLLLossArgs::default());
+        test_loss += F::nll_loss(output.clone(),
+                                 target.clone(),
+                                 None,
+                                 &F::NLLLossArgs::default());
         let pred = output.data().max_reduce(1).1;
         correct += pred.eq_tensor(&*target.data()).cpu().sum::<u32>();
     }

@@ -112,9 +112,12 @@ pub fn log_softmax<T: NumLimits>(input: Variable<T>) -> Variable<T> {
 
 pub fn nll_loss<T: NumLimits>(input: Variable<T>,
                               target: Variable<i64>,
+                              weights: Option<Variable<T>>,
                               args: &NLLLossArgs)
                               -> Variable<T> {
     let mut kind_input = vec![input.clone().into(), target.clone().into()];
+    if let Some(ref w) = weights {
+        kind_input.push(w.clone().into());
+    }
     NLLLoss::new(args).f(&mut kind_input).remove(0).into()
-
 }
