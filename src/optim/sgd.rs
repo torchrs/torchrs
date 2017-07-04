@@ -1,13 +1,15 @@
 use optim::*;
 use std::ops::Neg;
+use tensor::Tensor;
+use utils::TRVal;
 
 pub struct SGD {
     optimizer: Optimizer,
 }
 
 impl SGD {
-    pub fn new(defaults: HashMap<&'static str, OptimVal>) -> Self {
-        let mut sgd_defaults = map_opt!{"lr" => OptimVal::Required,
+    pub fn new(defaults: HashMap<&'static str, TRVal>) -> Self {
+        let mut sgd_defaults = map_opt!{"lr" => TRVal::Required,
             "momentum" => 0.0, "dampening" => 0.0,
             "weight_decay"=> 0.0, "nesterov"=>false};
 
@@ -19,7 +21,7 @@ impl SGD {
     }
 }
 
-impl<T: ::tensor::NumLimits + From<OptimVal> + Neg<Output = T>> OptIntf<T> for SGD {
+impl<T: ::tensor::NumLimits + From<TRVal> + Neg<Output = T>> OptIntf<T> for SGD {
     fn optimizer(&mut self) -> &mut Optimizer {
         &mut self.optimizer
     }
@@ -33,7 +35,7 @@ impl<T: ::tensor::NumLimits + From<OptimVal> + Neg<Output = T>> OptIntf<T> for S
 
         model.apply_parameters(&mut |v| {
             let mut d_p = if let Some(ref mut grad) = *v.grad() {
-                grad.data().clone() as ::tensor::Tensor<T>
+                grad.data().clone() as Tensor<T>
             } else {
                 return;
             };

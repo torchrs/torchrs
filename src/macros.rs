@@ -131,7 +131,7 @@ macro_rules! map(
 macro_rules! map_opt(
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::<&'static str, OptimVal>::new();
+            let mut m = ::std::collections::HashMap::<&'static str, ::utils::TRVal>::new();
             $(
                 m.insert($key, $value .into());
             )+

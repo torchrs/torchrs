@@ -8,14 +8,11 @@ extern crate torchrs;
 extern crate clap;
 
 use torchrs::autograd::{Variable, VariableArgs, VarAccess};
-use torchrs::optim;
-use torchrs::optim::OptimVal;
-use torchrs::nn;
+use torchrs::{optim, utils, nn, tensor};
 use torchrs::nn::{InitModuleStruct, GetFieldStruct, ModIntf, ModDelegate, Module};
 use torchrs::nn::functional as F;
 use torchrs::utils::data as D;
 use torchrs::utils::torchvision::{datasets, transforms};
-use torchrs::tensor;
 
 use clap::{Arg, App};
 #[derive(Clone, Builder)]
