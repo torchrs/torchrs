@@ -78,6 +78,11 @@ impl From<()> for THDims {
         THDims::new(vec![])
     }
 }
+impl<T: NumLimits> From<[usize; 2]> for THVec<T> {
+    fn from(input: [usize; 2]) -> Self {
+        THVec::new(input.to_vec(), vec![])
+    }
+}
 impl<T: NumLimits> From<[usize; 4]> for THVec<T> {
     fn from(input: [usize; 4]) -> Self {
         THVec::new(input.to_vec(), vec![])
