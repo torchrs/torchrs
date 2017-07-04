@@ -307,7 +307,11 @@ impl<T: NumLimits> Tensor<T> {
         ::torch::tensor(args)
     }
     pub fn set(&mut self, args: Vec<T>) {
-        unimplemented!()
+        let mut inner = self.value.borrow_mut();
+        let mut s = inner.storage_mut();
+        for i in 0..args.len() {
+            s[i] = args[i]
+        }
     }
     pub fn len(&self) -> usize {
         self.value.borrow().len()
@@ -376,6 +380,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn storage(&self) -> &[T];
+    fn storage_mut(&mut self) -> &mut [T];
     fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool);
     fn squeeze(&mut self, dim: Option<usize>);
     fn unsqueeze(&mut self, dim: usize);
@@ -653,6 +658,9 @@ macro_rules! impl_tensor_impl {
             }
             fn storage(&self) -> &[$type] {
                 &self.storage[self.storage_offset()..(self.len() + self.storage_offset())]
+            }
+            fn storage_mut(&mut self) -> &mut [$type] {
+                &mut *self.storage
             }
             fn set_storage(&mut self, v: &[$type]) {
                 self.set_storage(v)
