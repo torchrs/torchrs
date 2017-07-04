@@ -156,10 +156,10 @@ impl TensorKind {
         self
     }
     pub fn addt<T: NumLimits>(&self, val: T, rhs: &Self) -> Self {
-        (self.into(): &Tensor<T>).addt(val, rhs.into()).into()
+        impl_tk_dispatch_self_value!(self, t, val, t.addt(val, rhs.into()).into())
     }
     pub fn addt_<T: NumLimits>(&mut self, val: T, rhs: &Self) -> &mut Self {
-        (self.into(): &mut Tensor<T>).addt_(val, rhs.into());
+        impl_tk_dispatch_self_mut_value!(self, t, val, {t.addt(val, rhs.into());});
         self
     }
     pub fn addbmm<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
