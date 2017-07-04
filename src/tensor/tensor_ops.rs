@@ -677,7 +677,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn transpose(&self, dim0: usize, dim1: usize) -> Self {
-        let mut t = self.new(());
+        let t = self.new(());
         t.value.borrow_mut().transpose(self.inner(), dim0, dim1);
         t
     }
