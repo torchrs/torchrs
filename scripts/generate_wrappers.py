@@ -249,39 +249,53 @@ def build_args(name, args):
 	return fn_class
 
 def _make_function_class_criterion(class_name, update_output, update_grad_input, acc_grad_parameters):
-	full_args = update_output.arguments[4:]
-	args = [arg for arg in full_args if "Tensor" not in arg.type]
-	tensor_idxs = [(arg.is_optional, idx) for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
-	input_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
-	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
+	weight_arg_idx = -1
 	for i, arg in enumerate(update_output.arguments):
-		if arg.is_optional:
-			print("{} at {} is optional - {}".format(arg.name, i, class_name))
-	for i, (opt, idx) in enumerate(tensor_idxs):
-		if opt:
-			output_args.insert(idx, "&mut Some(input_list[{}].clone())".format(i+2))
-			input_args.insert(idx, "&mut Some(saved[{}].clone())".format(i+2))
-		else:
-			output_args.insert(idx, "&mut input_list[{}].clone()".format(i+2))
-			input_args.insert(idx, "&mut saved[{}].clone()".format(i+2))
+		if arg.name.startswith('weight'):
+			weight_arg_idx = i
+			break
+
+	buffers_idx = []
+	additional_arg_idx = 0
+	for arg in update_output.arguments[4:]:
+		if not arg.name.startswith('weight') and arg.type == 'THTensor*':
+			buffers_idx.append(additional_arg_idx)
+		additional_arg_idx += 1
+
+	full_args = update_output.arguments[4:]
+	additional_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
+
+	weightstr = ""
+	if weight_arg_idx >= 0:
+		weightstr += "\t\tlet mut weight = if input_list.len() > 2 {Some(input_list[2].clone())} else { None };\n"
+		idx = weight_arg_idx - 4
+		additional_args.insert(idx, "&mut weight")
+	bufferstr = "" 
+	for i, idx in enumerate(buffers_idx):
+		bufferstr += "\t\tself.saved_tensors.push(input.new(1));\n"
+		additional_args.insert(idx, "&mut self.saved_tensors[{}]".format(i))
 
 	def build_forward_class_criterion():
 		forward = "\t\tlet mut backend = input_list[0].backend();\n"
 		forward += "\t\tself.save_for_backward(input_list);\n"
-		forward += "\t\tlet mut output = input_list[0].new(1);\n"
-		forward += "\t\tbackend.{}(&mut input_list[0].clone(), &mut input_list[1].clone(), &mut output, ".format(update_output.name)
-		forward +=  ', '.join(arg for arg in output_args) + ");\n"
+		forward += "\t\tlet mut input = input_list[0].clone();\n"
+		forward += weightstr
+		forward += bufferstr
+		forward += "\t\tlet mut output = input.new(1);\n"
+		forward += "\t\tbackend.{}(&mut input, &mut input_list[1].clone(), &mut output, ".format(update_output.name)
+		forward +=  ', '.join(arg for arg in additional_args) + ");\n"
 		forward += "\t\tvec![output]"
 		return forward
 
 	def build_backward_class_criterion():
-		backward = "\t\tlet mut saved = self.saved_tensors();\n"
-		backward += "\t\tlet (mut input, mut target) = (saved[0].clone(), saved[1].clone());\n"
+		backward = "\t\tlet mut input_list = self.saved_tensors();\n"
+		backward += "\t\tlet (mut input, mut target) = (input_list[0].clone(), input_list[1].clone());\n"
+		backward += weightstr
 		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
 		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&input).zero_().clone();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
-		backward += ', '.join(arg for arg in input_args) + ");\n"
+		backward += ', '.join(arg for arg in additional_args) + ");\n"
 		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);"
 		backward += "\t\tlet mut grad_output_expanded = grad_output.view(dims.as_slice());\n"
 		backward += "\t\tlet mut grad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"		
@@ -290,6 +304,7 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 		return backward
 
 	fn_class = ""
+	args = [arg for arg in full_args if "Tensor" not in arg.type]
 	needs_args = len(args) >  0
 	if needs_args:
 		fn_class += build_args(class_name, args)
