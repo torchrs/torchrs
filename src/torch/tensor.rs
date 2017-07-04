@@ -50,13 +50,13 @@ impl<T: NumLimits> From<Vec<T>> for THVec<T> {
 impl<T: NumLimits> From<T> for THVec<T> {
     fn from(input: T) -> Self {
         let v = vec![input];
-        THVec::new(vec![], v)
+        THVec::new(vec![1], v)
     }
 }
 impl<T: NumLimits> From<T> for THVecGeneric {
     fn from(input: T) -> Self {
         let v: Vec<i64> = vec![<i64 as NumCast>::from(input).unwrap()];
-        THVecGeneric::new(vec![], v)
+        THVecGeneric::new(vec![1], v)
     }
 }
 
