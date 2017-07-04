@@ -649,14 +649,10 @@ impl<T: NumLimits> Tensor<T> {
     // symeig
     //
     pub fn t(&self) -> Self {
-        let t = self.new(());
-        t.value.borrow_mut().transpose(self.inner(), 1, 0);
-        t
+        self.transpose(0, 1)
     }
     pub fn t_(&mut self) -> &mut Self {
-        let p = self.inner();
-        self.value.borrow_mut().transpose(p, 1, 0);
-        self
+        self.transpose_(0, 1)
     }
     pub fn tan(&self) -> Self {
         unimplemented!()
@@ -679,11 +675,15 @@ impl<T: NumLimits> Tensor<T> {
     pub fn trace(&self) -> Self {
         unimplemented!()
     }
-    pub fn transpose(&self, dim0: i32, dim1: i32) -> Self {
-        unimplemented!()
+    pub fn transpose(&self, dim0: usize, dim1: usize) -> Self {
+        let mut t = self.new(());
+        t.value.borrow_mut().transpose(self.inner(), dim0, dim1);
+        t
     }
-    pub fn transpose_(&self, dim0: i32, dim1: i32) -> Self {
-        unimplemented!()
+    pub fn transpose_(&mut self, dim0: usize, dim1: usize) -> &mut Self {
+        let p = self.inner();
+        self.value.borrow_mut().transpose(p, dim0, dim1);
+        self
     }
     //
     // tril
