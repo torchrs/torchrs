@@ -9,6 +9,7 @@ thread_local! {
     pub static FUNC_TABLE: RefCell<VecDeque<FuncImpl>> = RefCell::new(VecDeque::new());
 }
 pub type FuncId = i32;
+#[derive(Clone, Debug)]
 pub enum RootKind {
     RootVar(VarKind),
     RootFunc(Function),
@@ -58,7 +59,7 @@ impl FuncImpl {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Function {
     pub id: FuncId,
 }
@@ -82,7 +83,6 @@ impl<T: 'static + FuncIntf> FIWrap<T> {
         self.value.borrow_mut().f(input_)
     }
 }
-
 
 impl Function {
     pub fn new() -> Self {

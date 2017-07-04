@@ -16,6 +16,8 @@ pub type OptVarKind = Option<VarKind>;
 pub type OptVarKindList = Vec<OptVarKind>;
 pub type RefVarKindList<'a> = Vec<&'a VarKind>;
 pub type VarId = i32;
+
+#[derive(Debug, Clone)]
 pub enum VarKind {
     FloatVariable(Variable<f32>),
     LongVariable(Variable<i64>),
@@ -24,7 +26,6 @@ pub enum VarKindImpl {
     FloatVariable(VariableImpl<f32>),
     LongVariable(VariableImpl<i64>),
 }
-
 
 pub fn var_table_reset(max: VarId) {
     VAR_TABLE.with(|f| {
@@ -189,16 +190,6 @@ impl Hash for VarKind {
     }
 }
 
-impl Clone for VarKind {
-    fn clone(&self) -> Self {
-        use self::VarKind::{FloatVariable, LongVariable};
-        match *self {
-            FloatVariable(ref v) => FloatVariable(v.clone()),
-            LongVariable(ref v) => LongVariable(v.clone()),
-        }
-    }
-}
-
 pub trait VarAccess<T: NumLimits> {
     fn access<'a>(&self) -> &'a mut VariableImpl<T>;
     fn borrow(&self) -> &VariableImpl<T>;
@@ -327,6 +318,7 @@ impl<T: NumLimits> VariableImpl<T> {
 }
 
 
+#[derive(Clone, Debug)]
 pub struct Variable<T: NumLimits> {
     pub id: VarId,
     phantom: PhantomData<T>,
@@ -336,14 +328,6 @@ impl<T: NumLimits> Default for Variable<T> {
     fn default() -> Self {
         Variable {
             id: -1,
-            phantom: PhantomData,
-        }
-    }
-}
-impl<T: NumLimits> Clone for Variable<T> {
-    fn clone(&self) -> Self {
-        Variable {
-            id: self.id,
             phantom: PhantomData,
         }
     }
