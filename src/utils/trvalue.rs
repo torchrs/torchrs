@@ -9,6 +9,7 @@ pub enum TRVal {
     Tensor(TensorKind),
     Variable(VarKind),
     Dims(Vec<usize>),
+    ViewDims(Vec<isize>),
     Required,
 }
 
@@ -35,6 +36,11 @@ impl From<TensorKind> for TRVal {
 impl From<Vec<usize>> for TRVal {
     fn from(input: Vec<usize>) -> Self {
         TRVal::Dims(input)
+    }
+}
+impl From<Vec<isize>> for TRVal {
+    fn from(input: Vec<isize>) -> Self {
+        TRVal::ViewDims(input)
     }
 }
 impl<T: NumLimits> From<Tensor<T>> for TRVal {
@@ -70,6 +76,14 @@ impl From<TRVal> for Vec<usize> {
     fn from(input: TRVal) -> Self {
         match input {
             self::TRVal::Dims(x) => x.clone(),
+            _ => unimplemented!(),
+        }
+    }
+}
+impl From<TRVal> for Vec<isize> {
+    fn from(input: TRVal) -> Self {
+        match input {
+            self::TRVal::ViewDims(x) => x.clone(),
             _ => unimplemented!(),
         }
     }
