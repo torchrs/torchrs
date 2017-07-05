@@ -293,7 +293,7 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 		backward += weightstr
 		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
-		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&input).zero_().clone();\n"
+		backward += "\t\tlet mut grad_input = grad_output.new(input.size()).zero_().clone();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
 		backward += ', '.join(arg for arg in additional_args) + ");\n"
 		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);"
