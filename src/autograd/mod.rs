@@ -4,9 +4,11 @@ pub mod function;
 pub mod engine;
 #[macro_use]
 pub mod functions;
+pub mod _functions;
 
 pub use self::variable::*;
 pub use self::variable_ops::*;
 pub use self::function::*;
 pub use self::engine::*;
 pub use self::functions::*;
+pub use self::_functions::*;

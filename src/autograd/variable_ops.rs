@@ -671,15 +671,18 @@ impl<T: NumLimits> Variable<T> {
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
     {
-        let mut v = Variable::new(self.borrow().data.view(dims));
-        v.copy_refs(self);
-        v
+        use autograd::{View, ViewArgs};
+        let mut input = vec![self.clone().into()];
+        let args = ViewArgs { dims: dims.as_ref().to_vec() };
+        View::new(&args).f(&mut input).remove(0).into()
     }
     pub fn view_as(&self, tensor: &Self) -> Self {
-        unimplemented!()
+        let dims: Vec<isize> = tensor.size().iter().map(|v| *v as isize).collect();
+        self.view(dims)
     }
-    pub fn zero_(self) -> Self {
-        unimplemented!()
+    pub fn zero_(mut self) -> Self {
+        self.data().zero_();
+        self
     }
 }
 
