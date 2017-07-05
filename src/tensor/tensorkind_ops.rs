@@ -289,7 +289,7 @@ impl TensorKind {
     pub fn clamp_<T: NumLimits>(&mut self, min: T, max: T) -> &mut Self {
         unimplemented!()
     }
-    pub fn contiguous<T: NumLimits>(&self) -> Self {
+    pub fn contiguous(&self) -> Self {
         unimplemented!()
     }
     // perform deep copy
@@ -304,28 +304,28 @@ impl TensorKind {
         impl_tk_dispatch_self_mut!(self, t, {t.copy_async_(src.into());});
         self
     }
-    pub fn cos<T: NumLimits>(&self) -> Self {
+    pub fn cos(&self) -> Self {
         unimplemented!()
     }
     pub fn cos_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn cosh<T: NumLimits>(&self) -> Self {
+    pub fn cosh(&self) -> Self {
         unimplemented!()
     }
     pub fn cosh_(&mut self) -> &mut Self {
         unimplemented!()
     }
-    pub fn cpu<T: NumLimits>(&self) -> Self {
+    pub fn cpu(&self) -> Self {
         unimplemented!()
     }
     pub fn cross<T: NumLimits>(&self, dim: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn cuda<T: NumLimits>(&self, device: Option<i32>) -> Self {
+    pub fn cuda(&self, device: Option<i32>) -> Self {
         unimplemented!()
     }
-    pub fn cuda_async<T: NumLimits>(&self, device: Option<i32>) -> Self {
+    pub fn cuda_async(&self, device: Option<i32>) -> Self {
         unimplemented!()
     }
     pub fn diag<T: NumLimits>(&self, diag: u32) -> Self {
