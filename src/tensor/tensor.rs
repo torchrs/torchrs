@@ -360,8 +360,7 @@ impl<T: NumLimits> Clone for Tensor<T> {
 type RefTI<T> = RcMut<TensorImpl<T, Output = T>>;
 pub type TIArg<T> = TensorImpl<T, Output = T>;
 pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
-    fn new(&self) -> RefTI<T>;
-
+    fn new(&self) -> Tensor<T>;
     fn add(&mut self, src: *mut voidp, value: T);
     fn addmm(&mut self, src: *mut voidp, beta: T, alpha: T, mat1: *mut voidp, mat2: *mut voidp);
     fn addt(&mut self, src: *mut voidp, value: *mut voidp);
@@ -617,8 +616,8 @@ macro_rules! impl_tensor_impl {
                 let valuep = value as *mut $thname;
                 unsafe { concat_idents!($thname, _cmul)(self.t, valuep, srcp)};
             }
-            fn new(&self) -> RefTI<$type> {
-                RcMutNew($name ::new())
+            fn new(&self) -> Tensor<$type> {
+                Tensor { value: RcMutNew($name ::new()) }
             }
             fn size(&self) -> Vec<usize> {
                 let d = unsafe { std::slice::from_raw_parts((*self.t).size as *mut usize,
