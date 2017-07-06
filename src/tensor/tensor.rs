@@ -71,7 +71,7 @@ impl TensorKind {
                 let tv: THVec<f32> = tv.into();
                 let mut newt: Tensor<f32> = t.new(tv.dims);
                 if tv.data.len() != 0 {
-                    newt.set(tv.data);
+                    newt.set_storage(tv.data);
                 }
                 newt.into()
             }
@@ -80,7 +80,7 @@ impl TensorKind {
                 let tv: THVec<i64> = tv.into();
                 let mut newt: Tensor<i64> = t.new(tv.dims);
                 if tv.data.len() != 0 {
-                    newt.set(tv.data);
+                    newt.set_storage(tv.data);
                 }
                 newt.into()
             }
@@ -89,7 +89,7 @@ impl TensorKind {
                 let tv: THVec<u8> = tv.into();
                 let mut newt: Tensor<u8> = t.new(tv.dims);
                 if tv.data.len() != 0 {
-                    newt.set(tv.data);
+                    newt.set_storage(tv.data);
                 }
                 newt.into()
             }
@@ -269,7 +269,9 @@ impl<'de, T: NumLimits + Deserialize<'de>> Deserialize<'de> for Tensor<T> {
         where D: Deserializer<'de>
     {
         let rt: RustTensor<T> = RustTensor::deserialize(deserializer)?;
-        Ok(rt.into())
+        let mut t = ::torch::tensor(());
+        t.from_rust_tensor(rt);
+        Ok(t)
     }
 }
 
@@ -297,24 +299,36 @@ impl<T: NumLimits> Index<i32> for Tensor<T> {
 }
 
 impl<T: NumLimits> Tensor<T> {
+    pub fn cast<D>(&self) -> Tensor<D>
+        where D: NumLimits
+    {
+        let t: Tensor<D> = torch::tensor(self.size());
+        let s: Vec<D> = self.value
+            .borrow()
+            .iter()
+            .map(|v| <D as num::NumCast>::from(v).unwrap())
+            .collect();
+        t.value.borrow_mut().set_storage(s.as_slice());
+        t
+    }
+    pub fn from_rust_tensor(&mut self, rt: RustTensor<T>) {
+        self.value.borrow_mut().from_rust_tensor(rt);
+    }
+    pub fn get_storage(&self, data: &mut [T]) {
+        let storage = self.value.borrow().get_storage(data);
+    }
+    pub fn len(&self) -> usize {
+        self.value.borrow().len()
+    }
     pub fn new<S>(&self, args: S) -> Self
         where S: Into<THVec<T>>
     {
         let mut args: THVec<T> = args.into();
         if args.dims.len() == 0 {
-            args.dims = self.size();
+            self.value.borrow().new()
+        } else {
+            ::torch::tensor(args)
         }
-        ::torch::tensor(args)
-    }
-    pub fn set(&mut self, args: Vec<T>) {
-        let mut inner = self.value.borrow_mut();
-        let mut s = inner.storage_mut();
-        for i in 0..args.len() {
-            s[i] = args[i]
-        }
-    }
-    pub fn len(&self) -> usize {
-        self.value.borrow().len()
     }
     /* XXX handle non-contiguous case */
     pub fn s<D>(&self, dim: D) -> Self
@@ -322,26 +336,8 @@ impl<T: NumLimits> Tensor<T> {
     {
         self.value.borrow().s(dim.as_ref())
     }
-    pub fn cast<D>(&self) -> Tensor<D>
-        where D: NumLimits
-    {
-        let t: Tensor<D> = torch::tensor(self.size());
-        let s: Vec<D> = self.value
-            .borrow()
-            .storage()
-            .to_vec()
-            .iter()
-            .map(|v| <D as num::NumCast>::from(*v).unwrap())
-            .collect();
-        t.value.borrow_mut().set_storage(s.as_slice());
-        t
-    }
-    pub fn get_storage(&self, data: &mut Vec<T>) {
-        let storage = self.value.borrow().storage().to_vec();
-        data.truncate(0);
-        for i in 0..storage.len() {
-            data.push(storage[i]);
-        }
+    pub fn set_storage(&mut self, args: Vec<T>) {
+        self.value.borrow_mut().set_storage(args.as_slice());
     }
 }
 
@@ -370,16 +366,18 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn div(&mut self, src: *mut voidp, value: T);
     fn divt(&mut self, src: *mut voidp, value: *mut voidp);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
+    fn from_rust_tensor(&mut self, rt: RustTensor<T>);
+    fn get_storage(&self, data: &mut [T]);
     fn inner(&self) -> *mut voidp;
+    fn iter(&self) -> Box<Iterator<Item = T>>;
     fn len(&self) -> usize;
     fn mm(&mut self, A: *mut voidp, B: *mut voidp);
     fn mul(&mut self, src: *mut voidp, value: T);
     fn mult(&mut self, src: *mut voidp, value: *mut voidp);
+    fn resize(&mut self, dims: &[usize]);
     fn s(&self, dim: &[usize]) -> Tensor<T>;
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
-    fn storage(&self) -> &[T];
-    fn storage_mut(&mut self) -> &mut [T];
     fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool);
     fn squeeze(&mut self, dim: Option<usize>);
     fn unsqueeze(&mut self, dim: usize);
@@ -389,39 +387,6 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn view(&self, dims: &[isize]) -> Tensor<T>;
     fn zero(&mut self);
 }
-
-
-impl<T: NumLimits> From<RustTensor<T>> for Tensor<T> {
-    #[allow(unused_variables)]
-    default fn from(input: RustTensor<T>) -> Self {
-        unreachable!()
-    }
-}
-impl From<RustTensor<u8>> for Tensor<u8> {
-    #[allow(unused_variables)]
-    default fn from(input: RustTensor<u8>) -> Self {
-        ByteTensor::from_rust_tensor(input)
-    }
-}
-impl From<RustTensor<f32>> for Tensor<f32> {
-    #[allow(unused_variables)]
-    default fn from(input: RustTensor<f32>) -> Self {
-        FloatTensor::from_rust_tensor(input)
-    }
-}
-impl From<RustTensor<f64>> for Tensor<f64> {
-    #[allow(unused_variables)]
-    default fn from(input: RustTensor<f64>) -> Self {
-        DoubleTensor::from_rust_tensor(input)
-    }
-}
-impl From<RustTensor<i64>> for Tensor<i64> {
-    #[allow(unused_variables)]
-    default fn from(input: RustTensor<i64>) -> Self {
-        LongTensor::from_rust_tensor(input)
-    }
-}
-
 
 pub struct Generator {
     t: *mut THGenerator,
@@ -437,36 +402,40 @@ pub struct RustTensor<T> {
     size: Vec<i64>,
     stride: Vec<i64>,
     storage: Vec<T>,
-    storage_offset: isize,
+}
+
+macro_rules!  unsafe_index {
+    ($p:ident, $idx:ident) => {
+         unsafe { & *(*(* $p .t).storage).data.offset($idx as isize) }
+    }
+}
+macro_rules!  unsafe_index_mut {
+    ($p:ident, $idx:ident) => {
+         unsafe { &mut *(*(* $p .t).storage).data.offset($idx as isize) }
+    }
 }
 
 macro_rules! impl_tensor_impl {
     ($name:ident, $type:ident, $thname:ident, $storage_name:ident) => {
         pub struct $name {
             t: *mut $thname,
-            storage: $storage_name,
         }
         impl $name {
             pub fn new() -> Self {
                 unsafe {
                     $name {
                         t: concat_idents!($thname, _new)(),
-                        storage: $storage_name ::new(),
                     }
                 }
             }
-            fn from_parts(t: *mut $thname, storage: $storage_name) -> Self {
-                $name {
-                    t: t,
-                    storage: storage,
-                }
+            fn from_parts(t: *mut $thname) -> Self {
+                $name { t: t}
             }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
                 let mut size: Vec<i64> = Vec::new();
                 let mut stride: Vec<i64> = Vec::new();
                 let mut storage = Vec::new();
-                let offset = unsafe {(*self.t).storageOffset};
-                let nd  = unsafe {(*self.t).nDimension};
+                let (offset, nd) = (self.storage_offset(), self.dim());
                 let need_stride = unsafe {(*self.t).stride != std::ptr::null_mut()};
 
                 for i in 0..nd {
@@ -479,21 +448,12 @@ macro_rules! impl_tensor_impl {
                         stride.push(*s);
                     }
                 }
-                for i in self.storage.iter() {
+                let s = self.storage();
+                /* XXX this has to be the slowest way possible */
+                for i in s.iter() {
                     storage.push(*i);
                 }
-                RustTensor {size: size, stride: stride, storage: storage, storage_offset: offset}
-            }
-            fn from_rust_tensor(rt: RustTensor<$type>) -> Tensor<$type> {
-                let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
-                let mut newt = $name ::with_capacity(size);
-                unsafe {
-                    (*newt.t).storageOffset = rt.storage_offset;
-                }
-                for (i, d) in rt.storage.iter().enumerate() {
-                    newt.storage[i] = *d;
-                }
-                Tensor {value: RcMutNew(newt)}
+                RustTensor {size: size, stride: stride, storage: storage}
             }
             pub fn with_capacity<D>(dims: D) -> Self
                 where D: AsRef<[usize]>
@@ -509,34 +469,23 @@ macro_rules! impl_tensor_impl {
                                                              sizes.t,
                                                              std::ptr::null_mut())
                 };
-                $name {
-                    t: t,
-                    storage: storage,
-                 }
+                $name { t: t}
             }
             pub fn randn<D>(dims: D) -> Self
                 where D: AsRef<[usize]>
             {
                 let dims = dims.as_ref();
-                let mut t = $name  ::with_capacity(dims);
-                for x in t.storage.iter_mut() {
-                    *x = rand::random::<$type>()
-                }
-                t
-            }
-            fn storage_offset(&self) -> usize {
-                let t = unsafe {(*self.t).storageOffset};
-                t as usize
+                unimplemented!()
             }
             fn len(&self) -> usize {
                 self.size().iter().product()
             }
-            fn set_storage(&mut self, v: &[$type]) {
-                let storage_offset = self.storage_offset();
-                assert_eq!(v.len(), self.len());
-                for i in 0..self.len() {
-                    self.storage[(storage_offset + i)] = v[i]
-                }
+            fn storage(&self) -> $storage_name {
+                let s = unsafe { (*self.t).storage };
+                $storage_name ::from_raw_parts(s)
+            }
+            fn storage_offset(&self) -> usize {
+                (unsafe {(*self.t).storageOffset}) as usize
             }
         }
 
@@ -594,11 +543,24 @@ macro_rules! impl_tensor_impl {
                 let newt = unsafe {
                     concat_idents!($thname, _newExpand)(self.t, size.t)
                 };
-                let t = $name :: from_parts(newt, self.storage.clone());
+                let t = $name :: from_parts(newt);
                 Tensor { value: RcMutNew(t) }
+            }
+            fn from_rust_tensor(&mut self, rt: RustTensor<$type>) {
+                let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
+                self.resize(size.as_slice());
+                let s = rt.storage.as_ptr() as *const voidp;
+                let mut d = (unsafe { ((*(*self.t).storage).data) }) as *mut voidp;
+                unsafe {memcpy(d, s, rt.storage.len()) };
+            }
+            fn get_storage(&self, data: &mut [$type]) {
+                unimplemented!()
             }
             fn inner(&self) -> *mut voidp {
                 self.t as *mut voidp
+            }
+            fn iter(&self) -> Box<Iterator<Item=$type>> {
+                unimplemented!()
             }
             fn len(&self) -> usize {
                 self.len()
@@ -619,13 +581,18 @@ macro_rules! impl_tensor_impl {
             fn new(&self) -> Tensor<$type> {
                 Tensor { value: RcMutNew($name ::new()) }
             }
+            fn resize(&mut self, dims: &[usize]) {
+                let dims : Vec<i64> = dims.iter().map(|v| *v as i64).collect();
+                let dims = LongStorage::with_data(dims);
+                unsafe { concat_idents!($thname, _resize)(self.t, dims.t, std::ptr::null_mut()) };
+            }
             fn size(&self) -> Vec<usize> {
                 let d = unsafe { std::slice::from_raw_parts((*self.t).size as *mut usize,
                                                             (*self.t).nDimension as usize)};
                 d.to_vec()
             }
             fn s(&self, dim: &[usize]) -> Tensor<$type> {
-                let mut increment = self.storage.len() - self.storage_offset();
+                let mut increment : usize = self.size().iter().product();
                 let sizes = self.size();
                 if sizes.len() < dim.len() {
                     panic!("bad slice index {:?}", dim);
@@ -645,24 +612,23 @@ macro_rules! impl_tensor_impl {
                 }
                 let dims_long : Vec<i64> = new_dims.iter().map(|t| *t as i64).collect();
                 let sizes = LongStorage::with_data(dims_long.as_slice());
-                let storage = self.storage.clone();
+                let storage = self.storage();
                 let t = unsafe {
                     concat_idents!($thname, _newWithStorage)(storage.t,
                                                              offset as isize,
                                                              sizes.t,
                                                              std::ptr::null_mut())
                 };
-                let t = $name :: from_parts(t, storage);
+                let t = $name :: from_parts(t);
                 Tensor { value: RcMutNew(t) }
             }
-            fn storage(&self) -> &[$type] {
-                &self.storage[self.storage_offset()..(self.len() + self.storage_offset())]
-            }
-            fn storage_mut(&mut self) -> &mut [$type] {
-                &mut *self.storage
-            }
             fn set_storage(&mut self, v: &[$type]) {
-                self.set_storage(v)
+                let storage_offset = self.storage_offset();
+                assert_eq!(v.len(), self.len());
+                let mut s = self.storage();
+                for i in 0..self.len() {
+                    s[(storage_offset + i)] = v[i]
+                }
             }
             fn squeeze(&mut self, dim: Option<usize>) {
                 let mut dims = Vec::new();
@@ -710,7 +676,7 @@ macro_rules! impl_tensor_impl {
                     LongStorage {t: p}
                 };
                 let t = unsafe { concat_idents!($thname, _newView)(self.t, inferred_size.t)  };
-                let t = $name :: from_parts(t, self.storage.clone());
+                let t = $name :: from_parts(t);
                 Tensor {value: RcMutNew(t) }
             }
             fn zero(&mut self) {
@@ -742,7 +708,7 @@ macro_rules! impl_tensor_impl {
                     panic!("bad dimlen")
                 }
                 index += idx[lastidx] as usize;
-                &self.storage[index]
+                unsafe_index!(self, index)
             }
         }
 
@@ -764,9 +730,10 @@ macro_rules! impl_tensor_impl {
                     panic!("bad dimlen")
                 }
                 index += idx[lastidx] as usize;
-                &mut self.storage[index]
+                unsafe_index_mut!(self, index)
             }
         }
+
         impl Index<usize> for $name {
             type Output = $type;
             fn index(&self, idx: usize) -> &Self::Output {
@@ -777,7 +744,7 @@ macro_rules! impl_tensor_impl {
                 if dims[0] <= idx {
                     panic!("idx {} out of range", idx)
                 };
-                &self.storage[self.storage_offset() + idx]
+                unsafe_index!(self, idx)
             }
         }
         impl Drop for $name {

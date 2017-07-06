@@ -17,9 +17,12 @@ macro_rules! impl_storage_impl {
             pub fn new() -> Self {
                 unsafe { $name { t: concat_idents!($thname, _new)() } }
             }
+            pub fn from_raw_parts(t: *mut $thname) -> Self {
+                unsafe { concat_idents!($thname, _retain)(t)};
+                $name { t: t }
+            }
             pub fn len(&self) -> usize {
-                let t = unsafe {(*self.t).size };
-                t as usize
+                (unsafe { (*self.t).size }) as usize
             }
             pub fn with_capacity(size: usize) -> Self {
                 unsafe { $name { t: concat_idents!($thname, _newWithSize)(size as isize) } }
