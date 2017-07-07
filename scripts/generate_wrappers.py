@@ -238,7 +238,6 @@ def build_backward(name, args):
 	backward = ""
 	return backward
 
-
 def build_args(name, args):
 	fn_class = "#[builder(pattern=\"owned\")]\n"
 	fn_class += "#[derive(Builder, Clone, Default)]\n"
@@ -293,7 +292,7 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 		backward += weightstr
 		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
-		backward += "\t\tlet mut grad_input = grad_output.new(input.size()).zero_().clone();\n"
+		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&mut input).zero_().clone();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
 		backward += ', '.join(arg for arg in additional_args) + ");\n"
 		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);"
@@ -345,23 +344,50 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 
 	param_args = {'weight', 'bias'}
 	ignored_args = {'weight', 'bias', 'gradWeight', 'gradBias', 'output'}
-	expected_params = [arg for arg in update_output.arguments[3:]
+	expected_params = [(idx, arg) for idx, arg in enumerate(update_output.arguments[3:])
 					   if arg.name in param_args]
 	buffers = {}
 	buffers['update_output'] = _find_buffers(update_output.arguments[3:],
 											 ignored_args)
+	print("{} found buffers {}".format(update_output.name, buffers['update_output']))
+
 	buffers['update_grad_input'] = _find_buffers(
 		update_grad_input.arguments[4:], ignored_args)
 	if acc_grad_parameters is not None:
 		buffers['acc_grad_parameters'] = _find_buffers(
 			acc_grad_parameters.arguments[3:], ignored_args)
 
+	is_inplace = update_output.arguments[-1].name == 'inplace'
+
 	full_args = update_output.arguments[3:]
 	args = [arg for arg in full_args if "Tensor" not in arg.type]
+	argnames = ["self.args.{}".format(arg.name) for arg in args]
+	def initialize_buffers(fn_name, args):
+		bufferstr = ""
+		additional_args = argnames
+		for i, (idx, name) in enumerate(buffers[fn_name]):
+			# TODO: some buffers are necessary only for update output and can be
+			# freed right afterwards
+			print("name {}".format(name))
+			bufferstr += "\t\tself.saved_tensors.push(input.new(()));\n"
+			additional_args.insert(idx, "&mut self.saved_tensors[{}]".format(i))
 
-	tensor_idxs = [(idx, arg.is_optional) for idx, arg in enumerate(full_args) if "Tensor" in arg.type]
+		i = 0
+		for idx, param in expected_params:
+			optstr = "\t\tlet mut {} = if input_list.len() > {}".format(param.name, i)
+			optstr += "{ " + "Some(input_list[{}].clone())".format(i) + "} "
+			optstr += "else { None };\n"
+			if param.is_optional:
+				bufferstr += optstr
+			else:
+				bufferstr += "\t\tlet mut {} = input_list[{}].clone();\n".format(param.name, i)
+			i += 1
+			additional_args.insert(idx, "&mut {}".format(param.name))
+
+		return bufferstr, additional_args
+
+
 	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
-	#added_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	added_args = full_args
 
 	start = 4 if needs_input else 3
@@ -369,12 +395,6 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 	input_args = ["self.args.{}".format(arg.name) for arg in grad_input_args if "Tensor" not in arg.type]
 	if len(grad_input_args) > len(args):
 		args = grad_input_args
-
-	for i, (idx, opt) in enumerate(tensor_idxs):
-		if opt:
-			output_args.insert(idx, "&mut Some(input_list[{}].clone())".format(i+1))
-		else:
-			output_args.insert(idx, "&mut input_list[{}].clone()".format(i+1))
 
 	ga_start = 5 if save_output else 4
 
@@ -393,20 +413,9 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 
 	skip_grad_output_unwrap = update_grad_input.arguments[2].is_optional
 	skip_input_unwrap = update_grad_input.arguments[1].is_optional
-	def initialize_buffers(fn_name):
-		print(class_name)
-		print(full_args)
-		additional_args = added_args
-		for idx, name in buffers[fn_name]:
-			# TODO: some buffers are necessary only for update output and can be
-			# freed right afterwards
-			buffer = buffers[name]
-			print(buffer)
-			additional_args = additional_args[:idx] + [buffer] + additional_args[idx:]
-		print(additional_args)
-		return tuple(additional_args)
 
 	def build_forward():
+		buffers, add_args = initialize_buffers('update_output', args)
 		forward = "\t\tlet mut backend = input_list[0].backend();\n"
 		if is_inplace:
 			forward += "\t\tlet mut output = if self.args.inplace {\n"
@@ -418,28 +427,22 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		else:
 			forward += "\t\tlet mut output = input_list[0].new(());\n"
 
+		forward += "\t\tlet mut save_list = input_list.clone();\n"
 		if save_output:
-			forward += "\t\t{\n"
-			forward += "\t\t\tlet mut save_list = input_list.clone();\n"
 			forward += "\t\t\tsave_list.push(output.clone());\n"
-			forward += "\t\t\tself.save_for_backward(&mut save_list);\n"
-			forward += "\t\t}\n"
-		else:
-			forward += "\t\tself.save_for_backward(input_list);\n"
-
 
 		forward += "\t\tlet mut input = input_list.remove(0);\n"
+		forward += buffers
 		forward += "\t\tbackend.{}(&mut input, &mut output, ".format(update_output.name)
-		forward +=  ', '.join(arg for arg in output_args) + ");\n"
+		forward +=  ', '.join(arg for arg in add_args) + ");\n"
+		forward += "\t\tsave_list.append(&mut self.saved_tensors);\n"
+		forward += "\t\tself.save_for_backward(&mut save_list);\n"
 		forward += "\t\tvec![output]\n"
 		return forward
 
 	def build_backward():
 		input = "&mut input, " if needs_input else ""
 		backward = "\t\tlet mut saved = self.saved_tensors();\n"
-		# XXX acknowledge that this is incomplete
-		backward += '\t\tpanic!("backward will not work properly until save_for is done correctly.");\n' 
-		backward += "\t\tunimplemented!();\n"
 		if save_output:
 			backward += "\t\tlet (mut input, mut output) = (saved[0].clone(), saved[1].clone());\n"
 		else:
@@ -452,13 +455,14 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		backward += "\t\tlet mut grad_input_result : Option<TensorKind> = None;\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
 
+		backward += "\t\tunimplemented!();\n"
+
 		# update_grad_input()
 		#ext_args = initialize_buffers('update_grad_input')
 		backward += "\t\tif needs_input_grad[0] {\n"
 		backward += "\t\t\tlet mut grad_input = input.new(());\n"
 		backward += "\t\t\tbackend.{}({}&mut grad_output, &mut grad_input".format(update_grad_input.name, input)
-		if save_output:
-			backward += ", &mut output"
+		backward += ", &mut output"
 
 		gi_args = input_args
 		if len(input_args) > 0:
