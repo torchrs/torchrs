@@ -73,7 +73,7 @@ impl FuncIntf for MaxPool2d {
         let mut input = input.remove(0);
         let mut backend = input.backend();
         let mut indices: TensorKind = ::torch::long_tensor(input.size()).into();
-        let mut output = input.new(());
+        let mut output = input.new(()).resize_as_(&input);
         backend.SpatialDilatedMaxPooling_updateOutput(&mut input,
                                                       &mut output,
                                                       &mut indices,

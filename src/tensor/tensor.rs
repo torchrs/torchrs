@@ -314,7 +314,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn from_rust_tensor(&mut self, rt: RustTensor<T>) {
         self.value.borrow_mut().from_rust_tensor(rt);
     }
-    pub fn get_storage(&self, data: &mut [T]) {
+    pub fn get_storage(&self, data: &mut [T], len: usize) {
+        assert!(len >= self.size().iter().product());
         let storage = self.value.borrow().get_storage(data);
     }
     pub fn len(&self) -> usize {
@@ -500,7 +501,8 @@ macro_rules! impl_tensor_impl {
                     alpha: $type,
                     mat1: *mut voidp,
                     mat2: *mut voidp) {
-                let (srcp, mat1p, mat2p) = (src as *mut $thname, mat1 as *mut $thname, mat2 as *mut $thname);
+                let srcp = src as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
                 unsafe {
                     concat_idents!($thname, _addmm)(self.t,
                                                     beta,
@@ -554,7 +556,12 @@ macro_rules! impl_tensor_impl {
                 unsafe {memcpy(d, s, rt.storage.len()) };
             }
             fn get_storage(&self, data: &mut [$type]) {
-                unimplemented!()
+                /* XXX presupposes contiguity */
+                let offset = self.storage_offset() as isize;
+                let s = (unsafe {(*(*self.t).storage).data.offset(offset)});
+                let s = s as *const voidp;
+                let d = data.as_mut_ptr() as *mut voidp;
+                unsafe {memcpy(d, s, data.len()) };
             }
             fn inner(&self) -> *mut voidp {
                 self.t as *mut voidp

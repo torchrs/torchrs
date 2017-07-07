@@ -25,8 +25,11 @@ pub trait OptIntf<T: ::tensor::NumLimits + From<TRVal>> {
     fn zero_grad(&mut self, model: &mut ModIntf<T>) {
         // XXX figure out point of parameter groups
         model.apply_parameters(&mut |p| if p.requires_grad() {
-                                        *p.grad() =
-                                            Some(Variable::new(p.data().new(()).zero_().clone()));
+                                        // :-/
+                                        let data = p.data().clone();
+                                        let new_data =
+                                            data.new(()).resize_as_(&data).zero_().clone();
+                                        *p.grad() = Some(Variable::new(new_data))
                                     });
     }
     /* ignore largely unused closure arg to start */

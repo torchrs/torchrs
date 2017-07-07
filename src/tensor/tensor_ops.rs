@@ -63,7 +63,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
-        let mut t = self.new(());
+        let mut t = self.new(()).resize_as_(self);
         t.value
             .borrow_mut()
             .addmm(self.inner(), beta, alpha, mat1.inner(), mat2.inner());
@@ -110,7 +110,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn bernoulli(&self, p: f64) -> Self {
-        let mut t = self.new(());
+        let mut t = self.new(()).resize_as_(self);
         t.bernoulli_(p);
         t
     }
@@ -150,7 +150,7 @@ impl<T: NumLimits> Tensor<T> {
     }
     // perform deep copy
     pub fn copy(&self) -> Self {
-        let mut t = self.new(());
+        let mut t = self.new(()).resize_as_(self);
         t.copy_(self);
         t
     }
@@ -535,11 +535,14 @@ impl<T: NumLimits> Tensor<T> {
         // NB: copies data
         unimplemented!()
     }
-    pub fn resize_(&mut self, sizes: &[i32]) -> &mut Self {
-        unimplemented!()
+    pub fn resize_<D>(&mut self, sizes: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        self.value.borrow_mut().resize(sizes.as_ref());
+        self.clone()
     }
-    pub fn resize_as_(&mut self, tensor: &Self) -> &mut Self {
-        unimplemented!()
+    pub fn resize_as_(&mut self, tensor: &Self) -> Self {
+        self.resize_(tensor.size())
     }
     pub fn round(&self) -> Self {
         unimplemented!()
@@ -677,7 +680,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn transpose(&self, dim0: usize, dim1: usize) -> Self {
-        let t = self.new(());
+        let t = self.new(()).resize_as_(self);
         t.value.borrow_mut().transpose(self.inner(), dim0, dim1);
         t
     }

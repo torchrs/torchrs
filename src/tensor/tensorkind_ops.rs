@@ -653,11 +653,13 @@ impl TensorKind {
         // NB: copies data
         unimplemented!()
     }
-    pub fn resize_(&mut self, sizes: &[i32]) -> &mut Self {
-        unimplemented!()
+    pub fn resize_<D>(&mut self, sizes: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        impl_tk_dispatch_self_mut!(self, t, t.resize_(sizes).into())
     }
-    pub fn resize_as_(&mut self, tensor: &Self) -> &mut Self {
-        unimplemented!()
+    pub fn resize_as_(&mut self, tensor: &Self) -> Self {
+        impl_tk_dispatch_self_mut!(self, t, t.resize_(tensor.size()).into())
     }
     pub fn round(&self) -> Self {
         unimplemented!()

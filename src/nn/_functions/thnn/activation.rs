@@ -30,15 +30,17 @@ impl_func_delegate!(Threshold);
 
 impl FuncIntf for Threshold {
     fn forward(&mut self, input_: &mut TensorKindList) -> TensorKindList {
-        let mut backend = input_[0].backend();
+        let mut input = input_.remove(0);
+        let mut backend = input.backend();
         let mut output = if self.inplace {
-            self.mark_dirty(input_);
-            input_[0].clone()
+            self.mark_dirty(&vec![input.clone()]);
+            input.clone()
         } else {
-            input_[0].new(())
+            input.new(()).resize_as_(&input)
         };
-        self.save_for_backward(input_);
-        backend.Threshold_updateOutput(&mut input_[0],
+        // XXX check if training
+        self.save_for_backward(&vec![input.clone()]);
+        backend.Threshold_updateOutput(&mut input,
                                        &mut output,
                                        self.threshold,
                                        self.value,

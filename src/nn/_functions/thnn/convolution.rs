@@ -116,7 +116,7 @@ fn compute_output(input: &mut TensorKind,
                   ones: &mut TensorKind,
                   args: &ConvNdArgs)
                   -> TensorKind {
-    let mut output = input.new(());
+    let mut output = input.new(()).resize_as_(input);
     let dim = input.size().len();
     let dilated = args.is_dilated();
     let mut backend = input.backend();
@@ -399,14 +399,14 @@ fn compute_grad_params(input: &mut TensorKind,
     let dilated = args.is_dilated();
     let backend = input.backend();
 
-    let mut grad_weight = weight.new(());
+    let mut grad_weight = weight.new(()).resize_as_(weight);
     grad_weight.zero_();
     let mut backend = input.backend();
     let mut grad_bias = None;
     /*
     if let &mut Some(ref bias) = bias {
         if args.should_compute_output(2) {
-        	let new_bias = bias.new(());
+        	let new_bias = bias.new(()).resize_as_(&bias);
         	new_bias.zero_();
             grad_bias = Some(new_bias);
         }
@@ -560,7 +560,8 @@ impl ConvNd {
 
         let mut input = inputs.remove(0);
         let mut weight = inputs.remove(0);
-        let (mut ones, mut columns) = (input.new(()), input.new(()));
+        let mut ones = input.new(()).resize_as_(&input);
+        let mut columns = input.new(()).resize_as_(&input);
         let mut save_list = vec![input.clone(), weight.clone()];
         let mut bias = if inputs.len() > 2 {
             let b = inputs.remove(0);

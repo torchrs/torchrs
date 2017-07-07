@@ -70,7 +70,7 @@ impl Dropout for Dropout1d {}
 impl Dropout for Dropout2d {}
 impl Noise for Dropout1d {
     fn make_noise(&self, input: &TensorKind) -> TensorKind {
-        input.new(())
+        input.new(()).resize_as_(input)
     }
 }
 impl Noise for Dropout2d {
