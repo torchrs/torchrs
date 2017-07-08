@@ -30,7 +30,7 @@ pub enum VarKindImpl {
 pub fn var_table_reset(max: VarId) {
     VAR_TABLE.with(|f| {
                        let mut table = f.borrow_mut();
-                       table.truncate(max as usize);
+                       table.truncate((max + 2) as usize);
                    });
 
 }
@@ -212,6 +212,12 @@ impl VarAccess<f32> for Variable<f32> {
     fn access<'a>(&self) -> &'a mut VariableImpl<f32> {
         let vecp = VAR_TABLE.with(|f| f.as_ptr());
         let vec = unsafe { &mut *vecp };
+        assert!(self.id >= 0);
+        if (self.id as usize) >= vec.len() {
+            panic!("{} out of bounds: {}", self.id, vec.len())
+        }
+        assert!((self.id as usize) < vec.len());
+
         match vec[self.id as usize] {
             VarKindImpl::FloatVariable(ref mut t) => t,
             _ => unreachable!(),
@@ -306,7 +312,7 @@ impl<T: NumLimits> VariableImpl<T> {
         &mut self.grad
     }
     fn _call_hooks(&self, grad_output: &Tensor<T>) {
-        unimplemented!()
+        println!("XXX implement _call_hooks");
     }
     pub fn copy_refs(&mut self, rhs: &Self) {
         self.grad_fn = rhs.grad_fn.clone();
@@ -539,7 +545,7 @@ impl<T: NumLimits> Variable<T> {
         inner._call_hooks(grad_output.data_borrow());
         // in place operations consume their input
         // grad returns a borrowed reference
-        inner.grad().clone().unwrap().add_(grad_output[0]);
+        inner.grad().clone().unwrap().addt_(T::one(), grad_output);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)
@@ -554,11 +560,11 @@ impl<T: NumLimits> Variable<T> {
     }
 }
 
-impl<T: NumLimits> Index<isize> for Variable<T> {
+impl<T: NumLimits> Index<usize> for Variable<T> {
     type Output = T;
 
-    fn index(&self, idx: isize) -> &Self::Output {
-        unimplemented!()
+    fn index(&self, idx: usize) -> &Self::Output {
+        self.data_borrow().index(idx)
     }
 }
 
