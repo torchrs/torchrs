@@ -119,20 +119,22 @@ pub mod ExecutionEngine {
         let dependencies = _compute_dependencies(&grad_fn);
         while !ready.is_empty() {
             let (mut func, mut grad) = ready.pop_front().unwrap();
+            println!("doing func: {:?}", func);
             let grad_input = func._do_backward(&mut grad, retain_variables);
             for (&(ref prev_func_, ref arg_id), ref d_prev_func_) in
                 itertools::zip(func.previous_functions(), grad_input) {
                 if !prev_func_.requires_grad() {
+                    println!("prev_func doesn't require grad");
                     continue;
                 }
                 let d_prev_func = match *d_prev_func_ {
                     Some(ref f) => f,
-                    None => continue,
+                    None => { println!("d_prev_func is None"); continue},
                 };
                 let prev_func = match prev_func_ {
                     &RootKind::RootVar(ref v) => {
                         v.clone()._do_backward(&mut Some(d_prev_func.clone()));
-                        return;
+                        continue;
                     }
                     &RootKind::RootFunc(ref f) => f,
                 };
@@ -148,6 +150,8 @@ pub mod ExecutionEngine {
                     };
                     ready.push_front((prev_func.clone(), prev_grad))
                 } else {
+                    println!("skip ready!");
+
                     let mut prev_grad = if not_ready.contains_key(&prev_func.id) {
                         not_ready[&prev_func.id].clone()
                     } else {
