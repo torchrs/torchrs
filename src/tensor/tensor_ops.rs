@@ -384,8 +384,13 @@ impl<T: NumLimits> Tensor<T> {
     pub fn max(&self) -> T {
         unimplemented!()
     }
-    pub fn max_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
-        unimplemented!()
+    pub fn max_reduce(&self, dim: usize, keepdim: bool) -> (Self, Tensor<i64>) {
+        let mut dims = self.size();
+        dims[dim] = 1;
+        let values = self.new(()).resize_(&dims);
+        let indices : Tensor<i64> = ::torch::tensor(()).resize_(&dims);
+        self.value.borrow().max_reduce(values.inner(), indices.inner(), dim, keepdim);
+        (values, indices)
     }
     pub fn mean(&self) -> T {
         unimplemented!()
@@ -399,8 +404,13 @@ impl<T: NumLimits> Tensor<T> {
     pub fn min(&self) -> T {
         unimplemented!()
     }
-    pub fn min_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
-        unimplemented!()
+    pub fn min_reduce(&self, dim: usize, keepdim: bool) -> (Self, Tensor<i64>) {
+        let mut dims = self.size();
+        dims[dim] = 1;
+        let values = self.new(()).resize_(&dims);
+        let indices : Tensor<i64> = ::torch::tensor(()).resize_(&dims);
+        self.value.borrow().min_reduce(values.inner(), indices.inner(), dim, keepdim);
+        (values, indices)
     }
     pub fn mm(&self, rhs: &Self) -> Self {
         let out = self.new([self.size()[0], rhs.size()[1]]);
@@ -411,7 +421,7 @@ impl<T: NumLimits> Tensor<T> {
     // mode
     //
     pub fn mul(&self, rhs: T) -> Self {
-        let mut t = self.copy();
+        let t = self.copy();
         t.value.borrow_mut().mul(self.value.borrow().inner(), rhs);
         t
     }
@@ -424,7 +434,7 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn mult(&self, rhs: &Self) -> Self {
-        let mut t = self.copy();
+        let t = self.copy();
         t.value.borrow_mut().mult(self.inner(), rhs.inner());
         t
     }
