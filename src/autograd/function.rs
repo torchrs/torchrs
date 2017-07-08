@@ -32,6 +32,7 @@ pub struct FuncImpl {
     output_ids: HashMap<VarId, usize>,
     to_save: Vec<TensorId>,
     requires_grad: bool,
+    saved: bool,
     owner: Option<RcMut<FuncIntf>>,
 }
 impl Default for FuncImpl {
@@ -45,6 +46,7 @@ impl Default for FuncImpl {
             output_ids: HashMap::new(),
             to_save: Vec::new(),
             requires_grad: false,
+            saved: false,
             owner: None,
         }
     }
@@ -142,6 +144,7 @@ impl Function {
             .collect()
     }
     pub fn save_for_backward(&mut self, input: &TensorKindList) {
+        self.access().saved = true;
         self.access().to_save = input.iter().map(|t| t.id()).collect();
     }
     pub fn _do_backward(&mut self,
@@ -149,7 +152,7 @@ impl Function {
                         retain_variables: bool)
                         -> OptVarKindList {
         let inner = self.access();
-        if inner.saved_variables.is_empty() {
+        if  inner.saved  && inner.saved_variables.is_empty() {
             panic!("Trying to backward through the graph second \
                     time, but the buffers have already been freed. Please \
                     specify retain_variables=True when calling backward for \
