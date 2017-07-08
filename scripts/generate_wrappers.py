@@ -225,8 +225,6 @@ def build_header():
 	header += "#![allow(non_camel_case)]\n\n"
 	header += "use autograd::{Function, FuncIntf, FuncDelegate, FIWrap};\n"
 	header += "use tensor::{OptTensorKindList, TensorKindList, TensorKind, make_vec};\n"
-	header += "use itertools::repeat_call;\n"
-	header += "use nn::backends::backend::*;\n\n\n"
 	return header
 
 def build_forward(name, args):
@@ -272,7 +270,7 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 	bufferstr = "" 
 	for i, idx in enumerate(buffers_idx):
 		bufferstr += "\t\tself.saved_tensors.push(input.new(1));\n"
-		additional_args.insert(idx, "&mut self.saved_tensors[{}]".format(i))
+		additional_args.insert(idx, "&mut self.saved_tensors[{}].clone()".format(i))
 
 	def build_forward_class_criterion():
 		forward = "\t\tlet mut backend = input_list[0].backend();\n"
@@ -295,7 +293,7 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&mut input).zero_().clone();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
 		backward += ', '.join(arg for arg in additional_args) + ");\n"
-		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);"
+		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);\n"
 		backward += "\t\tlet mut grad_output_expanded = grad_output.view(dims.as_slice());\n"
 		backward += "\t\tlet mut grad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"		
 		backward += "\t\tgrad_input.mult_(&grad_output_expanded);\n"
@@ -346,7 +344,6 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		return -1, False
 	save_output = has_argument(update_grad_input, 'output')
 	needs_input = has_argument(update_grad_input, 'input')
-	indices_idx, needs_indices = has_argument_(update_output, 'indices')
 
 	param_args = {'weight', 'bias'}
 	ignored_args = {'weight', 'bias', 'gradWeight', 'gradBias', 'output'}
@@ -377,7 +374,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 			# freed right afterwards
 			print("name {}".format(name))
 			bufferstr += "\t\tself.saved_tensors.push(input.new(()));\n"
-			additional_args.insert(idx, "&mut self.saved_tensors[{}]".format(i))
+			additional_args.insert(idx, "&mut self.saved_tensors[{}].clone()".format(i))
 		if fn_name != 'update_output':
 			return bufferstr, additional_args
 		for i, (idx, param) in enumerate(expected_params):
@@ -393,7 +390,6 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		return bufferstr, additional_args
 
 	is_inplace = update_output.arguments[-1].name == 'inplace'
-
 
 	output_args = ["self.args.{}".format(arg.name) for arg in full_args if "Tensor" not in arg.type]
 	added_args = full_args
@@ -426,8 +422,10 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 			forward += "\t\t\tsave_list.push(output.clone());\n"
 
 		forward += "\t\tlet mut input = input_list.remove(0);\n"
+		indices_idx, needs_indices = has_argument_(update_output, 'indices')
 		if needs_indices:
 			forward += "\t\tlet mut indices = input_list.remove(0);\n"
+			forward += "\t\tsave_list.push(indices.clone());\n"
 			add_args.insert(indices_idx - 3, "&mut indices")
 		forward += buffers
 		forward += "\t\tbackend.{}(&mut input, &mut output, ".format(update_output.name)
@@ -463,8 +461,16 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 
 		backward += "\t\tif needs_input_grad[0] {\n"
 		backward += "\t\t\tlet mut grad_input = input.new(());\n"
+		indices_idx, needs_indices = has_argument_(update_grad_input, 'indices')
+		if needs_indices:
+			backward += "\t\t//indices_idx: {}\n".format(indices_idx)
+			backward += "\t\tlet mut indices = saved.remove(0);\n"
+			add_args.insert(indices_idx - 4, "&mut indices")
 		backward += "\t\t\tbackend.{}({}&mut grad_output, &mut grad_input".format(update_grad_input.name, input)
-		if "weight" in [arg.name for arg in update_grad_input.arguments]:
+		names = [arg.name for arg in update_grad_input.arguments]
+		if "weight" in names and "bias" in names:
+			backward += ", &mut saved[0].clone(), &mut saved[1].clone()"
+		elif "weight" in names or "bias" in names:
 			backward += ", &mut saved[0].clone()"
 		if save_output:
 			backward += ", &mut output"
@@ -497,8 +503,12 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		return backward
 
 	fn_class = ""
+	if len(args) >= len(grad_input_args):
+		builder_args = args
+	else:
+		builder_args = grad_input_args
 	if needs_args:
-		fn_class += build_args(class_name, args)
+		fn_class += build_args(class_name, builder_args)
 		fn_class += "impl_func_args!({}, {}Args);\n".format(class_name, class_name)
 	else:
 		fn_class += "impl_func!({});\n".format(class_name)
