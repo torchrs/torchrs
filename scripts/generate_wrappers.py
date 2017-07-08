@@ -134,7 +134,7 @@ def arg_cast_inner(name, argtype, type):
 	return usename
 
 def unwrap_option(arg):
-	out = "\t\tlet mut {} = if let &mut Some(ref t) = {}".format(arg.name, arg.name)
+	out = "\t\tlet {} = if let &mut Some(ref t) = {}".format(arg.name, arg.name)
 	out += " {t.inner()} else { ::std::ptr::null_mut()};\n"
 	return out
 
@@ -288,19 +288,18 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 		backward = "\t\tlet mut input_list = self.saved_tensors();\n"
 		backward += "\t\tlet (mut input, mut target) = (input_list[0].clone(), input_list[1].clone());\n"
 		backward += weightstr
-		backward += "\t\tlet mut grad_output = grad_output_list.remove(0).unwrap();\n"
+		backward += "\t\tlet grad_output = grad_output_list.remove(0).unwrap();\n"
 		backward += "\t\tlet mut backend = input.backend();\n"
 		backward += "\t\tlet mut grad_input = grad_output.new(()).resize_as_(&mut input).zero_().clone();\n"
 		backward += "\t\tbackend.{}(&mut input, &mut target, &mut grad_input, ".format(update_grad_input.name)
 		backward += ', '.join(arg for arg in additional_args) + ");\n"
 		backward += "\t\tlet dims = make_vec(1, grad_input.dim() as usize);\n"
-		backward += "\t\tlet mut grad_output_expanded = grad_output.view(dims.as_slice());\n"
-		backward += "\t\tlet mut grad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"		
+		backward += "\t\tlet grad_output_expanded = grad_output.view(dims.as_slice());\n"
+		backward += "\t\tlet grad_output_expanded = grad_output_expanded.expand_as(&grad_input);\n"
 		backward += "\t\tgrad_input.mult_(&grad_output_expanded);\n"
 		backward += "\t\tvec![Some(grad_input), None]"
 		return backward
 
-	fn_class = ""
 	args = [arg for arg in full_args if "Tensor" not in arg.type]
 	needs_args = len(args) >  0
 	if needs_args:
