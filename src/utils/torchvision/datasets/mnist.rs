@@ -209,7 +209,6 @@ impl<T: NumLimits> DatasetIntf for MNIST<T> {
         if self.train { 60000 } else { 10000 }
     }
     fn collate(&self, sample: Vec<usize>) -> Self::Batch {
-        println!("collate called len: {}", sample.len());
         let v: Vec<Sample<u8>> = sample.into_iter().map(|i| self.index(i)).collect();
         let labels: Vec<i64> = v.iter().map(|&(_, ref t)| *t).collect();
         let imgs: Vec<Tensor<u8>> = v.into_iter().map(|(d, _)| d).collect();
