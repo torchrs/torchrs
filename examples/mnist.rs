@@ -178,7 +178,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
                                  target.clone(),
                                  None,
                                  &F::NLLLossArgs::default());
-        let pred = output.data().max_reduce(1, false).1;
+        let pred = output.data().max_reduce(1, true).1;
         correct += pred.eq_tensor(&*target.data()).cpu().sum::<u32>();
     }
     test_loss /= test_loader.len() as f32;
