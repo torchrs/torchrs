@@ -303,10 +303,10 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
 	args = [arg for arg in full_args if "Tensor" not in arg.type]
 	needs_args = len(args) >  0
 	if needs_args:
-		fn_class += build_args(class_name, args)
+		fn_class = build_args(class_name, args)
 		fn_class += "impl_func_args!({}, {}Args);\n".format(class_name, class_name)
 	else:
-		fn_class += "impl_func!({});\n".format(class_name)
+		fn_class = "impl_func!({});\n".format(class_name)
 
 
 	fn_class += "impl FuncIntf for {} ".format(class_name) + " {\n"
@@ -483,7 +483,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 		# acc_grad_parameters()
 		if acc_grad_parameters:
 			backward += "\t\tif needs_input_grad[1..].iter().any(|t| *t) {\n"
-
+			backward += "\t\t\tunimplemented!();"
 			backward += "\t\t}\n"
 
 		backward += "\t\tlet result = vec![grad_input_result];\n"
