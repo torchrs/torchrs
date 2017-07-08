@@ -146,7 +146,6 @@ fn train(model: &mut Net<f32>,
         let mut loss = F::nll_loss(output, target, None, &F::NLLLossArgs::default());
         loss.backward();
         optimizer.step(model);
-        model.free_graph();
         if batch_idx % args.log_interval == 0 {
             println!("Train Epoch: {} [{}/{} ({:.0}%)]\tLoss: {:.6}",
                      epoch,
@@ -155,6 +154,7 @@ fn train(model: &mut Net<f32>,
                      100. * (batch_idx as f32) / train_loader.len() as f32,
                      loss.data()[0]);
         }
+        model.free_graph();
     }
 }
 
@@ -178,7 +178,7 @@ fn test(model: &mut Net<f32>, args: &NetArgs, test_loader: &D::BatchLoader<f32, 
                                  target.clone(),
                                  None,
                                  &F::NLLLossArgs::default());
-        let pred = output.data().max_reduce(1).1;
+        let pred = output.data().max_reduce(1, false).1;
         correct += pred.eq_tensor(&*target.data()).cpu().sum::<u32>();
     }
     test_loss /= test_loader.len() as f32;
