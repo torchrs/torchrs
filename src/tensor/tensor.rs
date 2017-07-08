@@ -365,6 +365,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn div(&mut self, src: *mut voidp, value: T);
     fn divt(&mut self, src: *mut voidp, value: *mut voidp);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
+    fn eq_tensor(&self, other: *mut voidp, out: *mut voidp);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
     fn get_storage(&self, data: &mut [T]);
     fn inner(&self) -> *mut voidp;
@@ -375,11 +376,13 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn mm(&mut self, mat1: *mut voidp, mat2: *mut voidp);
     fn mul(&mut self, src: *mut voidp, value: T);
     fn mult(&mut self, src: *mut voidp, value: *mut voidp);
+    fn prod(&self, result: &mut f64);
     fn resize(&mut self, dims: &[usize]);
     fn s(&self, dim: &[usize]) -> Tensor<T>;
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool);
+    fn sum(&self, result: &mut f64);
     fn squeeze(&mut self, dim: Option<usize>);
     fn unsqueeze(&mut self, dim: usize);
     fn transpose(&mut self, src: *mut voidp, dim0: usize, dim1: usize);
@@ -539,6 +542,11 @@ macro_rules! impl_tensor_impl {
                     value: *mut voidp) {
                 unimplemented!()
             }
+            fn eq_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                let outp = out as *mut THByteTensor;
+                let otherp = other as *mut $thname;
+                unsafe {concat_idents!($thname, _eqTensor)(outp, self.t, otherp) }
+            }
             fn expand(&self, dims: &[usize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
                 let size = LongStorage::with_data(dims_long.as_slice());
@@ -612,6 +620,11 @@ macro_rules! impl_tensor_impl {
             fn new(&self) -> Tensor<$type> {
                 Tensor { value: RcMutNew($name ::new()) }
             }
+            fn prod(&self, mut result: &mut f64) {
+                let val: $type;
+                let r = unsafe { concat_idents!($thname, _prodall)(self.t) };
+                *result = <f64 as num::NumCast>::from(r).unwrap();
+            }
             fn resize(&mut self, dims: &[usize]) {
                 let dims : Vec<i64> = dims.iter().map(|v| *v as i64).collect();
                 let dims = LongStorage::with_data(dims);
@@ -677,6 +690,11 @@ macro_rules! impl_tensor_impl {
                     let p = ::std::ptr::null_mut();
                     unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
                 }
+            }
+            fn sum(&self, mut result: &mut f64) {
+                let val: $type;
+                let r = unsafe { concat_idents!($thname, _sumall)(self.t) };
+                *result = <f64 as num::NumCast>::from(r).unwrap();
             }
             fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool) {
                 let input = input as *mut $thname;

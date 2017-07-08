@@ -174,7 +174,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn cpu(&self) -> Self {
-        unimplemented!()
+        self.clone()
     }
     pub fn cross(&self, dim: Option<i32>) -> Self {
         unimplemented!()
@@ -229,7 +229,9 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
-        unimplemented!()
+        let out : Tensor<u8> = ::torch::tensor(());
+        self.value.borrow().eq_tensor(other.inner(), out.inner());
+        out
     }
     pub fn eq_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
@@ -512,7 +514,9 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn prod<R: NumLimits>(&self) -> R {
-        unimplemented!()
+        let mut result = 0.;
+        self.value.borrow().prod(&mut result);
+        <R as ::num::NumCast>::from(result).unwrap()
     }
     //
     // pstrf
@@ -645,7 +649,9 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn sum<R: NumLimits>(&self) -> R {
-        unimplemented!()
+        let mut result = 0.;
+        self.value.borrow().prod(&mut result);
+        <R as ::num::NumCast>::from(result).unwrap()
     }
     pub fn sum_reduce(&self, dim: usize, keepdim: bool) -> Self {
         let mut dims = self.size();
