@@ -10,7 +10,6 @@ use serde::{Serialize, Deserialize, Serializer, Deserializer};
 use storage::*;
 use ::*;
 pub use tensor::tensor_ops::*;
-use rand;
 use RcMut;
 
 pub struct THVec<T> {
@@ -292,9 +291,8 @@ impl<T: NumLimits> Index<usize> for Tensor<T> {
 impl<T: NumLimits> Index<i32> for Tensor<T> {
     type Output = T;
     fn index(&self, idx: i32) -> &Self::Output {
-
-        //        self.value.borrow_mut().index(idx as isize)
-        unimplemented!()
+        let t = unsafe { &mut *self.value.as_ptr() };
+        t.index(idx as usize)
     }
 }
 
@@ -372,7 +370,9 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn inner(&self) -> *mut voidp;
     fn iter(&self) -> Box<Iterator<Item = T>>;
     fn len(&self) -> usize;
-    fn mm(&mut self, A: *mut voidp, B: *mut voidp);
+    fn max_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool);
+    fn min_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool);
+    fn mm(&mut self, mat1: *mut voidp, mat2: *mut voidp);
     fn mul(&mut self, src: *mut voidp, value: T);
     fn mult(&mut self, src: *mut voidp, value: *mut voidp);
     fn resize(&mut self, dims: &[usize]);
@@ -552,13 +552,13 @@ macro_rules! impl_tensor_impl {
                 let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
                 self.resize(size.as_slice());
                 let s = rt.storage.as_ptr() as *const voidp;
-                let mut d = (unsafe { ((*(*self.t).storage).data) }) as *mut voidp;
+                let d = (unsafe { ((*(*self.t).storage).data) }) as *mut voidp;
                 unsafe {memcpy(d, s, rt.storage.len()) };
             }
             fn get_storage(&self, data: &mut [$type]) {
                 /* XXX presupposes contiguity */
                 let offset = self.storage_offset() as isize;
-                let s = (unsafe {(*(*self.t).storage).data.offset(offset)});
+                let s = unsafe {(*(*self.t).storage).data.offset(offset)};
                 let s = s as *const voidp;
                 let d = data.as_mut_ptr() as *mut voidp;
                 unsafe {memcpy(d, s, data.len()) };
@@ -572,11 +572,35 @@ macro_rules! impl_tensor_impl {
             fn len(&self) -> usize {
                 self.len()
             }
-            fn mm(&mut self, A: *mut voidp, B: *mut voidp) {
-                unimplemented!()
+            fn max_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool) {
+                let valuesp = values as *mut $thname;
+                let indicesp = values as *mut THLongTensor;
+                let dim = dim as i32;
+                let keep = keepdim as i32;
+                unsafe { concat_idents!($thname, _max)(valuesp, indicesp, self.t, dim, keep) }
+            }
+            fn min_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool) {
+                let valuesp = values as *mut $thname;
+                let indicesp = values as *mut THLongTensor;
+                let dim = dim as i32;
+                let keep = keepdim as i32;
+                assert!(dim < self.dim());
+                unsafe { concat_idents!($thname, _min)(valuesp, indicesp, self.t, dim, keep) }
+            }
+            fn mm(&mut self, mat1: *mut voidp, mat2: *mut voidp) {
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addmm)(self.t,
+                                                    0 as $type,
+                                                    self.t,
+                                                    1 as $type,
+                                                    mat1p,
+                                                    mat2p)
+                };
             }
             fn mul(&mut self, src: *mut voidp, value: $type) {
-                unimplemented!()
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _mul)(self.t, srcp, value)};
             }
             fn mult(&mut self,
                     src: *mut voidp,
@@ -655,7 +679,8 @@ macro_rules! impl_tensor_impl {
                 }
             }
             fn sum_reduce(&mut self, input: *mut voidp, dim: usize, keepdim: bool) {
-                unimplemented!()
+                let input = input as *mut $thname;
+                unsafe  { concat_idents!($thname, _sum)(self.t, input, dim as i32, keepdim as i32)};
             }
             fn transpose(&mut self, src: *mut voidp, dim0: usize, dim1: usize){
                 let (dim0, dim1) = (dim0 as i32, dim1 as i32);
@@ -744,12 +769,13 @@ macro_rules! impl_tensor_impl {
         impl Index<usize> for $name {
             type Output = $type;
             fn index(&self, idx: usize) -> &Self::Output {
-                let dims = self.size();
-                if dims.len() != 1 {
-                    panic!("bad index size")
+                let dims = self.dim();
+                if dims != 1 {
+                    panic!("bad index size 1D index an {}D dims: {:?}", dims, self.size())
                 };
-                if dims[0] <= idx {
-                    panic!("idx {} out of range", idx)
+                let size = self.size();
+                if size[0] <= idx {
+                    panic!("idx {} out of range {}", idx, size[0])
                 };
                 unsafe_index!(self, idx)
             }
@@ -783,14 +809,14 @@ pub fn THByteTensor_uniform(self_: *mut THByteTensor,
                             _generator: *mut THGenerator,
                             a: f64,
                             b: f64) {
-    unimplemented!()
+    panic!("no such function")
 }
 #[allow(non_snake_case, unused_variables)]
 pub fn THLongTensor_uniform(self_: *mut THLongTensor,
                             _generator: *mut THGenerator,
                             a: f64,
                             b: f64) {
-    unimplemented!()
+    panic!("no such function")
 }
 
 
