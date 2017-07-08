@@ -17,7 +17,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn add(&self, rhs: T) -> Self {
-        let mut t = self.copy();
+        let t = self.copy();
         t.value
             .borrow_mut()
             .add(self.value.borrow_mut().inner(), rhs);
@@ -32,7 +32,7 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
-        let mut t = self.copy();
+        let t = self.copy();
         t.value.borrow_mut().addt(self.inner(), rhs.inner());
         t
     }
@@ -63,7 +63,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
-        let mut t = self.new(()).resize_as_(self);
+        let t = self.new(()).resize_as_(self);
         t.value
             .borrow_mut()
             .addmm(self.inner(), beta, alpha, mat1.inner(), mat2.inner());
@@ -195,7 +195,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn div(&self, value: T) -> Self {
-        let mut t = self.copy();
+        let t = self.copy();
         t.value
             .borrow_mut()
             .div(self.value.borrow_mut().inner(), value);
