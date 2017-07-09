@@ -109,11 +109,18 @@ impl FuncIntf for MaxPool2d {
         let mut grad_input = grad_output.new(());
         let mut backend = input.backend();
         let p = &self.args;
-        backend.SpatialDilatedMaxPooling_updateGradInput(&mut input, &mut grad_output, &mut grad_input, &mut indices,
-                                                         p.kernel_size[1], p.kernel_size[0],
-                                                         p.stride[1], p.stride[0],
-                                                         p.padding[1], p.padding[0],
-                                                         p.dilation[1], p.dilation[0],
+        backend.SpatialDilatedMaxPooling_updateGradInput(&mut input,
+                                                         &mut grad_output,
+                                                         &mut grad_input,
+                                                         &mut indices,
+                                                         p.kernel_size[1],
+                                                         p.kernel_size[0],
+                                                         p.stride[1],
+                                                         p.stride[0],
+                                                         p.padding[1],
+                                                         p.padding[0],
+                                                         p.dilation[1],
+                                                         p.dilation[0],
                                                          p.ceil_mode);
         vec![Some(grad_input)]
     }

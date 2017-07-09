@@ -255,7 +255,7 @@ pub struct Tensor<T: NumLimits> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 
-impl<T:NumLimits> fmt::Debug for Tensor<T> {
+impl<T: NumLimits> fmt::Debug for Tensor<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Tensor ")
     }
