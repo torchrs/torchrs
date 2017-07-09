@@ -600,8 +600,47 @@ impl FuncIntf for ConvNd {
         assert_eq!(self.args.groups, 1);
         self.conv_forward_apply(input)
     }
-    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
+    fn backward(&mut self, mut grad_output_list: &mut OptTensorKindList) -> OptTensorKindList {
+        println!("ConvNd backward");
         // run native code here
-        unimplemented!()
+        let needs_input_grad = self.needs_input_grad().clone();
+        let mut saved = self.saved_tensors();
+        let mut grad_output = grad_output_list.remove(0).unwrap();
+        let (mut input, mut weight) = (saved.remove(0), saved.remove(0));
+        let mut bias = if saved.len() > 0 {
+            Some(saved.remove(0))
+        } else {
+            None
+        };
+        // XXX no cudnn yet
+        let mut backend = input.backend();
+        let (mut ones, mut columns) = (self.saved_tensors.remove(0), self.saved_tensors.remove(0));
+
+        let mut output = Vec::new();
+        if needs_input_grad[0] {
+            let grad_input = compute_grad_input(&mut input,
+                                                &mut grad_output,
+                                                &mut weight,
+                                                &mut columns,
+                                                &mut ones,
+                                                &self.args);
+            output.push(Some(grad_input));
+        }
+        if needs_input_grad[1..].iter().any(|t| *t) {
+            let (grad_weight, grad_bias) = compute_grad_params(&mut input,
+                                                               &mut grad_output,
+                                                               &mut weight,
+                                                               &mut bias,
+                                                               &mut columns,
+                                                               &mut ones,
+                                                               &self.args);
+            output.push(Some(grad_weight));
+            if let Some(_) = grad_bias {
+                if needs_input_grad[2] {
+                    output.push(grad_bias);
+                }
+            }
+        }
+        output
     }
 }
