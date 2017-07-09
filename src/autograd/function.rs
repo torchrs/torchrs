@@ -66,6 +66,14 @@ pub struct Function {
     pub id: FuncId,
 }
 
+pub fn func_table_reset() {
+    FUNC_TABLE.with(|f| {
+                       let mut table = f.borrow_mut();
+                       table.truncate(0);
+                   });
+
+}
+
 impl Default for Function {
     fn default() -> Self {
         Function { id: -1 }
@@ -152,7 +160,7 @@ impl Function {
                         retain_variables: bool)
                         -> OptVarKindList {
         let inner = self.access();
-        if  inner.saved  && inner.saved_variables.is_empty() {
+        if inner.saved && inner.saved_variables.is_empty() {
             panic!("Trying to backward through the graph second \
                     time, but the buffers have already been freed. Please \
                     specify retain_variables=True when calling backward for \

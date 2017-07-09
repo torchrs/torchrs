@@ -101,6 +101,7 @@ pub trait ModIntf<T: NumLimits>: ModDelegate<T> + GetFieldStruct<T> {
     fn free_graph(&mut self) {
         self.free_grad();
         ::autograd::var_table_reset(self.max_id());
+        ::autograd::func_table_reset();
     }
     fn apply_parameters(&mut self, func: &mut FnMut(&mut Variable<T>)) {
         let mod_names = self.delegate()._modules.clone();
