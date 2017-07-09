@@ -1,4 +1,5 @@
-use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList, Variable, VariableArgs, VarKind};
+use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList, Variable, VariableArgs,
+               VarKind};
 use tensor::{TensorKindList, OptTensorKindList};
 
 pub struct Threshold {
@@ -50,7 +51,7 @@ impl FuncIntf for Threshold {
         vec![output]
     }
     fn backward(&mut self, grad_output_list: &mut OptTensorKindList) -> OptTensorKindList {
-        let mut grad_output  = grad_output_list.remove(0).unwrap();
+        let mut grad_output = grad_output_list.remove(0).unwrap();
         let mut input = self.saved_tensors.remove(0);
         let needs_input_grad = self.needs_input_grad().clone();
 
@@ -58,14 +59,12 @@ impl FuncIntf for Threshold {
         let grad_input = if needs_input_grad[0] {
             let mut grad_input = input.new(());
             let mut backend = input.backend();
-            backend.Threshold_updateGradInput(
-                &mut input,
-                &mut grad_output,
-                &mut grad_input,
-                self.threshold,
-                self.value,
-                false
-            );
+            backend.Threshold_updateGradInput(&mut input,
+                                              &mut grad_output,
+                                              &mut grad_input,
+                                              self.threshold,
+                                              self.value,
+                                              false);
             Some(grad_input)
         } else {
             None
