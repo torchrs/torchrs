@@ -13,14 +13,18 @@ use ::*;
 pub use tensor::tensor_ops::*;
 use RcMut;
 
-pub struct THVec<T> {
+#[derive(Clone, Debug)]
+pub struct THVec<T: NumLimits> {
     pub data: Vec<T>,
     pub dims: Vec<usize>,
 }
+
+#[derive(Clone, Debug)]
 pub struct THVecGeneric {
     pub data: Vec<i64>,
     pub dims: Vec<usize>,
 }
+#[derive(Clone, Debug)]
 pub struct THDims {
     pub dims: Vec<usize>,
 }
@@ -36,7 +40,7 @@ pub enum TensorType {
 }
 
 pub trait NumLimits
-    : Copy + Default + ::num::Num + ::num::NumCast + serde::Serialize {
+    : Copy + Default + fmt::Debug + ::num::Num + ::num::NumCast + serde::Serialize {
 }
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
@@ -704,9 +708,10 @@ macro_rules! impl_tensor_impl {
             }
             fn set_storage(&mut self, v: &[$type]) {
                 let storage_offset = self.storage_offset();
-                assert_eq!(v.len(), self.len());
                 let mut s = self.storage();
-                for i in 0..self.len() {
+                assert_eq!(v.len(), s.len());
+                // XXX memcpy
+                for i in 0..s.len() {
                     s[(storage_offset + i)] = v[i]
                 }
             }
