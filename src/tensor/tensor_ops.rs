@@ -229,7 +229,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().eq_tensor(other.inner(), out.inner());
         out
     }
@@ -278,7 +278,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn ge_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().ge_tensor(other.inner(), out.inner());
         out
     }
@@ -289,7 +289,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!();
     }
     pub fn gt_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().gt_tensor(other.inner(), out.inner());
         out
     }
@@ -343,7 +343,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn le_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().le_tensor(other.inner(), out.inner());
         out
     }
@@ -351,7 +351,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn le_value(&self, value: T) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().le_value(value, out.inner());
         out
     }
@@ -380,7 +380,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().lt_tensor(other.inner(), out.inner());
         out
     }
@@ -388,7 +388,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn lt_value(&self, value: T) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().lt_value(value, out.inner());
         out
     }
@@ -416,8 +416,10 @@ impl<T: NumLimits> Tensor<T> {
         let mut dims = self.size();
         dims[dim] = 1;
         let values = self.new(()).resize_(&dims);
-        let indices : Tensor<i64> = ::torch::tensor(()).resize_(&dims);
-        self.value.borrow().max_reduce(values.inner(), indices.inner(), dim, keepdim);
+        let indices: Tensor<i64> = ::torch::tensor(()).resize_(&dims);
+        self.value
+            .borrow()
+            .max_reduce(values.inner(), indices.inner(), dim, keepdim);
         (values, indices)
     }
     pub fn mean(&self) -> T {
@@ -436,8 +438,10 @@ impl<T: NumLimits> Tensor<T> {
         let mut dims = self.size();
         dims[dim] = 1;
         let values = self.new(()).resize_(&dims);
-        let indices : Tensor<i64> = ::torch::tensor(()).resize_(&dims);
-        self.value.borrow().min_reduce(values.inner(), indices.inner(), dim, keepdim);
+        let indices: Tensor<i64> = ::torch::tensor(()).resize_(&dims);
+        self.value
+            .borrow()
+            .min_reduce(values.inner(), indices.inner(), dim, keepdim);
         (values, indices)
     }
     pub fn mm(&self, rhs: &Self) -> Self {
@@ -487,7 +491,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn ne_tensor(&self, other: &Self) -> Tensor<u8> {
-        let out : Tensor<u8> = ::torch::tensor(());
+        let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().ne_tensor(other.inner(), out.inner());
         out
     }
