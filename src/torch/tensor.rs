@@ -262,5 +262,10 @@ pub fn tensor<S, T>(arg: S) -> Tensor<T>
           S: Into<THVec<T>>
 {
     let t: THVec<T> = arg.into();
-    Tensor::tensor_new(t.into())
+    let dims = t.dims.clone().into();
+    let mut out = Tensor::tensor_new(dims);
+    if t.data.len() > 0 {
+        out.set_storage(t.data);
+    }
+    out
 }
