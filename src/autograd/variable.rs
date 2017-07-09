@@ -30,7 +30,7 @@ pub enum VarKindImpl {
 pub fn var_table_reset(max: VarId) {
     VAR_TABLE.with(|f| {
                        let mut table = f.borrow_mut();
-                       table.truncate((max + 2) as usize);
+                       table.truncate((max + 1) as usize);
                    });
 
 }
@@ -543,9 +543,15 @@ impl<T: NumLimits> Variable<T> {
         let inner = self.access();
         assert_eq!(inner.dirty, false);
         inner._call_hooks(grad_output.data_borrow());
-        // in place operations consume their input
-        // grad returns a borrowed reference
-        inner.grad().clone().unwrap().addt_(T::one(), grad_output);
+        let mut optgrad = &mut inner.grad;
+        let mut grad = if let &mut Some(ref grad) = optgrad {
+            grad.clone()
+        } else {
+            let tensor = inner.data.new(()).resize_as_(&inner.data).zero_().clone();
+            Variable::new(tensor)
+        };
+        grad.addt_(T::one(), grad_output);
+        *optgrad = Some(grad);
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)

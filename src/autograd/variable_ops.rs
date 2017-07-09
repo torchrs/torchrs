@@ -31,8 +31,8 @@ impl<T: NumLimits> Variable<T> {
         v.data().clone().addt_(val, rhs.data_borrow());
         v
     }
-    pub fn addt_(self, val: T, rhs: &Self) -> Self {
-        self.data_borrow().clone().addt_(val, rhs.data_borrow());
+    pub fn addt_(&mut self, val: T, rhs: &Self) -> &mut Self {
+        self.data().addt_(val, &rhs.data_borrow());
         self
     }
     pub fn addbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
@@ -716,7 +716,7 @@ impl VarKind {
         v
     }
     pub fn addt_<T: NumLimits>(&mut self, val: T, rhs: &Self) -> &mut Self {
-        //self.data_borrow().clone().addt_(val, rhs.data_borrow());
+        self.data_borrow().addt_(val, &rhs.data_borrow());
         self
     }
     pub fn addbmm<T: NumLimits>(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
