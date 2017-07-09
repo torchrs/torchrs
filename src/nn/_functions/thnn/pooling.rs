@@ -97,7 +97,24 @@ impl FuncIntf for MaxPool2d {
         };
         v
     }
-    fn backward(&mut self, mut input: &mut OptTensorKindList) -> OptTensorKindList {
-        unimplemented!()
+    fn backward(&mut self, grad_output_list: &mut OptTensorKindList) -> OptTensorKindList {
+        println!("MaxPool2d backward");
+        let mut saved_tensors = self.saved_tensors();
+        let mut grad_output = grad_output_list.remove(0).unwrap();
+        let (mut input, mut indices) = if self.args.return_indices {
+            (saved_tensors.remove(0), saved_tensors.remove(0))
+        } else {
+            (saved_tensors.remove(0), self.saved_tensors.remove(0))
+        };
+        let mut grad_input = grad_output.new(());
+        let mut backend = input.backend();
+        let p = &self.args;
+        backend.SpatialDilatedMaxPooling_updateGradInput(&mut input, &mut grad_output, &mut grad_input, &mut indices,
+                                                         p.kernel_size[1], p.kernel_size[0],
+                                                         p.stride[1], p.stride[0],
+                                                         p.padding[1], p.padding[0],
+                                                         p.dilation[1], p.dilation[0],
+                                                         p.ceil_mode);
+        vec![Some(grad_input)]
     }
 }
