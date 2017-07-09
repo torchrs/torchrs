@@ -1,7 +1,7 @@
 use tensor::{Tensor, TensorKind, NumLimits};
 use autograd::VarKind;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TRVal {
     Bool(bool),
     Int(i32),
@@ -84,7 +84,7 @@ impl From<TRVal> for Vec<isize> {
     fn from(input: TRVal) -> Self {
         match input {
             self::TRVal::ViewDims(x) => x.clone(),
-            _ => unimplemented!(),
+            _ => {println!("{:?}", input); unimplemented!()},
         }
     }
 }

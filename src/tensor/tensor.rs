@@ -4,6 +4,7 @@ use rutorch::*;
 use std::ops::{Index, IndexMut};
 use std::convert::From;
 use std::cmp::max;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
@@ -44,7 +45,7 @@ impl NumLimits for u32 {}
 impl NumLimits for i64 {}
 impl NumLimits for u8 {}
 
-#[derive(Hash, Serialize, Deserialize)]
+#[derive(Hash, Serialize, Deserialize, Debug)]
 pub enum TensorKind {
     FloatTensor(Tensor<f32>),
     LongTensor(Tensor<i64>),
@@ -254,6 +255,13 @@ pub struct Tensor<T: NumLimits> {
     pub value: RcMut<TensorImpl<T, Output = T>>,
 }
 
+impl<T:NumLimits> fmt::Debug for Tensor<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Tensor ")
+    }
+}
+
+
 impl<T: NumLimits> Serialize for Tensor<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -367,15 +375,22 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> {
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn eq_tensor(&self, other: *mut voidp, out: *mut voidp);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
+    fn ge_tensor(&self, other: *mut voidp, out: *mut voidp);
     fn get_storage(&self, data: &mut [T]);
+    fn gt_tensor(&self, other: *mut voidp, out: *mut voidp);
     fn inner(&self) -> *mut voidp;
     fn iter(&self) -> Box<Iterator<Item = T>>;
+    fn le_tensor(&self, other: *mut voidp, out: *mut voidp);
+    fn le_value(&self, value: T, out: *mut voidp);
     fn len(&self) -> usize;
+    fn lt_tensor(&self, other: *mut voidp, out: *mut voidp);
+    fn lt_value(&self, value: T, out: *mut voidp);
     fn max_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool);
     fn min_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool);
     fn mm(&mut self, mat1: *mut voidp, mat2: *mut voidp);
     fn mul(&mut self, src: *mut voidp, value: T);
     fn mult(&mut self, src: *mut voidp, value: *mut voidp);
+    fn ne_tensor(&self, other: *mut voidp, out: *mut voidp);
     fn prod(&self, result: &mut f64);
     fn resize(&mut self, dims: &[usize]);
     fn s(&self, dim: &[usize]) -> Tensor<T>;
@@ -563,6 +578,9 @@ macro_rules! impl_tensor_impl {
                 let d = (unsafe { ((*(*self.t).storage).data) }) as *mut voidp;
                 unsafe {memcpy(d, s, rt.storage.len()) };
             }
+            fn ge_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                unimplemented!()
+            }
             fn get_storage(&self, data: &mut [$type]) {
                 /* XXX presupposes contiguity */
                 let offset = self.storage_offset() as isize;
@@ -571,14 +589,29 @@ macro_rules! impl_tensor_impl {
                 let d = data.as_mut_ptr() as *mut voidp;
                 unsafe {memcpy(d, s, data.len()) };
             }
+            fn gt_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                unimplemented!()
+            }
             fn inner(&self) -> *mut voidp {
                 self.t as *mut voidp
             }
             fn iter(&self) -> Box<Iterator<Item=$type>> {
                 unimplemented!()
             }
+            fn le_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                unimplemented!()
+            }
+            fn le_value(&self, value: $type, out: *mut voidp) {
+                unimplemented!()
+            }
             fn len(&self) -> usize {
                 self.len()
+            }
+            fn lt_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                unimplemented!()
+            }
+            fn lt_value(&self, value: $type, out: *mut voidp) {
+                unimplemented!()
             }
             fn max_reduce(&self, values: *mut voidp, indices: *mut voidp, dim: usize, keepdim: bool) {
                 let valuesp = values as *mut $thname;
@@ -616,6 +649,9 @@ macro_rules! impl_tensor_impl {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
                 unsafe { concat_idents!($thname, _cmul)(self.t, valuep, srcp)};
+            }
+            fn ne_tensor(&self, other: *mut voidp, out: *mut voidp) {
+                unimplemented!()
             }
             fn new(&self) -> Tensor<$type> {
                 Tensor { value: RcMutNew($name ::new()) }

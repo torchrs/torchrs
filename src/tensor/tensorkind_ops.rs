@@ -290,7 +290,8 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn contiguous(&self) -> Self {
-        unimplemented!()
+        println!("XXX implement contiguous");
+        self.clone()
     }
     // perform deep copy
     pub fn copy(&self) -> Self {
@@ -474,6 +475,9 @@ impl TensorKind {
     pub fn le_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
     }
+    pub fn le_value<T: NumLimits>(&self, value: T) -> Tensor<u8> {
+        impl_tk_dispatch_self_value!(self, t, value, t.le_value(value))
+    }
     pub fn lerp(&self, start: &Self, end: &Self, weight: f32) -> Self {
         unimplemented!()
     }
@@ -509,6 +513,13 @@ impl TensorKind {
     //
     pub fn masked_copy_(&mut self, mask: Tensor<u8>, source: &Self) -> &mut Self {
         unimplemented!()
+    }
+    pub fn masked_fill_<T: NumLimits>(&mut self, mask: Tensor<u8>, value: T) -> &mut Self {
+        impl_tk_dispatch_self_mut_value!(self, t, value, t.masked_fill_(mask, value));
+        self
+    }
+    pub fn masked_fill<T: NumLimits>(&self, mask: Tensor<u8>, value: T) -> Self {
+        impl_tk_dispatch_self_value!(self, t, value, t.masked_fill(mask, value).into())
     }
     pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
         unimplemented!()
