@@ -1,8 +1,9 @@
-use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList};
+use autograd::{Function, FuncIntf, FuncDelegate, FIWrap, OptVarKindList, Variable, VariableArgs, VarKind};
 use tensor::{TensorKindList, OptTensorKindList};
 
 pub struct Threshold {
     delegate: Function,
+    saved_tensors: Vec<::tensor::TensorKind>,
     threshold: f64,
     value: f64,
     inplace: bool,
@@ -19,6 +20,7 @@ impl Threshold {
 
         FIWrap::new(Threshold {
                         delegate: Function::new(),
+                        saved_tensors: Vec::new(),
                         threshold: threshold,
                         value: value,
                         inplace: inplace,
@@ -39,7 +41,7 @@ impl FuncIntf for Threshold {
             input.new(()).resize_as_(&input)
         };
         // XXX check if training
-        self.save_for_backward(&vec![input.clone()]);
+        self.saved_tensors.push(input.clone());
         backend.Threshold_updateOutput(&mut input,
                                        &mut output,
                                        self.threshold,
@@ -47,11 +49,27 @@ impl FuncIntf for Threshold {
                                        self.inplace);
         vec![output]
     }
-    fn backward(&mut self, input: &mut OptTensorKindList) -> OptTensorKindList {
-        /* Why are they doing backprop on a volatile variable? */
-        unimplemented!()
-    }
-    fn backward_var(&mut self, input: &mut OptVarKindList) -> OptVarKindList {
-        unimplemented!()
+    fn backward(&mut self, grad_output_list: &mut OptTensorKindList) -> OptTensorKindList {
+        let mut grad_output  = grad_output_list.remove(0).unwrap();
+        let mut input = self.saved_tensors.remove(0);
+        let needs_input_grad = self.needs_input_grad().clone();
+
+        println!("Threshold backward");
+        let grad_input = if needs_input_grad[0] {
+            let mut grad_input = input.new(());
+            let mut backend = input.backend();
+            backend.Threshold_updateGradInput(
+                &mut input,
+                &mut grad_output,
+                &mut grad_input,
+                self.threshold,
+                self.value,
+                false
+            );
+            Some(grad_input)
+        } else {
+            None
+        };
+        vec![grad_input, None, None, None]
     }
 }
