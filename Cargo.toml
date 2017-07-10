@@ -22,7 +22,8 @@ clap = "2.24"
 # serialization support
 serde = "^1.0"
 serde_derive = "^1.0"
-rmp-serde = "^0.13"
+#rmp-serde = "^0.13"
+rmp-serde = { git = "https://github.com/torchrs/msgpack-rust.git"}
 rmp= "^0.8"
 
 # get rid of obnoxous deprecation warning
