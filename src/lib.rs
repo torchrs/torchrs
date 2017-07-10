@@ -29,7 +29,6 @@ extern crate serde;
 #[macro_use]
 pub mod macros;
 
-
 pub mod nn;
 pub mod autograd;
 pub mod optim;
@@ -37,6 +36,10 @@ pub mod utils;
 pub mod tensor;
 pub mod storage;
 pub mod torch;
+
+#[cfg(test)]
+pub mod test;
+
 use std::rc::Rc;
 use std::cell::RefCell;
 
