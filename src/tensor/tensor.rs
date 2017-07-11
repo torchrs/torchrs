@@ -107,10 +107,9 @@ impl TensorKind {
             _ => panic!("no corresponding backend"),
         }
     }
-    pub fn len(&self) -> usize {
-        unimplemented!()
-    }
-    pub fn s(&self, dim: usize) -> Self {
+    pub fn s<D>(&self, dim: D) -> Self
+        where D: AsRef<[isize]>
+    {
         unimplemented!()
     }
 }
@@ -349,9 +348,8 @@ impl<T: NumLimits> Tensor<T> {
             ::torch::tensor(args)
         }
     }
-    /* XXX handle non-contiguous case */
     pub fn s<D>(&self, dim: D) -> Self
-        where D: AsRef<[usize]>
+        where D: AsRef<[isize]>
     {
         self.value.borrow().s(dim.as_ref())
     }
@@ -411,7 +409,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn ne_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn prod(&self, result: &mut f64);
     fn resize(&mut self, dims: &[usize]);
-    fn s(&self, dim: &[usize]) -> Tensor<T>;
+    fn s(&self, dim: &[isize]) -> Tensor<T>;
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn sum_reduce(&mut self, input: *mut c_void, dim: usize, keepdim: bool);
@@ -692,35 +690,22 @@ macro_rules! impl_tensor_impl {
                                                             (*self.t).nDimension as usize)};
                 d.to_vec()
             }
-            fn s(&self, dim: &[usize]) -> Tensor<$type> {
-                let mut increment : usize = self.size().iter().product();
+            fn s(&self, dims: &[isize]) -> Tensor<$type> {
                 let sizes = self.size();
-                if sizes.len() < dim.len() {
-                    panic!("bad slice index {:?}", dim);
+                if sizes.len() < dims.len() {
+                    panic!("bad slice index {:?}", dims);
                 }
-               /* calculate new storage offset and validate */
-                for i in 0..dim.len() {
-                    if dim[i] >= sizes[i] {
-                        panic!("{} out of range {:?}", dim[i], sizes[i]);
+                for i in 0..dims.len() {
+                    if dims[i] as usize >= sizes[i] || dims[i] < -1 {
+                        panic!("{} out of range {:?}", dims[i], sizes[i]);
                     }
                 }
-                let mut offset = 0;
-                let mut new_dims = sizes.clone();
-                for i in 0..dim.len() {
-                    increment /= sizes[i];
-                    offset += dim[i] * increment;
-                    new_dims.remove(0);
+                let mut ptr: *mut $thname = self.t;
+                for (i, dim) in dims.iter().enumerate() {
+                    if *dim == -1 { continue }
+                    ptr = unsafe {concat_idents!($thname, _newSelect)(ptr, i as i32, *dim as i64)  };
                 }
-                let dims_long : Vec<i64> = new_dims.iter().map(|t| *t as i64).collect();
-                let sizes = LongStorage::with_data(dims_long.as_slice());
-                let storage = self.storage();
-                let t = unsafe {
-                    concat_idents!($thname, _newWithStorage)(storage.t,
-                                                             offset as isize,
-                                                             sizes.t,
-                                                             std::ptr::null_mut())
-                };
-                let t = $name :: from_parts(t);
+                let t = $name :: from_parts(ptr);
                 Tensor { value: RcMutNew(t) }
             }
             fn set_storage(&mut self, v: &[$type]) {
