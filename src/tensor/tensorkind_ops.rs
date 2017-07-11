@@ -29,18 +29,6 @@ macro_rules! impl_tk_dispatch_self_mut {
         }
     )}
 }
-macro_rules! impl_tk_dispatch_self {
-    ($key:ident, $var:ident, $action:expr ) => {(
-        {
-        match * $key {
-            TensorKind::FloatTensor(ref mut $var) => {$action;} ,
-            TensorKind::LongTensor(ref mut $var) => {$action;} ,
-            TensorKind::ByteTensor(ref mut $var) => {$action;} ,
-        };
-        $key
-        }
-    )}
-}
 
 macro_rules! impl_tk_dispatch_self_mut_value {
     ($key:ident, $var:ident, $value:ident, $action:expr) => {(
@@ -761,7 +749,7 @@ impl TensorKind {
         unimplemented!()
     }
     pub fn sum<T: NumLimits>(&self) -> T {
-        unimplemented!()
+        impl_tk_dispatch_self_ref_other!(self, t, t.sum())
     }
     pub fn sum_reduce(&self, dim: usize, keepdim: bool) -> Self {
         impl_tk_dispatch_self_ref!(self, t, t.sum_reduce(dim, keepdim).into())
@@ -846,6 +834,9 @@ impl TensorKind {
     pub fn unsqueeze_(&mut self, dim: usize) -> &mut Self {
         impl_tk_dispatch_self_mut!(self, t, {t.unsqueeze(dim);});
         self
+    }
+    pub fn validate(&self, arg: &str) {
+        impl_tk_dispatch_self_ref_other!(self, t, {t.validate(arg);});
     }
     pub fn var<T: NumLimits>(&self) -> T {
         unimplemented!()
