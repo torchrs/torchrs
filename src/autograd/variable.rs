@@ -32,10 +32,10 @@ pub fn var_table_reset(max: VarId) {
                        let mut table = f.borrow_mut();
                        table.truncate((max + 1) as usize);
                    });
-
 }
 
 impl<T: NumLimits> From<VarKindImpl> for VariableImpl<T> {
+    #[allow(unused_variables)]
     default fn from(input: VarKindImpl) -> Self {
         unreachable!()
     }
@@ -60,6 +60,7 @@ impl From<VarKindImpl> for VariableImpl<i64> {
 }
 
 impl<T: NumLimits> From<VariableImpl<T>> for VarKindImpl {
+    #[allow(unused_variables)]
     default fn from(input: VariableImpl<T>) -> Self {
         unreachable!()
     }
@@ -76,6 +77,7 @@ impl From<VariableImpl<i64>> for VarKindImpl {
 }
 
 impl<T: NumLimits> From<Variable<T>> for VarKind {
+    #[allow(unused_variables)]
     default fn from(input: Variable<T>) -> Self {
         panic!("bad cast")
     }
@@ -127,6 +129,7 @@ impl From<VarId> for VarKind {
 }
 
 impl<T: NumLimits> From<VarKind> for Variable<T> {
+    #[allow(unused_variables)]
     default fn from(input: VarKind) -> Self {
         panic!("bad cast");
     }
@@ -150,6 +153,7 @@ impl From<VarKind> for Variable<i64> {
     }
 }
 impl<'a, T: 'a + NumLimits> From<&'a VarKind> for &'a Variable<T> {
+    #[allow(unused_variables)]
     default fn from(input: &'a VarKind) -> Self {
         panic!("bad cast");
     }
@@ -203,6 +207,7 @@ impl<T: NumLimits> VarAccess<T> for Variable<T> {
     default fn borrow(&self) -> &VariableImpl<T> {
         panic!("unsupported Tensor type")
     }
+    #[allow(unused_variables)]
     default fn new_args(data: Tensor<T>, args: &VariableArgs) -> Self {
         panic!("unsupported Tensor type")
     }
@@ -563,6 +568,10 @@ impl<T: NumLimits> Variable<T> {
     // return a new variable detached from graph
     pub fn detach(&self) -> Variable<T> {
         unimplemented!()
+    }
+    pub fn validate(&self) {
+        let data = self.data_borrow();
+        data.validate("variable validate: ");
     }
 }
 
