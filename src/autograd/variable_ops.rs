@@ -422,8 +422,8 @@ impl<T: NumLimits> Variable<T> {
     //
     // normal_
     //
-    pub fn numel(&self) -> i32 {
-        unimplemented!()
+    pub fn numel(&self) -> usize {
+        self.data_borrow().numel()
     }
     //
     // numpy() (need native tensor equivalent - rust-ndarray?)
