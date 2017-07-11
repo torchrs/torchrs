@@ -34,6 +34,7 @@ impl<T: NumLimits> From<Vec<Vec<Vec<T>>>> for THVec<T> {
         THVec::new(dims, v)
     }
 }
+
 impl<T: NumLimits> From<Vec<Vec<T>>> for THVec<T> {
     fn from(input: Vec<Vec<T>>) -> Self {
         let dims = vec![input.len(), input[0].len()];
@@ -256,6 +257,12 @@ pub fn double_tensor<T>(arg: T) -> Tensor<f64>
     where T: Into<THVec<f64>>
 {
     tensor(arg)
+}
+pub fn zeros<S, T>(arg: S) -> Tensor<T>
+    where T: NumLimits,
+          S: Into<THVec<T>>
+{
+    tensor(arg).zero_()
 }
 pub fn tensor<S, T>(arg: S) -> Tensor<T>
     where T: NumLimits,

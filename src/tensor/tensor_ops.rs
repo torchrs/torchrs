@@ -63,17 +63,19 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
-        let t = self.new(()).resize_as_(self);
+        let mut t = self.new(());
         t.value
             .borrow_mut()
-            .addmm(self.inner(), beta, alpha, mat1.inner(), mat2.inner());
+            .addmm(beta, self.inner(), alpha, mat1.inner(), mat2.inner());
+        t.validate("addmm");
         t
     }
     pub fn addmm_(&mut self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> &mut Self {
-        let p = self.inner();
+        let bias = self.inner();
         self.value
             .borrow_mut()
-            .addmm(p, beta, alpha, mat1.inner(), mat2.inner());
+            .addmm(beta, bias, alpha, mat1.inner(), mat2.inner());
+        self.validate("addmm_");
         self
     }
     pub fn addmv(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
@@ -513,8 +515,8 @@ impl<T: NumLimits> Tensor<T> {
     //
     // normal_
     //
-    pub fn numel(&self) -> i32 {
-        unimplemented!()
+    pub fn numel(&self) -> usize {
+        self.size().iter().product()
     }
     //
     // numpy() (need native tensor equivalent - rust-ndarray?)
@@ -682,7 +684,7 @@ impl<T: NumLimits> Tensor<T> {
     }
     pub fn sum<R: NumLimits>(&self) -> R {
         let mut result = 0.;
-        self.value.borrow().prod(&mut result);
+        self.value.borrow().sum_float(&mut result);
         <R as ::num::NumCast>::from(result).unwrap()
     }
     pub fn sum_reduce(&self, dim: usize, keepdim: bool) -> Self {
@@ -768,7 +770,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn uniform_(&mut self, range: (f64, f64)) -> &mut Self {
-        self.value.borrow_mut().uniform_(range);
+        self.value.borrow_mut().uniform(range);
         self
     }
     pub fn unsqueeze(&self, dim: usize) -> Self {
@@ -779,6 +781,10 @@ impl<T: NumLimits> Tensor<T> {
     pub fn unsqueeze_(&mut self, dim: usize) -> &mut Self {
         self.value.borrow_mut().unsqueeze(dim);
         self
+    }
+    pub fn validate(&self, arg: &str) {
+        println!("validate - {}: {}", arg, self.sum() : f64);
+        assert_eq!(self.is_valid(), true);
     }
     pub fn var(&self) -> f32 {
         unimplemented!()
@@ -792,8 +798,8 @@ impl<T: NumLimits> Tensor<T> {
         let dims: Vec<isize> = tensor.size().iter().map(|t| *t as isize).collect();
         self.view(dims)
     }
-    pub fn zero_(&mut self) -> &mut Self {
+    pub fn zero_(&mut self) -> Self {
         self.value.borrow_mut().zero();
-        self
+        self.clone()
     }
 }
