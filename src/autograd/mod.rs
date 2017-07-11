@@ -1,7 +1,9 @@
+pub mod engine;
+pub mod function;
+pub mod gradcheck;
 pub mod variable;
 pub mod variable_ops;
-pub mod function;
-pub mod engine;
+
 #[macro_use]
 pub mod functions;
 pub mod _functions;
