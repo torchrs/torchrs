@@ -389,6 +389,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn divt(&mut self, src: *mut c_void, value: *mut c_void);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn eq_tensor(&self, other: *mut c_void, out: *mut c_void);
+    fn fill(&mut self, value: T);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
     fn ge_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn get_storage(&self, data: &mut [T]);
@@ -577,6 +578,9 @@ macro_rules! impl_tensor_impl {
                 let outp = out as *mut THByteTensor;
                 let otherp = other as *mut $thname;
                 unsafe {concat_idents!($thname, _eqTensor)(outp, self.t, otherp) }
+            }
+            fn fill(&mut self, value: $type) {
+                unimplemented!()
             }
             fn expand(&self, dims: &[usize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();

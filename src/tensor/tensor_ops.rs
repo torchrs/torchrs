@@ -252,8 +252,9 @@ impl<T: NumLimits> Tensor<T> {
     pub fn expand_as(&self, tensor: &Self) -> Self {
         self.expand(tensor.size())
     }
-    pub fn fill_(&mut self) -> &mut Self {
-        unimplemented!()
+    pub fn fill_(&mut self, value: T) -> &mut Self {
+        self.value.borrow_mut().fill(value);
+        self
     }
     pub fn float(&mut self) -> &mut Self {
         unimplemented!()
