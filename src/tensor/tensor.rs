@@ -335,9 +335,6 @@ impl<T: NumLimits> Tensor<T> {
     pub fn is_valid(&self) -> bool {
         self.value.borrow().is_valid()
     }
-    pub fn len(&self) -> usize {
-        self.value.borrow().len()
-    }
     pub fn new<S>(&self, args: S) -> Self
         where S: Into<THVec<T>>
     {
@@ -352,6 +349,9 @@ impl<T: NumLimits> Tensor<T> {
         where D: AsRef<[isize]>
     {
         self.value.borrow().s(dim.as_ref())
+    }
+    pub fn iter(&self) -> Box<Iterator<Item = T>> {
+        unimplemented!()
     }
     pub fn set_storage(&mut self, args: Vec<T>) {
         self.value.borrow_mut().set_storage(args.as_slice());
