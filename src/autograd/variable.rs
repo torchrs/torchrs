@@ -510,6 +510,11 @@ impl<T: NumLimits> Variable<T> {
     pub fn data_borrow(&self) -> &Tensor<T> {
         &self.borrow().data
     }
+    pub fn detach_(&mut self) {
+        let mut inner = self.access();
+        inner.requires_grad = false;
+        inner.grad = None;
+    }
     pub fn tid(&self) -> usize {
         self.borrow().data.id()
     }
@@ -560,10 +565,6 @@ impl<T: NumLimits> Variable<T> {
     }
     pub fn backward(&mut self) {
         self.backward_args(None, false)
-    }
-    // Detach from graph
-    pub fn detach_(&mut self) {
-        unimplemented!()
     }
     // return a new variable detached from graph
     pub fn detach(&self) -> Variable<T> {
