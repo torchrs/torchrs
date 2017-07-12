@@ -193,7 +193,7 @@ impl<T: NumLimits> MNIST<T> {
         }
     }
     fn index(&self, idx: usize) -> Sample<u8> {
-        let img = self.data.s([idx]);
+        let img = self.data.s([idx as isize]);
         let img = if let Some(ref transform) = self.transform {
             transform(&img.into()).into()
         } else {
@@ -214,7 +214,7 @@ impl<T: NumLimits> DatasetIntf for MNIST<T> {
         let imgs: Vec<Tensor<u8>> = v.into_iter().map(|(d, _)| d).collect();
         // XXX should check for case of double
         let mut img_batch: Tensor<T> = torch::tensor(imgs);
-        let scale : T = <T as ::num::NumCast>::from(255.).unwrap();
+        let scale: T = <T as ::num::NumCast>::from(255.).unwrap();
         img_batch.div(scale);
         let label_batch = torch::long_tensor(labels);
         (img_batch, label_batch)
