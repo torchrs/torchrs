@@ -76,11 +76,11 @@ fn _make_grads<T: NumLimits>(outputs: &Vec<Variable<T>>,
 //
 
 pub fn backward<T: NumLimits>(variables: &mut Vec<Variable<T>>,
-                              grad_variables: &Option<Vec<Variable<T>>>,
+                              grad_variables: &Vec<Variable<T>>,
                               retain_graph: Option<bool>,
                               create_graph: Option<bool>) {
-    let grad_variables = if let &Some(ref grads) = grad_variables {
-        grads.iter().map(|v| Some(v.clone())).collect()
+    let grad_variables = if grad_variables.len() > 0 {
+        grad_variables.iter().map(|v| Some(v.clone())).collect()
     } else {
         let mut v = Vec::new();
         for _ in 0..variables.len() {

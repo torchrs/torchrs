@@ -1,4 +1,4 @@
-use autograd::Variable;
+use autograd::{Variable, VariableArgs, VarAccess};
 use tensor::{NumLimits, Tensor};
 use std::slice::{Iter, IterMut};
 use torch;
@@ -23,8 +23,9 @@ pub fn get_numerical_jacobian(func: &mut PartialLayer,
         Some(e) => e,
         None => 1e-3,
     };
-    let input = contiguous(input);
-    let output_size = func(&input).numel();
+    let input_ = contiguous(input);
+    let input = &input_;
+    let output_size = func(input).numel();
     // XXX look at when this may not be a flat vector
     let jacobian: Vec<Tensor<f64>> = target
         .iter()
@@ -50,9 +51,9 @@ pub fn get_numerical_jacobian(func: &mut PartialLayer,
         for i in 0..flat_tensor.numel() {
             let orig = flat_tensor[i];
             flat_tensor[i] = orig - eps;
-            outa.copy_(&(*func)(&input));
+            outa.copy_(&func(input));
             flat_tensor[i] = orig + eps;
-            outb.copy_(&func(&input));
+            outb.copy_(&func(input));
             flat_tensor[i] = orig;
 
             outb.addt_(-1., &outa).div_(2. * eps);
@@ -158,13 +159,20 @@ pub fn gradcheck(func: Layer,
         let analytical = get_analytical_jacobian(inputs, o);
         let numerical = get_numerical_jacobian(&mut f, inputs, inputs, Some(eps));
         for (ref a, ref n) in zip(analytical, numerical) {
-            if !zip(a.sub(n).abs().iter(), n.abs().mul(rtol).add(rtol).iter())
+            if !zip(a.sub(n).abs().iter(), n.abs().mul(rtol).add(atol).iter())
                     .all(|(a, b)| a <= b) {
                 return false;
             }
         }
     }
     zero_gradients(inputs);
-    let output = func(inputs);
+    let mut output = func(inputs);
+    let args = VariableArgs::build().volatile(true).done();
+
+    let grads = output
+        .iter()
+        .map(|o| Variable::new_args(o.data_borrow().new(o.size()).zero_(), &args))
+        .collect();
+    torch::autograd::backward(&mut output, &grads, None, None);
     true
 }
