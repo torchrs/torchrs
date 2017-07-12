@@ -127,22 +127,24 @@ impl From<Vec<usize>> for THDims {
     }
 }
 impl<S: NumLimits, D: NumLimits> From<Tensor<S>> for THVec<D> {
+    #[allow(unused_variables)]
     fn from(input: Tensor<S>) -> Self {
         unimplemented!()
     }
 }
 impl<T: NumLimits> From<Vec<THVec<T>>> for THVec<T> {
+    #[allow(unused_variables)]
     fn from(input: Vec<THVec<T>>) -> Self {
         unimplemented!()
     }
 }
 impl<S: NumLimits, D: NumLimits> From<Vec<Tensor<S>>> for THVec<D> {
     fn from(input: Vec<Tensor<S>>) -> Self {
-        let mut d: Vec<D> = Vec::with_capacity(input.len() * input[0].len());
-        let len = input[0].len();
+        let mut d: Vec<D> = Vec::with_capacity(input.len() * input[0].numel());
+        let len = input[0].numel();
         let mut tmp: Vec<S> = Vec::with_capacity(len);
         unsafe {
-            d.set_len(input.len() * input[0].len());
+            d.set_len(input.len() * input[0].numel());
             tmp.set_len(len);
         }
         for i in 0..input.len() {
