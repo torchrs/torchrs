@@ -100,19 +100,24 @@ pub mod ExecutionEngine {
         }
 
     }
-    pub fn run_backward<T: NumLimits>(var: &mut Variable<T>,
-                                      grad: VarKind,
+    pub fn run_backward<T: NumLimits>(var: &mut Vec<Variable<T>>,
+                                      mut grad: Vec<Option<VarKind>>,
                                       retain_variables: bool) {
         let grad_fn;
+
+
+        assert_eq!(var.len(), 1);
+        let mut var = var.remove(0);
+        var.data_borrow().validate("run backward");
         match var.grad_fn() {
             Some(v) => grad_fn = v,
             None => {
-                var._do_backward(&mut grad.into());
+                var._do_backward(&mut grad[0].clone().unwrap().into());
                 return;
             }
         }
         let mut ready = VecDeque::new();
-        ready.push_back((grad_fn.clone(), vec![Some(grad)]));
+        ready.push_back((grad_fn.clone(), grad));
         let mut need_copy: HashSet<VarKind> = HashSet::new();
         let mut not_ready: HashMap<FuncId, Vec<Option<VarKind>>> = HashMap::new();
 
@@ -129,7 +134,7 @@ pub mod ExecutionEngine {
                 }
                 let d_prev_func = match *d_prev_func_ {
                     Some(ref f) => f,
-                    None => { println!("d_prev_func is None"); continue},
+                    None => continue,
                 };
                 let prev_func = match prev_func_ {
                     &RootKind::RootVar(ref v) => {

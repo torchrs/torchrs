@@ -547,7 +547,9 @@ impl<T: NumLimits> Variable<T> {
                 }
             };
         }
-        ExecutionEngine::run_backward(self, gradient.clone().into(), retain_variables)
+        ExecutionEngine::run_backward(&mut vec![self.clone()],
+                                      vec![Some(gradient.clone().into())],
+                                      retain_variables)
     }
     pub fn _do_backward(&mut self, grad_output: &mut Variable<T>) {
         let inner = self.access();
