@@ -1,13 +1,20 @@
 use autograd::Variable;
-use tensor::Tensor;
+use tensor::{NumLimits, Tensor};
+use std::slice::{Iter, IterMut};
 use torch;
 use itertools::zip;
 
 type Var64List = Vec<Variable<f64>>;
 
+type Layer = fn(&Var64List) -> Var64List;
+type PartialLayer = FnMut(&Var64List) -> Tensor<f64>;
 
-pub fn get_numerical_jacobian(func: fn(&Variable<f64>) -> Variable<f64>,
-                              input: &Variable<f64>,
+pub fn contiguous(v: &Var64List) -> Var64List {
+    v.iter().map(|v| v.contiguous()).collect()
+}
+
+pub fn get_numerical_jacobian(func: &mut PartialLayer,
+                              input: &Var64List,
                               target: &Var64List,
                               eps: Option<f64>)
                               -> Vec<Tensor<f64>> {
@@ -16,7 +23,7 @@ pub fn get_numerical_jacobian(func: fn(&Variable<f64>) -> Variable<f64>,
         Some(e) => e,
         None => 1e-3,
     };
-    let input = input.contiguous();
+    let input = contiguous(input);
     let output_size = func(&input).numel();
     // XXX look at when this may not be a flat vector
     let jacobian: Vec<Tensor<f64>> = target
@@ -43,9 +50,9 @@ pub fn get_numerical_jacobian(func: fn(&Variable<f64>) -> Variable<f64>,
         for i in 0..flat_tensor.numel() {
             let orig = flat_tensor[i];
             flat_tensor[i] = orig - eps;
-            outa.copy_(func(&input).data_borrow());
+            outa.copy_(&(*func)(&input));
             flat_tensor[i] = orig + eps;
-            outb.copy_(func(&input).data_borrow());
+            outb.copy_(&func(&input));
             flat_tensor[i] = orig;
 
             outb.addt_(-1., &outa).div_(2. * eps);
@@ -77,7 +84,6 @@ pub fn iter_gradients(input: &mut Var64List) -> Vec<Option<Tensor<f64>>> {
                  None
              })
         .collect()
-
 }
 
 pub fn get_analytical_jacobian(input: &mut Var64List, output: &Variable<f64>) -> Vec<Tensor<f64>> {
@@ -101,6 +107,64 @@ pub fn get_analytical_jacobian(input: &mut Var64List, output: &Variable<f64>) ->
         }
 
     }
-
     jacobian
+}
+
+//
+//       Check gradients computed via small finite differences
+//       against analytical gradients
+//
+//    The check between numerical and analytical has the same behaviour as
+//    numpy.allclose https://docs.scipy.org/doc/numpy/reference/generated/numpy.allclose.html
+//    meaning it check that
+//        absolute(a - n) <= (atol + rtol * absolute(n))
+//    is true for all elements of analytical jacobian a and numerical jacobian n.
+//
+//    Args:
+//        func: function that takes Vec<Variable> inputs and returns
+//            a Vec<Variable>
+//        inputs: Vec<Variable>
+//        eps: perturbation for finite differences
+//        atol: absolute tolerance
+//        rtol: relative tolerance
+//
+//    Returns:
+//        True if all differences satisfy allclose condition
+
+pub fn gradcheck(func: Layer,
+                 inputs: &mut Var64List,
+                 eps: Option<f64>,
+                 atol: Option<f64>,
+                 rtol: Option<f64>)
+                 -> bool {
+    let eps = match eps {
+        Some(e) => e,
+        None => 1e-6,
+    };
+    let atol = match atol {
+        Some(e) => e,
+        None => 1e-5,
+    };
+    let rtol = match rtol {
+        Some(e) => e,
+        None => 1e-3,
+    };
+    let output = func(inputs);
+    for (i, ref o) in output.iter().enumerate() {
+        if !o.requires_grad() {
+            continue;
+        }
+        let mut f = move |input: &Var64List| func(input)[i].data().clone();
+        let analytical = get_analytical_jacobian(inputs, o);
+        let numerical = get_numerical_jacobian(&mut f, inputs, inputs, Some(eps));
+        for (ref a, ref n) in zip(analytical, numerical) {
+            if !zip(a.sub(n).abs().iter(), n.abs().mul(rtol).add(rtol).iter())
+                    .all(|(a, b)| a <= b) {
+                return false;
+            }
+        }
+    }
+    zero_gradients(inputs);
+    let output = func(inputs);
+    true
 }
