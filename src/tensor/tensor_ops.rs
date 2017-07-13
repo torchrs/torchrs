@@ -3,18 +3,36 @@ use tensor::*;
 use std::cell::RefMut;
 
 
+macro_rules! self_op {
+    ($key:ident, $action:ident ) => {(
+        let t = $key.new(()).resize_as_($key);
+        let inner = $key.inner();
+        t.value.borrow_mut().$action (inner);
+        t
+     )}
+}
+
+macro_rules! self_inplace_op {
+    ($key:ident, $action:ident ) => {(
+        let inner = $key.inner();
+        $key.value.borrow_mut().$action (inner);
+        $key
+     )}
+}
+
+
 impl<T: NumLimits> Tensor<T> {
     pub fn abs(&self) -> Self {
-        unimplemented!()
+        self_op!(self, abs)
     }
     pub fn abs_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, abs)
     }
     pub fn acos(&self) -> Self {
-        unimplemented!()
+        self_op!(self, acos)
     }
     pub fn acos_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, acos)
     }
     pub fn add(&self, rhs: T) -> Self {
         let t = self.copy();
@@ -91,19 +109,19 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn asin(&self) -> Self {
-        unimplemented!()
+        self_op!(self, asin)
     }
     pub fn asin_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, asin)
     }
     pub fn atan(&self) -> Self {
-        unimplemented!()
-    }
+        self_op!(self, atan)
+    }    
     pub fn atan2(&self) -> Self {
-        unimplemented!()
+        self_op!(self, atan2)
     }
     pub fn atan2_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, atan2)
     }
     pub fn baddbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
@@ -123,19 +141,19 @@ impl<T: NumLimits> Tensor<T> {
     pub fn bmm(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn byte(&mut self) -> &mut Self {
+    pub fn byte(&mut self) -> Self {
         unimplemented!()
     }
     //
     // cauchy_
     //
     pub fn ceil(&self) -> Self {
-        unimplemented!()
+        self_op!(self, ceil)
     }
     pub fn ceil_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, ceil)
     }
-    pub fn char(&mut self) -> &mut Self {
+    pub fn char(&mut self) -> Self {
         unimplemented!()
     }
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
@@ -164,16 +182,16 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn cos(&self) -> Self {
-        unimplemented!()
+        self_op!(self, cos)
     }
     pub fn cos_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, cos)
     }
     pub fn cosh(&self) -> Self {
-        unimplemented!()
+       self_op!(self, cosh)
     }
     pub fn cosh_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, cosh)
     }
     pub fn cpu(&self) -> Self {
         self.clone()
@@ -239,10 +257,10 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn exp(&self) -> Self {
-        unimplemented!()
+       self_op!(self, exp)
     }
     pub fn exp_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, exp)
     }
     pub fn expand<D>(&self, dims: D) -> Self
         where D: AsRef<[usize]>
@@ -256,14 +274,14 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow_mut().fill(value);
         self
     }
-    pub fn float(&mut self) -> &mut Self {
+    pub fn float(&mut self) -> Self {
         unimplemented!()
     }
     pub fn floor(&self) -> Self {
-        unimplemented!()
+       self_op!(self, floor)
     }
     pub fn floor_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, floor)
     }
     pub fn fmod(&self, divisor: T) -> Self {
         unimplemented!()
@@ -272,10 +290,10 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn frac(&self) -> Self {
-        unimplemented!()
+        self_op!(self, frac())
     }
     pub fn frac_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, frac)
     }
     pub fn gather(&self, dim: i32, index: Tensor<i64>) {
         unimplemented!()
@@ -299,7 +317,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn gt_tensor_(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn half(&mut self) -> &mut Self {
+    pub fn half(&mut self) -> Self {
         unimplemented!()
     }
     pub fn id(&self) -> usize {
@@ -326,7 +344,7 @@ impl<T: NumLimits> Tensor<T> {
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
         self.value.borrow().inner()
     }
-    pub fn int(&mut self) -> &mut Self {
+    pub fn int(&mut self) -> Self {
         unimplemented!()
     }
     pub fn is_cuda(&self) -> bool {
@@ -365,21 +383,21 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn log(&self) -> Self {
-        unimplemented!()
+       self_op!(self, log)
     }
     pub fn log_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, log)
     }
     pub fn log1p(&self) -> Self {
-        unimplemented!()
+       self_op!(self, log1p)
     }
     pub fn log1p_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, log1p)
     }
     //
     // log_normal(...)
     //
-    pub fn long(&mut self) -> &mut Self {
+    pub fn long(&mut self) -> Self {
         unimplemented!()
     }
     pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
@@ -502,10 +520,10 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn neg(&self) -> Self {
-        unimplemented!()
+       self_op!(self, neg)
     }
     pub fn neg_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, neg)
     }
     pub fn nonzero(&self) -> Tensor<i64> {
         unimplemented!()
@@ -531,7 +549,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn pin_memory(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, pin_memory)
     }
     //
     // potrf
@@ -543,10 +561,10 @@ impl<T: NumLimits> Tensor<T> {
     // potrs
     //
     pub fn pow(&self) -> Self {
-        unimplemented!()
+       self_op!(self, pow)
     }
     pub fn pow_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, pow)
     }
     pub fn prod<R: NumLimits>(&self) -> R {
         let mut result = 0.;
@@ -563,10 +581,10 @@ impl<T: NumLimits> Tensor<T> {
     // random_
     //
     pub fn reciprocal(&self) -> Self {
-        unimplemented!()
+       self_op!(self, reciprocal)
     }
     pub fn reciprocal_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, reciprocal)
     }
     pub fn remainder(&self, divisor: T) -> Self {
         unimplemented!()
@@ -594,16 +612,17 @@ impl<T: NumLimits> Tensor<T> {
         self.resize_(tensor.size())
     }
     pub fn round(&self) -> Self {
-        unimplemented!()
+        self_inplace_op!(self, round)
     }
     pub fn round_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, round)
     }
     pub fn rsqrt(&self) -> Self {
+       self_op!(self, rqsrt)
         unimplemented!()
     }
     pub fn rsqrt_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, rsqrt)
     }
     pub fn scatter_(&mut self, dim: i32, index: Tensor<i64>, src: &Self) -> &mut Self {
         unimplemented!()
@@ -617,32 +636,33 @@ impl<T: NumLimits> Tensor<T> {
     //
     // share_memory_
     //
-    pub fn short(&mut self) -> &mut Self {
+    pub fn short(&mut self) -> Self {
         unimplemented!()
     }
     pub fn sigmoid(&self) -> Self {
-        unimplemented!()
+       self_op!(self, sigmoid)
+
     }
     pub fn sigmoid_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, sigmoid)
     }
     pub fn sign(&self) -> Self {
-        unimplemented!()
+        self_op!(self, sign)
     }
     pub fn sign_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, sign)
     }
     pub fn sin(&self) -> Self {
-        unimplemented!()
+        self_op!(self, sin)
     }
     pub fn sin_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, sin)
     }
     pub fn sinh(&self) -> Self {
-        unimplemented!()
+       self_op!(self, sinh)
     }
     pub fn sinh_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, sinh)
     }
     pub fn size(&self) -> Vec<usize> {
         self.value.borrow().size()
@@ -651,10 +671,10 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn sqrt(&self) -> Self {
-        unimplemented!()
+       self_op!(self, sqrt)
     }
     pub fn sqrt_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, sqrt)
     }
     pub fn squeeze(&self, dim: Option<usize>) -> Self {
         let mut t = self.copy();
@@ -710,16 +730,16 @@ impl<T: NumLimits> Tensor<T> {
         self.transpose_(0, 1)
     }
     pub fn tan(&self) -> Self {
-        unimplemented!()
+        self_op!(self, tan)
     }
     pub fn tan_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, tan)
     }
     pub fn tanh(&self) -> Self {
-        unimplemented!()
+       self_op!(self, tanh)
     }
     pub fn tanh_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, tanh)
     }
     //
     // tolist
@@ -728,7 +748,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn trace(&self) -> Self {
-        unimplemented!()
+       self_op!(self, trace)
     }
     pub fn transpose(&self, dim0: usize, dim1: usize) -> Self {
         let t = self.new(()).resize_as_(self);
@@ -756,10 +776,10 @@ impl<T: NumLimits> Tensor<T> {
     // trtrs
     //
     pub fn trunc(&self) -> Self {
-        unimplemented!()
+        self_op!(self, trunc)
     }
     pub fn trunc_(&mut self) -> &mut Self {
-        unimplemented!()
+        self_inplace_op!(self, trunc)
     }
     pub fn type_as(&self, tensor: &Self) -> Self {
         unimplemented!()
