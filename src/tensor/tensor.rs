@@ -382,7 +382,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
              alpha: T,
              mat1: *mut c_void,
              mat2: *mut c_void);
-    fn addt(&mut self, src: *mut c_void, value: *mut c_void);
+    fn addt(&mut self, src: *mut c_void, alpha: T, value: *mut c_void);
     fn asin(&mut self, src: *mut c_void);
     fn atan(&mut self, src: *mut c_void);
     fn atan2(&mut self, src: *mut c_void);
@@ -394,6 +394,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn dim(&self) -> i32;
     fn div(&mut self, src: *mut c_void, value: T);
     fn divt(&mut self, src: *mut c_void, value: *mut c_void);
+    fn dot(&mut self, src: *mut c_void, value: *mut c_void);
     fn exp(&mut self, src: *mut c_void);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn eq_tensor(&self, other: *mut c_void, out: *mut c_void);
@@ -414,11 +415,15 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn log1p(&mut self, src: *mut c_void);
     fn lt_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn lt_value(&self, value: T, out: *mut c_void);
+    fn max(&self) -> T;
     fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
+    fn mean(&self) -> T;
+    fn min(&self) -> T;
     fn min_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn mm(&mut self, mat1: *mut c_void, mat2: *mut c_void);
     fn mul(&mut self, src: *mut c_void, value: T);
     fn mult(&mut self, src: *mut c_void, value: *mut c_void);
+    fn mv(&mut self, mat: *mut c_void, vector: *mut c_void);
     fn neg(&mut self, src: *mut c_void);
     fn ne_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn pin_memory(&mut self, src: *mut c_void);
@@ -436,6 +441,8 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn size(&self) -> Vec<usize>;
     fn set_storage(&mut self, v: &[T]);
     fn sqrt(&mut self, src: *mut c_void);
+    fn stride(&self) -> Vec<i32>;
+    fn sub(&mut self, src: *mut c_void, rhs: *mut c_void);
     fn squeeze(&mut self, dim: Option<usize>);
     fn sum_reduce(&mut self, input: *mut c_void, dim: usize, keepdim: bool);
     fn sum_float(&self, result: &mut f64);
@@ -582,10 +589,11 @@ macro_rules! impl_tensor_impl {
             }
             fn addt(&mut self,
                     src: *mut c_void,
+                    alpha: $type,
                     value: *mut c_void) {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
-                unsafe { concat_idents!($thname, _cadd)(self.t, valuep, 1 as $type, srcp)};
+                unsafe { concat_idents!($thname, _cadd)(self.t, valuep, alpha, srcp)};
             }
             fn asin(&mut self, src: *mut c_void) {
                 unimplemented!();
@@ -624,6 +632,12 @@ macro_rules! impl_tensor_impl {
                     src: *mut c_void,
                     value: *mut c_void) {
                 unimplemented!()
+            }
+            fn dot(&mut self,
+                    src: *mut c_void,
+                    value: *mut c_void) {
+                let srcp = src as *mut $thname;
+                let valuep = value as *mut $thname;
             }            
             fn eq_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 let outp = out as *mut THByteTensor;
@@ -702,12 +716,21 @@ macro_rules! impl_tensor_impl {
             fn lt_value(&self, value: $type, out: *mut c_void) {
                 unimplemented!()
             }
+            fn max(&self) -> $type {
+                unimplemented!()
+            }
             fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool) {
                 let valuesp = values as *mut $thname;
                 let indicesp = values as *mut THLongTensor;
                 let dim = dim as i32;
                 let keep = keepdim as i32;
                 unsafe { concat_idents!($thname, _max)(valuesp, indicesp, self.t, dim, keep) }
+            }
+            fn mean(&self) -> $type {
+                unimplemented!()
+            }
+            fn min(&self) -> $type {
+                unimplemented!()
             }
             fn min_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool) {
                 let valuesp = values as *mut $thname;
@@ -739,6 +762,9 @@ macro_rules! impl_tensor_impl {
                 let valuep = value as *mut $thname;
                 unsafe { concat_idents!($thname, _cmul)(self.t, valuep, srcp)};
             }
+            fn mv(&mut self, mat: *mut c_void, vector: *mut c_void) {
+                unimplemented!()
+            }
             fn ne_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 unimplemented!()
             }
@@ -748,7 +774,7 @@ macro_rules! impl_tensor_impl {
             fn new(&self) -> Tensor<$type> {
                 Tensor { value: RcMutNew($name ::new()) }
             }
-            fn pin_memory(&mut self) {
+            fn pin_memory(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
             fn pow(&mut self, src: *mut c_void) {
@@ -837,6 +863,12 @@ macro_rules! impl_tensor_impl {
                     unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, d as i32) };
                 }
             }
+            fn stride(&self) -> Vec<i32> {
+                unimplemented!()
+            }
+            fn sub(&mut self, src: *mut c_void, rhs: *mut c_void) {
+                unimplemented!();
+             }
             fn sum_float(&self, mut result: &mut f64) {
                 let r = unsafe { concat_idents!($thname, _sumall)(self.t) };
                 let f = <f64 as ::num::NumCast>::from(r);

@@ -3,37 +3,38 @@ use tensor::*;
 use std::cell::RefMut;
 
 macro_rules! self_op {
-    ($key:ident, $action:ident ) => {(
+    ($key:ident, $action:ident ) => { {
         let t = $key.new(()).resize_as_($key);
         let inner = $key.inner();
         t.value.borrow_mut().$action (inner);
         t
-     )}
+     }}
 }
 
 macro_rules! self_inplace_op {
-    ($key:ident, $action:ident ) => {(
+    ($key:ident, $action:ident ) => {{
         let inner = $key.inner();
         $key.value.borrow_mut().$action (inner);
         $key
-     )}
+     }}
 }
 macro_rules! binary_op {
-    ($key:ident, $other:ident, $action:ident ) => {(
+    ($key:ident, $other:ident, $action:ident ) => {{
         let t = $key.new(()).resize_as_($key);
         let inner = $key.inner();
         let rhs = $other.inner();
         t.value.borrow_mut().$action (inner, rhs);
         t
-     )}
+     }}
 }
 
 macro_rules! binary_inplace_op {
-    ($key:ident, $action:ident ) => {(
+    ($key:ident, $rhs:ident, $action:ident ) => {{
         let inner = $key.inner();
+        let rhs = $rhs.inner();
         $key.value.borrow_mut().$action (inner, rhs);
         $key
-     )}
+     }}
 }
 
 
@@ -305,7 +306,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn frac(&self) -> Self {
-        self_op!(self, frac())
+        self_op!(self, frac)
     }
     pub fn frac_(&mut self) -> &mut Self {
         self_inplace_op!(self, frac)
@@ -620,14 +621,13 @@ impl<T: NumLimits> Tensor<T> {
         self.resize_(tensor.size())
     }
     pub fn round(&self) -> Self {
-        self_inplace_op!(self, round)
+        self_op!(self, round)
     }
     pub fn round_(&mut self) -> &mut Self {
         self_inplace_op!(self, round)
     }
     pub fn rsqrt(&self) -> Self {
-       self_op!(self, rqsrt)
-        unimplemented!()
+       self_op!(self, rsqrt)
     }
     pub fn rsqrt_(&mut self) -> &mut Self {
         self_inplace_op!(self, rsqrt)
@@ -703,7 +703,7 @@ impl<T: NumLimits> Tensor<T> {
     // storage_offset
     //
     pub fn stride(&self) -> Vec<i32> {
-        self.value.borrow.stride()
+        self.value.borrow().stride()
     }
     pub fn sub(&self, rhs: &Self) -> Self {
         binary_op!(self, rhs, sub)
