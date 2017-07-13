@@ -2,7 +2,6 @@
 use tensor::*;
 use std::cell::RefMut;
 
-
 macro_rules! self_op {
     ($key:ident, $action:ident ) => {(
         let t = $key.new(()).resize_as_($key);
@@ -16,6 +15,23 @@ macro_rules! self_inplace_op {
     ($key:ident, $action:ident ) => {(
         let inner = $key.inner();
         $key.value.borrow_mut().$action (inner);
+        $key
+     )}
+}
+macro_rules! binary_op {
+    ($key:ident, $other:ident, $action:ident ) => {(
+        let t = $key.new(()).resize_as_($key);
+        let inner = $key.inner();
+        let rhs = $other.inner();
+        t.value.borrow_mut().$action (inner, rhs);
+        t
+     )}
+}
+
+macro_rules! binary_inplace_op {
+    ($key:ident, $action:ident ) => {(
+        let inner = $key.inner();
+        $key.value.borrow_mut().$action (inner, rhs);
         $key
      )}
 }
@@ -35,10 +51,10 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, acos)
     }
     pub fn add(&self, rhs: T) -> Self {
-        let t = self.copy();
+        let t = self.new(()).resize_as_(self);
         t.value
             .borrow_mut()
-            .add(self.value.borrow_mut().inner(), rhs);
+            .add(self.inner(), rhs);
         t
     }
     pub fn add_(&mut self, rhs: T) -> &mut Self {
@@ -50,15 +66,15 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
-        let t = self.copy();
-        t.value.borrow_mut().addt(self.inner(), rhs.inner());
+        let t = self.new(()).resize_as_(self);
+        t.value.borrow_mut().addt(self.inner(), val, rhs.inner());
         t
     }
     pub fn addt_(&mut self, val: T, rhs: &Self) -> &mut Self {
         {
             let mut selfcell = self.value.borrow_mut();
             let srcp = selfcell.inner();
-            selfcell.addt(srcp, rhs.inner());
+            selfcell.addt(srcp, val, rhs.inner());
         }
         self
     }
@@ -230,14 +246,13 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn divt(&self, value: &Self) -> Self {
-
-        unimplemented!()
+        binary_op!(self, value, divt)
     }
     pub fn divt_(&mut self, value: &Self) -> &mut Self {
-        unimplemented!()
+        binary_inplace_op!(self, value, divt)
     }
     pub fn dot(&self, other: &Self) -> Self {
-        unimplemented!()
+        binary_op!(self, other, dot)
     }
     pub fn double(&self) -> Self {
         unimplemented!()
@@ -431,7 +446,7 @@ impl<T: NumLimits> Tensor<T> {
         self.clone()
     }
     pub fn max(&self) -> T {
-        unimplemented!()
+        self.value.borrow().max()
     }
     pub fn max_reduce(&self, dim: usize, keepdim: bool) -> (Self, Tensor<i64>) {
         let mut dims = self.size();
@@ -444,7 +459,7 @@ impl<T: NumLimits> Tensor<T> {
         (values, indices)
     }
     pub fn mean(&self) -> T {
-        unimplemented!()
+        self.value.borrow().mean()
     }
     pub fn mean_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
         unimplemented!()
@@ -453,7 +468,7 @@ impl<T: NumLimits> Tensor<T> {
     // median
     //
     pub fn min(&self) -> T {
-        unimplemented!()
+        self.value.borrow().min()
     }
     pub fn min_reduce(&self, dim: usize, keepdim: bool) -> (Self, Tensor<i64>) {
         let mut dims = self.size();
@@ -487,29 +502,22 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn mult(&self, rhs: &Self) -> Self {
-        let t = self.copy();
-        t.value.borrow_mut().mult(self.inner(), rhs.inner());
-        t
+        binary_op!(self, rhs, mult)
     }
     pub fn mult_(&mut self, rhs: &Self) -> &mut Self {
-        {
-            let mut selfcell = self.value.borrow_mut();
-            let srcp = selfcell.inner();
-            selfcell.mult(srcp, rhs.inner());
-        }
-        self
+        binary_inplace_op!(self, rhs, mult)
     }
     //
     // multinomial
     //
     pub fn mv(&self, vec: &Self) -> Self {
-        unimplemented!()
+        binary_op!(self, vec, mv)
     }
     pub fn narrow(&self, dim: i32, start: i32, length: i32) -> Self {
         unimplemented!()
     }
     pub fn ndimension(&self) -> i32 {
-        unimplemented!()
+        self.dim()
     }
     pub fn ne_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -695,13 +703,13 @@ impl<T: NumLimits> Tensor<T> {
     // storage_offset
     //
     pub fn stride(&self) -> Vec<i32> {
-        unimplemented!()
+        self.value.borrow.stride()
     }
     pub fn sub(&self, rhs: &Self) -> Self {
-        unimplemented!()
+        binary_op!(self, rhs, sub)
     }
     pub fn sub_(&mut self, rhs: &Self) -> &mut Self {
-        unimplemented!()
+        binary_inplace_op!(self, rhs, sub)
     }
     pub fn sum<R: NumLimits>(&self) -> R {
         let mut result = 0.;
