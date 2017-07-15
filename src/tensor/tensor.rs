@@ -382,6 +382,8 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
               alpha: T,
               mat1: *mut c_void,
               mat2: *mut c_void);
+    fn addcdiv(&mut self, bias: *mut c_void, alpha: T, mat1: *mut c_void, mat2: *mut c_void);
+    fn addcmul(&mut self, bias: *mut c_void, alpha: T, mat1: *mut c_void, mat2: *mut c_void);
     fn addmm(&mut self,
              beta: T,
              bias: *mut c_void,
@@ -427,8 +429,10 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn frac(&mut self, src: *mut c_void);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
     fn ge_tensor(&self, other: *mut c_void, out: *mut c_void);
+    fn ge_value(&self, value: T, out: *mut c_void);
     fn get_storage(&self, data: &mut [T]);
     fn gt_tensor(&self, other: *mut c_void, out: *mut c_void);
+    fn gt_value(&self, value: T, out: *mut c_void);
     fn is_valid(&self) -> bool;
     fn inner(&self) -> *mut c_void;
     fn iter(&self) -> Box<Iterator<Item = T>>;
@@ -441,7 +445,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn lt_value(&self, value: T, out: *mut c_void);
     fn max(&self) -> T;
     fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
-    fn mean(&self) -> T;
+    fn mean(&self) -> f64;
     fn min(&self) -> T;
     fn min_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn mm(&mut self, mat1: *mut c_void, mat2: *mut c_void);
@@ -478,6 +482,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn trunc(&mut self, src: *mut c_void);
     fn uniform(&mut self, range: (f64, f64));
     fn unsqueeze(&mut self, dim: usize);
+    fn var(&self) -> f64;
     fn view(&self, dims: &[isize]) -> Tensor<T>;
     fn zero(&mut self);
 }
@@ -605,6 +610,36 @@ macro_rules! impl_tensor_impl {
                 unsafe {
                     concat_idents!($thname, _addbmm)(self.t,
                                                     beta,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
+            fn addcdiv(&mut self,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addcdiv)(self.t,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
+            fn addcmul(&mut self,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addcmul)(self.t,
                                                     biasp,
                                                     alpha,
                                                     mat1p,
@@ -767,6 +802,9 @@ macro_rules! impl_tensor_impl {
             fn ge_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 unimplemented!()
             }
+            fn ge_value(&self, value: $type, out: *mut c_void) {
+                unimplemented!()
+            }
             fn get_storage(&self, data: &mut [$type]) {
                 /* XXX presupposes contiguity */
                 let offset = self.storage_offset() as isize;
@@ -776,6 +814,9 @@ macro_rules! impl_tensor_impl {
                 unsafe {memcpy(d, s, data.len()) };
             }
             fn gt_tensor(&self, other: *mut c_void, out: *mut c_void) {
+                unimplemented!()
+            }
+            fn gt_value(&self, value: $type, out: *mut c_void) {
                 unimplemented!()
             }
             fn is_valid(&self) -> bool {
@@ -818,7 +859,7 @@ macro_rules! impl_tensor_impl {
                 let keep = keepdim as i32;
                 unsafe { concat_idents!($thname, _max)(valuesp, indicesp, self.t, dim, keep) }
             }
-            fn mean(&self) -> $type {
+            fn mean(&self) -> f64 {
                 unimplemented!()
             }
             fn min(&self) -> $type {
@@ -1002,6 +1043,9 @@ macro_rules! impl_tensor_impl {
             fn unsqueeze(&mut self, dim: usize) {
                 let p = ::std::ptr::null_mut();
                 unsafe {concat_idents!($thname, _squeeze1d)(self.t, p, dim as i32) };
+            }
+            fn var(&self) -> f64 {
+                unimplemented!()
             }
             fn view(&self, dims: &[isize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();

@@ -58,6 +58,26 @@ macro_rules! gemm_inplace_op {
      }}
 }
 
+macro_rules! addc_op {
+    ($key:ident, $alpha:ident, $mat1:ident, $mat2:ident, $action:ident ) => {{
+        let t = $key.new(()).resize_as_($key);
+        let inner = $key.inner();
+        let mat1p = $mat1.inner();
+        let mat2p = $mat2.inner();
+        t.value.borrow_mut().$action (inner, $alpha, mat1p, mat2p);
+        t
+     }}
+}
+
+macro_rules! addc_inplace_op {
+    ($key:ident, $alpha:ident, $mat1:ident, $mat2:ident, $action:ident ) => {{
+        let inner = $key.inner();
+        let mat1p = $mat1.inner();
+        let mat2p = $mat2.inner();
+        $key.value.borrow_mut().$action (inner, $alpha, mat1p, mat2p);
+        $key
+     }}
+}
 
 
 impl<T: NumLimits> Tensor<T> {
@@ -106,16 +126,16 @@ impl<T: NumLimits> Tensor<T> {
         gemm_inplace_op!(self, beta, alpha, batch1, batch2, addbmm)
     }
     pub fn addcdiv(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
-        unimplemented!()
+        addc_op!(self, value, tensor1, tensor2, addcdiv)
     }
     pub fn addcdiv_(&mut self, value: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
-        unimplemented!()
+        addc_inplace_op!(self, value, tensor1, tensor2, addcdiv)
     }
     pub fn addcmul(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
-        unimplemented!()
+        addc_op!(self, value, tensor1, tensor2, addcmul)
     }
     pub fn addcmul_(&mut self, value: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
-        unimplemented!()
+        addc_inplace_op!(self, value, tensor1, tensor2, addcmul)
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
         gemm_op!(self, beta, alpha, mat1, mat2, addmm)
@@ -469,7 +489,7 @@ impl<T: NumLimits> Tensor<T> {
             .max_reduce(values.inner(), indices.inner(), dim, keepdim);
         (values, indices)
     }
-    pub fn mean(&self) -> T {
+    pub fn mean(&self) -> f64 {
         self.value.borrow().mean()
     }
     pub fn mean_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
@@ -659,7 +679,6 @@ impl<T: NumLimits> Tensor<T> {
     }
     pub fn sigmoid(&self) -> Self {
         self_op!(self, sigmoid)
-
     }
     pub fn sigmoid_(&mut self) -> &mut Self {
         self_inplace_op!(self, sigmoid)
@@ -825,8 +844,8 @@ impl<T: NumLimits> Tensor<T> {
         println!("validate - {}: {}", arg, self.sum() : f64);
         assert_eq!(self.is_valid(), true);
     }
-    pub fn var(&self) -> f32 {
-        unimplemented!()
+    pub fn var(&self) -> f64 {
+        self.value.borrow().var()
     }
     pub fn view<D>(&self, dims: D) -> Self
         where D: AsRef<[isize]>
