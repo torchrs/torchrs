@@ -111,6 +111,13 @@ pub fn get_analytical_jacobian(input: &mut Var64List, output: &Variable<f64>) ->
     jacobian
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct GradValues {
+    pub eps: Option<f64>,
+    pub atol: Option<f64>,
+    pub rtol: Option<f64>,
+}
+
 //
 //       Check gradients computed via small finite differences
 //       against analytical gradients
@@ -131,22 +138,16 @@ pub fn get_analytical_jacobian(input: &mut Var64List, output: &Variable<f64>) ->
 //
 //    Returns:
 //        True if all differences satisfy allclose condition
-
-pub fn gradcheck(func: Layer,
-                 inputs: &mut Var64List,
-                 eps: Option<f64>,
-                 atol: Option<f64>,
-                 rtol: Option<f64>)
-                 -> bool {
-    let eps = match eps {
+pub fn gradcheck(func: Layer, inputs: &mut Var64List, values: GradValues) -> bool {
+    let eps = match values.eps {
         Some(e) => e,
         None => 1e-6,
     };
-    let atol = match atol {
+    let atol = match values.atol {
         Some(e) => e,
         None => 1e-5,
     };
-    let rtol = match rtol {
+    let rtol = match values.rtol {
         Some(e) => e,
         None => 1e-3,
     };
@@ -160,7 +161,7 @@ pub fn gradcheck(func: Layer,
         let numerical = get_numerical_jacobian(&mut f, inputs, inputs, Some(eps));
         for (ref a, ref n) in zip(analytical, numerical) {
             if !zip(a.sub(n).abs().iter(), n.abs().mul(rtol).add(atol).iter())
-                    .all(|(a, b)| a <= b) {
+                   .all(|(a, b)| a <= b) {
                 return false;
             }
         }
@@ -176,3 +177,41 @@ pub fn gradcheck(func: Layer,
     torch::autograd::backward(&mut output, &grads, None, None);
     true
 }
+
+//       Check gradients of gradients computed via small finite differences
+//       against analytical gradients
+//    This function checks that backpropagating through the gradients computed
+//    to the given grad_outputs are correct.
+//
+//    The check between numerical and analytical has the same behaviour as
+//    numpy.allclose https://docs.scipy.org/doc/numpy/reference/generated/numpy.allclose.html
+//    meaning it check that
+//        absolute(a - n) <= (atol + rtol * absolute(n))
+//    is true for all elements of analytical gradient a and numerical gradient n.
+//
+//    Args:
+//        func: Python function that takes Variable inputs and returns
+//            a tuple of Variables
+//        inputs: tuple of Variables
+//        grad_outputs: tuple of Variables
+//        eps: perturbation for finite differences
+//        atol: absolute tolerance
+//        rtol: relative tolerance
+//
+//    Returns:
+//        True if all differences satisfy allclose condition
+/*
+pub fn gradgradcheck(func: Layer,
+                 inputs: &mut Var64List,
+                 grad_outputs: &mut Var64List,
+                 values: GradValues)
+                 -> bool {
+    let mut f = move |input: &Var64List| {
+        let outputs = func(input);
+        let inputs = inputs.iter().map(|v| )
+
+
+
+                 }
+
+*/
