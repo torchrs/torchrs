@@ -444,6 +444,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn gt_value(&self, value: T, out: *mut c_void);
     fn is_valid(&self) -> bool;
     fn inner(&self) -> *mut c_void;
+    fn is_cuda(&self) -> bool;
     fn iter(&self) -> Box<Iterator<Item = T>>;
     fn le_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn le_value(&self, value: T, out: *mut c_void);
@@ -861,6 +862,9 @@ macro_rules! impl_tensor_impl {
             }
             fn inner(&self) -> *mut c_void {
                 self.t as *mut c_void
+            }
+            fn is_cuda(&self) -> bool {
+                false
             }
             fn iter(&self) -> Box<Iterator<Item=$type>> {
                 unimplemented!()

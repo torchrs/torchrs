@@ -401,8 +401,7 @@ impl<T: NumLimits> Tensor<T> {
         self.cast()
     }
     pub fn is_cuda(&self) -> bool {
-        unimplemented!();
-        false
+        self.value.borrow().is_cuda()
     }
     pub fn is_pinned(&self) -> bool {
         unimplemented!()
