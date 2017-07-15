@@ -209,8 +209,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn ceil_(&mut self) -> &mut Self {
         self_inplace_op!(self, ceil)
     }
-    pub fn char(&mut self) -> Self {
-        unimplemented!()
+    pub fn char(&mut self) -> Tensor<i8> {
+        self.cast()
     }
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
         unimplemented!()
@@ -370,8 +370,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn gt_tensor_(&mut self, other: &Self) -> &mut Self {
         binary_inplace_op!(self, other, gt_tensor)
     }
-    pub fn half(&mut self) -> Self {
-        unimplemented!()
+    pub fn half(&mut self) -> Tensor<i16> {
+        self.cast()
     }
     pub fn id(&self) -> usize {
         self.value.borrow().inner() as usize
