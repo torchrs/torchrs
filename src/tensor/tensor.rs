@@ -453,6 +453,9 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn log1p(&mut self, src: *mut c_void);
     fn lt_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn lt_value(&self, value: T, out: *mut c_void);
+    fn masked_fill(&mut self, src: *mut c_void, mask: *mut c_void, value: T);
+    fn masked_scatter(&mut self, src: *mut c_void, mask: *mut c_void, src: *mut c_void);
+    fn masked_select(&mut self, src: *mut c_void, mask: *mut c_void);
     fn max(&self) -> T;
     fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn mean(&self) -> f64;
@@ -888,6 +891,15 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn lt_value(&self, value: $type, out: *mut c_void) {
+                unimplemented!()
+            }
+            fn masked_fill(&mut self, src: *mut c_void, mask: *mut c_void, value: $type) {
+                unimplemented!()
+            }
+            fn masked_scatter(&mut self, src: *mut c_void, mask: *mut c_void, source: *mut c_void) {
+                unimplemented!()
+            }
+            fn masked_select(&mut self, src: *mut c_void, mask: *mut c_void) {
                 unimplemented!()
             }
             fn max(&self) -> $type {

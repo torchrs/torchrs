@@ -476,19 +476,31 @@ impl<T: NumLimits> Tensor<T> {
     //
     // map_
     //
-    pub fn masked_copy_(&mut self, mask: Tensor<u8>, source: &Self) -> &mut Self {
-        unimplemented!()
-    }
-    pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
-        unimplemented!()
-    }
     pub fn masked_fill_(&mut self, mask: Tensor<u8>, value: T) -> &mut Self {
-        unimplemented!();
+        self.value
+            .borrow_mut()
+            .masked_fill(self.inner(), mask.inner(), value);
         self
     }
     pub fn masked_fill(&self, mask: Tensor<u8>, value: T) -> Self {
-        unimplemented!();
-        self.clone()
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .masked_fill(self.inner(), mask.inner(), value);
+        t
+    }
+    pub fn masked_scatter_(&mut self, mask: Tensor<u8>, source: &Self) -> &mut Self {
+        self.value
+            .borrow_mut()
+            .masked_scatter(self.inner(), mask.inner(), source.inner());
+        self
+    }
+    pub fn masked_select(&self, mask: Tensor<u8>) -> Self {
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .masked_select(self.inner(), mask.inner());
+        t
     }
     pub fn max(&self) -> T {
         self.value.borrow().max()
