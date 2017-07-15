@@ -408,7 +408,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn is_set_to(&self, tensor: &Self) -> bool {
-        unimplemented!()
+        self.id() == tensor.id()
     }
     pub fn is_signed(&self) -> bool {
         unimplemented!()
