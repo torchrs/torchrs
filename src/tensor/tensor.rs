@@ -788,7 +788,7 @@ macro_rules! impl_tensor_impl {
                     value: *mut c_void) {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
-            }            
+            }
             fn eq_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 let outp = out as *mut THByteTensor;
                 let otherp = other as *mut $thname;
@@ -878,7 +878,11 @@ macro_rules! impl_tensor_impl {
             fn max(&self) -> $type {
                 unimplemented!()
             }
-            fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool) {
+            fn max_reduce(&self,
+                          values: *mut c_void,
+                          indices: *mut c_void,
+                          dim: usize,
+                          keepdim: bool) {
                 let valuesp = values as *mut $thname;
                 let indicesp = values as *mut THLongTensor;
                 let dim = dim as i32;
@@ -891,7 +895,11 @@ macro_rules! impl_tensor_impl {
             fn min(&self) -> $type {
                 unimplemented!()
             }
-            fn min_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool) {
+            fn min_reduce(&self,
+                          values: *mut c_void,
+                          indices: *mut c_void,
+                          dim: usize,
+                          keepdim: bool) {
                 let valuesp = values as *mut $thname;
                 let indicesp = values as *mut THLongTensor;
                 let dim = dim as i32;
@@ -980,7 +988,7 @@ macro_rules! impl_tensor_impl {
                 let mut ptr: *mut $thname = self.t;
                 for (i, dim) in dims.iter().enumerate() {
                     if *dim == -1 { continue }
-                    ptr = unsafe {concat_idents!($thname, _newSelect)(ptr, i as i32, *dim as i64)  };
+                    ptr = unsafe {concat_idents!($thname, _newSelect)(ptr, i as i32, *dim as i64)};
                 }
                 let t = $name :: from_parts(ptr);
                 Tensor { value: RcMutNew(t) }
