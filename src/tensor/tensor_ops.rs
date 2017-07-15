@@ -195,7 +195,9 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn bmm(&self, other: &Self) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value.borrow_mut().bmm(self.inner(), other.inner());
+        t
     }
     pub fn byte(&mut self) -> Tensor<u8> {
         self.cast()
@@ -213,7 +215,7 @@ impl<T: NumLimits> Tensor<T> {
         self.cast()
     }
     pub fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Self> {
-        unimplemented!()
+        self.value.borrow().chunk(n_chunks, dim)
     }
     pub fn clamp(&self, min: T, max: T) -> Self {
         let t = self.new(()).resize_as_(self);
@@ -296,7 +298,9 @@ impl<T: NumLimits> Tensor<T> {
         self.cast()
     }
     pub fn eig(&self, eigenvectors: bool) -> (Self, Self) {
-        unimplemented!()
+        let (e, v) = (self.new(()), self.new(()));
+        self.value.borrow().eig(eigenvectors, e.inner(), v.inner());
+        (e, v)
     }
     pub fn element_size(&self) -> i32 {
         ::std::mem::size_of::<T>() as i32
@@ -348,8 +352,12 @@ impl<T: NumLimits> Tensor<T> {
     pub fn frac_(&mut self) -> &mut Self {
         self_inplace_op!(self, frac)
     }
-    pub fn gather(&self, dim: i32, index: Tensor<i64>) {
-        unimplemented!()
+    pub fn gather(&self, dim: i32, index: Tensor<i64>) -> Self {
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .gather(self.inner(), dim, index.inner());
+        t
     }
     pub fn ge_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -376,20 +384,28 @@ impl<T: NumLimits> Tensor<T> {
     pub fn id(&self) -> usize {
         self.value.borrow().inner() as usize
     }
-    pub fn index_masked(&self, m: &Tensor<u8>) -> &mut Self {
-        unimplemented!()
-    }
     pub fn index_add_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
-        unimplemented!()
+        self.value
+            .borrow_mut()
+            .index_add(dim, index.inner(), tensor.inner());
+        self
     }
     pub fn index_copy_(&mut self, dim: i32, index: Tensor<i64>, tensor: &Self) -> &mut Self {
-        unimplemented!()
+        self.value
+            .borrow_mut()
+            .index_copy(dim, index.inner(), tensor.inner());
+        self
     }
-    pub fn index_fill_(&mut self, dim: i32, index: Tensor<i64>, val: f32) -> &mut Self {
-        unimplemented!()
+    pub fn index_fill_(&mut self, dim: i32, index: Tensor<i64>, val: T) -> &mut Self {
+        self.value.borrow_mut().index_fill(dim, index.inner(), val);
+        self
     }
     pub fn index_select(&self, dim: i32, index: Tensor<i64>) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .index_select(self.inner(), dim, index.inner());
+        t
     }
     pub fn inner_impl(&self) -> RefMut<TIArg<T>> {
         self.value.borrow_mut()
@@ -412,8 +428,13 @@ impl<T: NumLimits> Tensor<T> {
     pub fn is_signed(&self) -> bool {
         unimplemented!()
     }
-    pub fn kthvalue(&self, k: i32, dim: Option<i32>) -> (Self, Tensor<i64>) {
-        unimplemented!()
+    pub fn kthvalue(&self, k: i32, dim: Option<i32>, keepdim: bool) -> (Self, Tensor<i64>) {
+        let values = self.new(());
+        let indices: Tensor<i64> = ::torch::tensor(());
+        self.value
+            .borrow()
+            .kthvalue(k, dim, keepdim, values.inner(), indices.inner());
+        (values, indices)
     }
     pub fn le_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -517,8 +538,15 @@ impl<T: NumLimits> Tensor<T> {
     pub fn mean(&self) -> f64 {
         self.value.borrow().mean()
     }
-    pub fn mean_reduce(&self, dim: i32) -> (Self, Tensor<i64>) {
-        unimplemented!()
+    pub fn mean_reduce(&self, dim: usize, keepdim: bool) -> (Self, Tensor<i64>) {
+        let mut dims = self.size();
+        dims[dim] = 1;
+        let values = self.new(()).resize_(&dims);
+        let indices: Tensor<i64> = ::torch::tensor(()).resize_(&dims);
+        self.value
+            .borrow()
+            .mean_reduce(values.inner(), indices.inner(), dim, keepdim);
+        (values, indices)
     }
     //
     // median
@@ -606,8 +634,12 @@ impl<T: NumLimits> Tensor<T> {
     //
     // ormqr
     //
-    pub fn permute(&self, dims: &[u32]) -> Self {
-        unimplemented!()
+    pub fn permute<D>(&self, dims: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        let t = self.new(());
+        t.value.borrow_mut().permute(self.inner(), dims.as_ref());
+        t
     }
     pub fn pin_memory(&mut self) -> &mut Self {
         self_inplace_op!(self, pin_memory)
@@ -659,9 +691,12 @@ impl<T: NumLimits> Tensor<T> {
     //
     // renorm_
     //
-    pub fn repeat(&self, sizes: &[i32]) -> Self {
-        // NB: copies data
-        unimplemented!()
+    pub fn repeat<D>(&self, sizes: D) -> Self
+        where D: AsRef<[usize]>
+    {
+        let t = self.new(());
+        t.value.borrow_mut().repeat(self.inner(), sizes.as_ref());
+        t
     }
     pub fn resize_<D>(&mut self, sizes: D) -> Self
         where D: AsRef<[usize]>
@@ -729,7 +764,15 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow().size()
     }
     pub fn sort(&self, dim: Option<i32>, descending: bool) -> (Self, Tensor<i64>) {
-        unimplemented!()
+        let sorted_tensor = self.new(());
+        let sorted_indices: Tensor<i64> = ::torch::tensor(());
+        self.value
+            .borrow()
+            .sort(dim,
+                  descending,
+                  sorted_tensor.inner(),
+                  sorted_indices.inner());
+        (sorted_tensor, sorted_indices)
     }
     pub fn sqrt(&self) -> Self {
         self_op!(self, sqrt)
@@ -779,7 +822,11 @@ impl<T: NumLimits> Tensor<T> {
         out
     }
     pub fn svd(&self, some: bool) -> (Self, Self, Self) {
-        unimplemented!()
+        let (u, s, v) = (self.new(()), self.new(()), self.new(()));
+        self.value
+            .borrow()
+            .svd(some, u.inner(), s.inner(), v.inner());
+        (u, s, v)
     }
     //
     // symeig
@@ -805,8 +852,18 @@ impl<T: NumLimits> Tensor<T> {
     //
     // tolist
     //
-    pub fn topk(k: i32, dim: Option<i32>, largest: bool, sorted: bool) -> (Self, Tensor<i64>) {
-        unimplemented!()
+    pub fn topk(&self,
+                k: i32,
+                dim: Option<i32>,
+                largest: bool,
+                sorted: bool)
+                -> (Self, Tensor<i64>) {
+        let values = self.new(());
+        let indices: Tensor<i64> = ::torch::tensor(());
+        self.value
+            .borrow()
+            .topk(k, dim, largest, sorted, values.inner(), indices.inner());
+        (values, indices)
     }
     pub fn trace(&self) -> Self {
         self_op!(self, trace)

@@ -416,18 +416,21 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
                mat1: *mut c_void,
                mat2: *mut c_void);
     fn bernoulli(&mut self, p: f64);
+    fn bmm(&mut self, a: *mut c_void, b: *mut c_void);
     fn ceil(&mut self, src: *mut c_void);
     fn clamp(&mut self, src: *mut c_void, min: T, max: T);
     fn copy(&mut self, src: &RefTI<T>);
     fn cos(&mut self, src: *mut c_void);
     fn cosh(&mut self, src: *mut c_void);
     fn cross(&mut self, src: *mut c_void, dim: Option<i32>);
+    fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Tensor<T>>;
     fn diag(&mut self, src: *mut c_void, diag: u32);
     fn dim(&self) -> i32;
     fn dist(&self, src: *mut c_void, p: u32) -> f64;
     fn div(&mut self, src: *mut c_void, value: T);
     fn divt(&mut self, src: *mut c_void, value: *mut c_void);
     fn dot(&mut self, src: *mut c_void, value: *mut c_void);
+    fn eig(&self, eigenvectors: bool, e: *mut c_void, v: *mut c_void);
     fn exp(&mut self, src: *mut c_void);
     fn expand(&self, dims: &[usize]) -> Tensor<T>;
     fn eq_tensor(&self, other: *mut c_void, out: *mut c_void);
@@ -436,16 +439,22 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn fmod(&mut self, src: *mut c_void, value: T);
     fn frac(&mut self, src: *mut c_void);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
+    fn gather(&mut self, src: *mut c_void, dim: i32, index: *mut c_void);
     fn gels(&mut self, src: *mut c_void, other: *mut c_void);
     fn ge_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn ge_value(&self, value: T, out: *mut c_void);
     fn get_storage(&self, data: &mut [T]);
     fn gt_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn gt_value(&self, value: T, out: *mut c_void);
-    fn is_valid(&self) -> bool;
+    fn index_add(&mut self, dim: i32, index: *mut c_void, tensor: *mut c_void);
+    fn index_copy(&mut self, dim: i32, index: *mut c_void, tensor: *mut c_void);
+    fn index_fill(&mut self, dim: i32, index: *mut c_void, val: T);
+    fn index_select(&mut self, src: *mut c_void, dim: i32, index: *mut c_void);
     fn inner(&self) -> *mut c_void;
     fn is_cuda(&self) -> bool;
+    fn is_valid(&self) -> bool;
     fn iter(&self) -> Box<Iterator<Item = T>>;
+    fn kthvalue(&self, k: i32, dim: Option<i32>, keepdim: bool, v: *mut c_void, i: *mut c_void);
     fn le_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn le_value(&self, value: T, out: *mut c_void);
     fn len(&self) -> usize;
@@ -460,6 +469,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn max(&self) -> T;
     fn max_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn mean(&self) -> f64;
+    fn mean_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn min(&self) -> T;
     fn min_reduce(&self, values: *mut c_void, indices: *mut c_void, dim: usize, keepdim: bool);
     fn mm(&mut self, mat1: *mut c_void, mat2: *mut c_void);
@@ -470,11 +480,13 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn neg(&mut self, src: *mut c_void);
     fn ne_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn norm(&self, p: i32) -> f64;
+    fn permute(&mut self, src: *mut c_void, dims: &[usize]);
     fn pin_memory(&mut self, src: *mut c_void);
     fn pow(&mut self, src: *mut c_void);
     fn prod(&self, result: &mut f64);
     fn reciprocal(&mut self, src: *mut c_void);
     fn remainder(&mut self, src: *mut c_void, value: T);
+    fn repeat(&mut self, src: *mut c_void, sizes: &[usize]);
     fn resize(&mut self, dims: &[usize]);
     fn round(&mut self, src: *mut c_void);
     fn rsqrt(&mut self, src: *mut c_void);
@@ -486,18 +498,27 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn sin(&mut self, src: *mut c_void);
     fn sinh(&mut self, src: *mut c_void);
     fn size(&self) -> Vec<usize>;
+    fn sort(&self, dim: Option<i32>, descending: bool, t: *mut c_void, i: *mut c_void);
     fn sqrt(&mut self, src: *mut c_void);
     fn std(&self) -> f64;
     fn stride(&self) -> Vec<i32>;
     fn sub(&mut self, src: *mut c_void, rhs: *mut c_void);
     fn squeeze(&mut self, dim: Option<usize>);
-    fn sum_reduce(&mut self, input: *mut c_void, dim: usize, keepdim: bool);
     fn sum_float(&self, result: &mut f64);
+    fn sum_reduce(&mut self, input: *mut c_void, dim: usize, keepdim: bool);
+    fn svd(&self, some: bool, u: *mut c_void, s: *mut c_void, v: *mut c_void);
     fn tan(&mut self, src: *mut c_void);
     fn tanh(&mut self, src: *mut c_void);
+    fn to_rust_tensor(&self) -> RustTensor<T>;
+    fn topk(&self,
+            k: i32,
+            dim: Option<i32>,
+            largest: bool,
+            sorted: bool,
+            v: *mut c_void,
+            i: *mut c_void);
     fn trace(&mut self, src: *mut c_void);
     fn transpose(&mut self, src: *mut c_void, dim0: usize, dim1: usize);
-    fn to_rust_tensor(&self) -> RustTensor<T>;
     fn trunc(&mut self, src: *mut c_void);
     fn unfold(&self, src: *mut c_void, dim: i32, size: i32, step: i32);
     fn uniform(&mut self, range: (f64, f64));
@@ -755,6 +776,9 @@ macro_rules! impl_tensor_impl {
                 let g = Generator::new();
                 unsafe { concat_idents!($thname, _bernoulli)(self.t, g.t, p) };
             }
+            fn bmm(&mut self, a: *mut c_void, b: *mut c_void) {
+                unimplemented!()
+            }
             fn ceil(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
@@ -772,6 +796,9 @@ macro_rules! impl_tensor_impl {
                 unimplemented!();
              }
             fn cross(&mut self, src: *mut c_void, dim: Option<i32>) {
+                unimplemented!()
+            }
+            fn chunk(&self, n_chunks: usize, dim: usize) -> Vec<Tensor<$type>> {
                 unimplemented!()
             }
             fn diag(&mut self, src: *mut c_void, diag: u32) {
@@ -797,6 +824,9 @@ macro_rules! impl_tensor_impl {
                     value: *mut c_void) {
                 let srcp = src as *mut $thname;
                 let valuep = value as *mut $thname;
+            }
+            fn eig(&self, eigenvectors: bool, e: *mut c_void, v: *mut c_void) {
+                unimplemented!()
             }
             fn eq_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 let outp = out as *mut THByteTensor;
@@ -834,6 +864,9 @@ macro_rules! impl_tensor_impl {
                 let d = (unsafe { ((*(*self.t).storage).data) }) as *mut c_void;
                 unsafe {memcpy(d, s, rt.storage.len()) };
             }
+            fn gather(&mut self, src: *mut c_void, dim: i32, index: *mut c_void) {
+                unimplemented!()
+            }
             fn gels(&mut self, src: *mut c_void, other: *mut c_void) {
                 unimplemented!()
             }
@@ -857,8 +890,17 @@ macro_rules! impl_tensor_impl {
             fn gt_value(&self, value: $type, out: *mut c_void) {
                 unimplemented!()
             }
-            fn is_valid(&self) -> bool {
-                self.is_valid()
+            fn index_add(&mut self, dim: i32, index: *mut c_void, tensor: *mut c_void) {
+                unimplemented!()
+            }
+            fn index_copy(&mut self, dim: i32, index: *mut c_void, tensor: *mut c_void) {
+                unimplemented!()
+            }
+            fn index_fill(&mut self, dim: i32, index: *mut c_void, val: $type) {
+                unimplemented!()
+            }
+            fn index_select(&mut self, src: *mut c_void, dim: i32, index: *mut c_void) {
+                unimplemented!()
             }
             fn inner(&self) -> *mut c_void {
                 self.t as *mut c_void
@@ -866,7 +908,18 @@ macro_rules! impl_tensor_impl {
             fn is_cuda(&self) -> bool {
                 false
             }
+            fn is_valid(&self) -> bool {
+                self.is_valid()
+            }
             fn iter(&self) -> Box<Iterator<Item=$type>> {
+                unimplemented!()
+            }
+            fn kthvalue(&self,
+                        k: i32,
+                        dim: Option<i32>,
+                        keepdim: bool,
+                        v: *mut c_void,
+                        i: *mut c_void) {
                 unimplemented!()
             }
             fn le_tensor(&self, other: *mut c_void, out: *mut c_void) {
@@ -921,6 +974,13 @@ macro_rules! impl_tensor_impl {
                 unsafe { concat_idents!($thname, _max)(valuesp, indicesp, self.t, dim, keep) }
             }
             fn mean(&self) -> f64 {
+                unimplemented!()
+            }
+            fn mean_reduce(&self,
+                           values: *mut c_void,
+                           indices: *mut c_void,
+                           dim: usize,
+                           keepdim: bool) {
                 unimplemented!()
             }
             fn min(&self) -> $type {
@@ -978,6 +1038,9 @@ macro_rules! impl_tensor_impl {
             fn norm(&self, p: i32) -> f64 {
                 unimplemented!()
             }
+            fn permute(&mut self, src: *mut c_void, dims: &[usize]) {
+                unimplemented!()
+            }
             fn pin_memory(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
@@ -993,6 +1056,9 @@ macro_rules! impl_tensor_impl {
                 unimplemented!();
              }
             fn remainder(&mut self, src: *mut c_void, value: $type) {
+                unimplemented!()
+            }
+            fn repeat(&mut self, src: *mut c_void, sizes: &[usize]) {
                 unimplemented!()
             }
             fn resize(&mut self, dims: &[usize]) {
@@ -1053,6 +1119,9 @@ macro_rules! impl_tensor_impl {
                                                             (*self.t).nDimension as usize)};
                 d.to_vec()
             }
+            fn sort(&self, dim: Option<i32>, descending: bool, t: *mut c_void, i: *mut c_void) {
+                unimplemented!()
+            }
             fn sqrt(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
@@ -1095,6 +1164,9 @@ macro_rules! impl_tensor_impl {
                 let input = input as *mut $thname;
                 unsafe  { concat_idents!($thname, _sum)(self.t, input, dim as i32, keepdim as i32)};
             }
+            fn svd(&self, some: bool, u: *mut c_void, s: *mut c_void, v: *mut c_void) {
+                unimplemented!()
+            }
             fn tan(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
@@ -1104,10 +1176,19 @@ macro_rules! impl_tensor_impl {
             fn to_rust_tensor(&self) -> RustTensor<$type> {
                 self.to_rust_tensor()
             }
+            fn topk(&self,
+                    k: i32,
+                    dim: Option<i32>,
+                    largest: bool,
+                    sorted: bool,
+                    v: *mut c_void,
+                    i: *mut c_void) {
+                unimplemented!()
+            }
             fn trace(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
-            fn transpose(&mut self, src: *mut c_void, dim0: usize, dim1: usize){
+            fn transpose(&mut self, src: *mut c_void, dim0: usize, dim1: usize) {
                 let (dim0, dim1) = (dim0 as i32, dim1 as i32);
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _transpose)(self.t, srcp, dim0, dim1)};
