@@ -426,6 +426,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn eq_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn fill(&mut self, value: T);
     fn floor(&mut self, src: *mut c_void);
+    fn fmod(&mut self, src: *mut c_void, value: T);
     fn frac(&mut self, src: *mut c_void);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
     fn ge_tensor(&self, other: *mut c_void, out: *mut c_void);
@@ -458,6 +459,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn pow(&mut self, src: *mut c_void);
     fn prod(&self, result: &mut f64);
     fn reciprocal(&mut self, src: *mut c_void);
+    fn remainder(&mut self, src: *mut c_void, value: T);
     fn resize(&mut self, dims: &[usize]);
     fn round(&mut self, src: *mut c_void);
     fn rsqrt(&mut self, src: *mut c_void);
@@ -789,6 +791,9 @@ macro_rules! impl_tensor_impl {
             fn floor(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
+            fn fmod(&mut self, src: *mut c_void, value: $type) {
+                unimplemented!()
+            }
             fn frac(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
@@ -921,6 +926,9 @@ macro_rules! impl_tensor_impl {
             fn reciprocal(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
+            fn remainder(&mut self, src: *mut c_void, value: $type) {
+                unimplemented!()
+            }
             fn resize(&mut self, dims: &[usize]) {
                 let dims : Vec<i64> = dims.iter().map(|v| *v as i64).collect();
                 let dims = LongStorage::with_data(dims);

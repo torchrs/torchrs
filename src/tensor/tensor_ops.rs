@@ -27,12 +27,28 @@ macro_rules! binary_op {
         t
      }}
 }
+macro_rules! binary_scalar_op {
+    ($key:ident, $other:ident, $action:ident ) => {{
+        let t = $key.new(()).resize_as_($key);
+        let inner = $key.inner();
+        t.value.borrow_mut().$action (inner, $other);
+        t
+     }}
+}
 
 macro_rules! binary_inplace_op {
     ($key:ident, $rhs:ident, $action:ident ) => {{
         let inner = $key.inner();
         let rhs = $rhs.inner();
         $key.value.borrow_mut().$action (inner, rhs);
+        $key
+     }}
+}
+
+macro_rules! binary_scalar_inplace_op {
+    ($key:ident, $rhs:ident, $action:ident ) => {{
+        let inner = $key.inner();
+        $key.value.borrow_mut().$action (inner, $rhs);
         $key
      }}
 }
@@ -94,17 +110,10 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, acos)
     }
     pub fn add(&self, rhs: T) -> Self {
-        let t = self.new(()).resize_as_(self);
-        t.value.borrow_mut().add(self.inner(), rhs);
-        t
+        binary_scalar_op!(self, rhs, add)
     }
     pub fn add_(&mut self, rhs: T) -> &mut Self {
-        {
-            let mut selfcell = self.value.borrow_mut();
-            let srcp = selfcell.inner();
-            selfcell.add(srcp, rhs);
-        }
-        self
+        binary_scalar_inplace_op!(self, rhs, add)
     }
     pub fn addt(&self, val: T, rhs: &Self) -> Self {
         let t = self.new(()).resize_as_(self);
@@ -262,19 +271,10 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn div(&self, value: T) -> Self {
-        let t = self.copy();
-        t.value
-            .borrow_mut()
-            .div(self.value.borrow_mut().inner(), value);
-        t
+        binary_scalar_op!(self, value, div)
     }
     pub fn div_(&mut self, value: T) -> &mut Self {
-        {
-            let mut selfcell = self.value.borrow_mut();
-            let srcp = selfcell.inner();
-            selfcell.div(srcp, value);
-        }
-        self
+        binary_scalar_inplace_op!(self, value, div)
     }
     pub fn divt(&self, value: &Self) -> Self {
         binary_op!(self, value, divt)
@@ -330,10 +330,10 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, floor)
     }
     pub fn fmod(&self, divisor: T) -> Self {
-        unimplemented!()
+        binary_scalar_op!(self, divisor, fmod)
     }
     pub fn fmod_(&mut self, divisor: T) -> &mut Self {
-        unimplemented!()
+        binary_scalar_inplace_op!(self, divisor, fmod)
     }
     pub fn frac(&self) -> Self {
         self_op!(self, frac)
@@ -626,10 +626,10 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, reciprocal)
     }
     pub fn remainder(&self, divisor: T) -> Self {
-        unimplemented!()
+        binary_scalar_op!(self, divisor, remainder)
     }
     pub fn remainder_(&mut self, divisor: T) -> &mut Self {
-        unimplemented!()
+        binary_scalar_inplace_op!(self, divisor, remainder)
     }
     //
     // renorm
