@@ -46,6 +46,7 @@ pub trait NumLimits
 impl NumLimits for f32 {}
 impl NumLimits for f64 {}
 impl NumLimits for i32 {}
+impl NumLimits for u16 {}
 impl NumLimits for u32 {}
 impl NumLimits for i64 {}
 impl NumLimits for u8 {}

@@ -197,8 +197,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn bmm(&self, other: &Self) -> Self {
         unimplemented!()
     }
-    pub fn byte(&mut self) -> Self {
-        unimplemented!()
+    pub fn byte(&mut self) -> Tensor<u8> {
+        self.cast()
     }
     //
     // cauchy_
@@ -292,8 +292,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn dot(&self, other: &Self) -> Self {
         binary_op!(self, other, dot)
     }
-    pub fn double(&self) -> Self {
-        unimplemented!()
+    pub fn double(&self) -> Tensor<f64> {
+        self.cast()
     }
     pub fn eig(&self, eigenvectors: bool) -> (Self, Self) {
         unimplemented!()
@@ -327,8 +327,8 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow_mut().fill(value);
         self
     }
-    pub fn float(&mut self) -> Self {
-        unimplemented!()
+    pub fn float(&mut self) -> Tensor<f32> {
+        self.cast()
     }
     pub fn floor(&self) -> Self {
         self_op!(self, floor)
@@ -397,8 +397,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn inner(&self) -> *mut ::std::os::raw::c_void {
         self.value.borrow().inner()
     }
-    pub fn int(&mut self) -> Self {
-        unimplemented!()
+    pub fn int(&mut self) -> Tensor<i32> {
+        self.cast()
     }
     pub fn is_cuda(&self) -> bool {
         unimplemented!();
@@ -457,8 +457,8 @@ impl<T: NumLimits> Tensor<T> {
     //
     // log_normal(...)
     //
-    pub fn long(&mut self) -> Self {
-        unimplemented!()
+    pub fn long(&mut self) -> Tensor<i64> {
+        self.cast()
     }
     pub fn lt_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -567,7 +567,7 @@ impl<T: NumLimits> Tensor<T> {
         out
     }
     pub fn ne_tensor_(&mut self, other: &Self) -> &mut Self {
-        unimplemented!()
+        binary_inplace_op!(self, other, ne_tensor)
     }
     pub fn neg(&self) -> Self {
         self_op!(self, neg)
@@ -687,8 +687,8 @@ impl<T: NumLimits> Tensor<T> {
     //
     // share_memory_
     //
-    pub fn short(&mut self) -> Self {
-        unimplemented!()
+    pub fn short(&mut self) -> Tensor<u16> {
+        self.cast()
     }
     pub fn sigmoid(&self) -> Self {
         self_op!(self, sigmoid)
