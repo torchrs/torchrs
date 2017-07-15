@@ -216,10 +216,13 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn clamp(&self, min: T, max: T) -> Self {
-        unimplemented!()
+        let t = self.new(()).resize_as_(self);
+        t.value.borrow_mut().clamp(self.inner(), min, max);
+        t
     }
     pub fn clamp_(&mut self, min: T, max: T) -> &mut Self {
-        unimplemented!()
+        self.value.borrow_mut().clamp(self.inner(), min, max);
+        self
     }
     pub fn contiguous(&self) -> Self {
         unimplemented!()
@@ -253,7 +256,9 @@ impl<T: NumLimits> Tensor<T> {
         self.clone()
     }
     pub fn cross(&self, dim: Option<i32>) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value.borrow_mut().cross(self.inner(), dim);
+        t
     }
     pub fn cuda(&self, device: Option<i32>) -> Self {
         unimplemented!()
@@ -262,13 +267,15 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn diag(&self, diag: u32) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value.borrow_mut().diag(self.inner(), diag);
+        t
     }
     pub fn dim(&self) -> i32 {
         self.value.borrow().dim()
     }
-    pub fn dist(&self, other: &Self, p: u32) -> f32 {
-        unimplemented!()
+    pub fn dist(&self, other: &Self, p: u32) -> f64 {
+        self.value.borrow().dist(other.inner(), p)
     }
     pub fn div(&self, value: T) -> Self {
         binary_scalar_op!(self, value, div)
@@ -292,7 +299,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn element_size(&self) -> i32 {
-        unimplemented!()
+        ::std::mem::size_of::<T>() as i32
     }
     pub fn eq_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -520,17 +527,10 @@ impl<T: NumLimits> Tensor<T> {
     // mode
     //
     pub fn mul(&self, rhs: T) -> Self {
-        let t = self.copy();
-        t.value.borrow_mut().mul(self.value.borrow().inner(), rhs);
-        t
+        binary_scalar_op!(self, rhs, mul)
     }
     pub fn mul_(&mut self, rhs: T) -> &mut Self {
-        {
-            let mut selfcell = self.value.borrow_mut();
-            let srcp = selfcell.inner();
-            selfcell.mul(srcp, rhs);
-        }
-        self
+        binary_scalar_inplace_op!(self, rhs, mul)
     }
     pub fn mult(&self, rhs: &Self) -> Self {
         binary_op!(self, rhs, mult)
@@ -545,7 +545,11 @@ impl<T: NumLimits> Tensor<T> {
         binary_op!(self, vec, mv)
     }
     pub fn narrow(&self, dim: i32, start: i32, length: i32) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .narrow(self.inner(), dim, start, length);
+        t
     }
     pub fn ndimension(&self) -> i32 {
         self.dim()
@@ -567,8 +571,8 @@ impl<T: NumLimits> Tensor<T> {
     pub fn nonzero(&self) -> Tensor<i64> {
         unimplemented!()
     }
-    pub fn norm(&self, p: i32) -> f32 {
-        unimplemented!()
+    pub fn norm(&self, p: i32) -> f64 {
+        self.value.borrow().norm(p)
     }
     //
     // normal_
@@ -666,7 +670,9 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn select(&self, dim: i32, index: i32) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value.borrow().select(self.inner(), dim, index);
+        t
     }
     //
     // set_
@@ -722,8 +728,8 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow_mut().squeeze(dim);
         self
     }
-    pub fn std(&self) -> f32 {
-        unimplemented!()
+    pub fn std(&self) -> f64 {
+        self.value.borrow().std()
     }
     //
     // storage
@@ -825,7 +831,9 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn unfold(&self, dim: i32, size: i32, step: i32) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value.borrow_mut().unfold(self.inner(), dim, size, step);
+        t
     }
     pub fn uniform_(&mut self, range: (f64, f64)) -> &mut Self {
         self.value.borrow_mut().uniform(range);
