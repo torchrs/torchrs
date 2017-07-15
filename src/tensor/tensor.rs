@@ -376,16 +376,40 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn abs(&mut self, src: *mut c_void);
     fn acos(&mut self, src: *mut c_void);
     fn add(&mut self, src: *mut c_void, value: T);
+    fn addbmm(&mut self,
+              beta: T,
+              bias: *mut c_void,
+              alpha: T,
+              mat1: *mut c_void,
+              mat2: *mut c_void);
     fn addmm(&mut self,
              beta: T,
              bias: *mut c_void,
              alpha: T,
              mat1: *mut c_void,
              mat2: *mut c_void);
+    fn addmv(&mut self,
+             beta: T,
+             bias: *mut c_void,
+             alpha: T,
+             mat1: *mut c_void,
+             mat2: *mut c_void);
+    fn addr(&mut self,
+            beta: T,
+            bias: *mut c_void,
+            alpha: T,
+            mat1: *mut c_void,
+            mat2: *mut c_void);
     fn addt(&mut self, src: *mut c_void, alpha: T, value: *mut c_void);
     fn asin(&mut self, src: *mut c_void);
     fn atan(&mut self, src: *mut c_void);
     fn atan2(&mut self, src: *mut c_void);
+    fn baddbmm(&mut self,
+               beta: T,
+               bias: *mut c_void,
+               alpha: T,
+               mat1: *mut c_void,
+               mat2: *mut c_void);
     fn bernoulli(&mut self, p: f64);
     fn ceil(&mut self, src: *mut c_void);
     fn copy(&mut self, src: &RefTI<T>);
@@ -570,6 +594,23 @@ macro_rules! impl_tensor_impl {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _add)(self.t, srcp, value)};
             }
+            fn addbmm(&mut self,
+                    beta: $type,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addbmm)(self.t,
+                                                    beta,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
             fn addmm(&mut self,
                     beta: $type,
                     bias: *mut c_void,
@@ -580,6 +621,40 @@ macro_rules! impl_tensor_impl {
                 let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
                 unsafe {
                     concat_idents!($thname, _addmm)(self.t,
+                                                    beta,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
+            fn addmv(&mut self,
+                    beta: $type,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addmv)(self.t,
+                                                    beta,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
+            fn addr(&mut self,
+                    beta: $type,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _addr)(self.t,
                                                     beta,
                                                     biasp,
                                                     alpha,
@@ -604,6 +679,23 @@ macro_rules! impl_tensor_impl {
             fn atan2(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
+            fn baddbmm(&mut self,
+                    beta: $type,
+                    bias: *mut c_void,
+                    alpha: $type,
+                    mat1: *mut c_void,
+                    mat2: *mut c_void) {
+                let biasp = bias as *mut $thname;
+                let (mat1p, mat2p) = (mat1 as *mut $thname, mat2 as *mut $thname);
+                unsafe {
+                    concat_idents!($thname, _baddbmm)(self.t,
+                                                    beta,
+                                                    biasp,
+                                                    alpha,
+                                                    mat1p,
+                                                    mat2p)
+                };
+            }
             fn bernoulli(&mut self, p: f64) {
                 let g = Generator::new();
                 unsafe { concat_idents!($thname, _bernoulli)(self.t, g.t, p) };

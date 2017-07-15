@@ -37,6 +37,28 @@ macro_rules! binary_inplace_op {
      }}
 }
 
+macro_rules! gemm_op {
+    ($key:ident, $beta:ident, $alpha:ident, $mat1:ident, $mat2:ident, $action:ident ) => {{
+        let t = $key.new(()).resize_as_($key);
+        let inner = $key.inner();
+        let mat1p = $mat1.inner();
+        let mat2p = $mat2.inner();
+        t.value.borrow_mut().$action ($beta, inner, $alpha, mat1p, mat2p);
+        t
+     }}
+}
+
+macro_rules! gemm_inplace_op {
+    ($key:ident, $beta:ident, $alpha:ident, $mat1:ident, $mat2:ident, $action:ident ) => {{
+        let inner = $key.inner();
+        let mat1p = $mat1.inner();
+        let mat2p = $mat2.inner();
+        $key.value.borrow_mut().$action ($beta, inner, $alpha, mat1p, mat2p);
+        $key
+     }}
+}
+
+
 
 impl<T: NumLimits> Tensor<T> {
     pub fn abs(&self) -> Self {
@@ -53,9 +75,7 @@ impl<T: NumLimits> Tensor<T> {
     }
     pub fn add(&self, rhs: T) -> Self {
         let t = self.new(()).resize_as_(self);
-        t.value
-            .borrow_mut()
-            .add(self.inner(), rhs);
+        t.value.borrow_mut().add(self.inner(), rhs);
         t
     }
     pub fn add_(&mut self, rhs: T) -> &mut Self {
@@ -80,10 +100,10 @@ impl<T: NumLimits> Tensor<T> {
         self
     }
     pub fn addbmm(&self, beta: T, alpha: T, batch1: &Self, batch2: &Self) -> Self {
-        unimplemented!()
+        gemm_op!(self, beta, alpha, batch1, batch2, addbmm)
     }
     pub fn addbmm_(&mut self, beta: T, alpha: T, batch1: &Self, batch2: &Self) -> &mut Self {
-        unimplemented!()
+        gemm_inplace_op!(self, beta, alpha, batch1, batch2, addbmm)
     }
     pub fn addcdiv(&self, value: T, tensor1: &Self, tensor2: &Self) -> Self {
         unimplemented!()
@@ -98,32 +118,22 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn addmm(&self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> Self {
-        let mut t = self.new(());
-        t.value
-            .borrow_mut()
-            .addmm(beta, self.inner(), alpha, mat1.inner(), mat2.inner());
-        t.validate("addmm");
-        t
+        gemm_op!(self, beta, alpha, mat1, mat2, addmm)
     }
     pub fn addmm_(&mut self, beta: T, alpha: T, mat1: &Self, mat2: &Self) -> &mut Self {
-        let bias = self.inner();
-        self.value
-            .borrow_mut()
-            .addmm(beta, bias, alpha, mat1.inner(), mat2.inner());
-        self.validate("addmm_");
-        self
+        gemm_inplace_op!(self, beta, alpha, mat1, mat2, addmm)
     }
     pub fn addmv(&self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> Self {
-        unimplemented!()
+        gemm_op!(self, beta, alpha, tensor1, vec, addmv)
     }
     pub fn addmv_(&mut self, beta: T, alpha: T, tensor1: &Self, vec: &Self) -> &mut Self {
-        unimplemented!()
+        gemm_inplace_op!(self, beta, alpha, tensor1, vec, addmv)
     }
     pub fn addr(&self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> Self {
-        unimplemented!()
+        gemm_op!(self, beta, alpha, vec1, vec2, addr)
     }
     pub fn addr_(&mut self, beta: T, alpha: T, vec1: &Self, vec2: &Self) -> &mut Self {
-        unimplemented!()
+        gemm_inplace_op!(self, beta, alpha, vec1, vec2, addr)
     }
     pub fn asin(&self) -> Self {
         self_op!(self, asin)
@@ -133,7 +143,7 @@ impl<T: NumLimits> Tensor<T> {
     }
     pub fn atan(&self) -> Self {
         self_op!(self, atan)
-    }    
+    }
     pub fn atan2(&self) -> Self {
         self_op!(self, atan2)
     }
@@ -141,10 +151,10 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, atan2)
     }
     pub fn baddbmm(&self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> Self {
-        unimplemented!()
+        gemm_op!(self, beta, alpha, tensor1, tensor2, baddbmm)
     }
     pub fn baddbmm_(&mut self, beta: T, alpha: T, tensor1: &Self, tensor2: &Self) -> &mut Self {
-        unimplemented!()
+        gemm_inplace_op!(self, beta, alpha, tensor1, tensor2, baddbmm)
     }
     pub fn bernoulli(&self, p: f64) -> Self {
         let mut t = self.new(()).resize_as_(self);
@@ -205,7 +215,7 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, cos)
     }
     pub fn cosh(&self) -> Self {
-       self_op!(self, cosh)
+        self_op!(self, cosh)
     }
     pub fn cosh_(&mut self) -> &mut Self {
         self_inplace_op!(self, cosh)
@@ -273,7 +283,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn exp(&self) -> Self {
-       self_op!(self, exp)
+        self_op!(self, exp)
     }
     pub fn exp_(&mut self) -> &mut Self {
         self_inplace_op!(self, exp)
@@ -294,7 +304,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn floor(&self) -> Self {
-       self_op!(self, floor)
+        self_op!(self, floor)
     }
     pub fn floor_(&mut self) -> &mut Self {
         self_inplace_op!(self, floor)
@@ -399,13 +409,13 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn log(&self) -> Self {
-       self_op!(self, log)
+        self_op!(self, log)
     }
     pub fn log_(&mut self) -> &mut Self {
         self_inplace_op!(self, log)
     }
     pub fn log1p(&self) -> Self {
-       self_op!(self, log1p)
+        self_op!(self, log1p)
     }
     pub fn log1p_(&mut self) -> &mut Self {
         self_inplace_op!(self, log1p)
@@ -529,7 +539,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn neg(&self) -> Self {
-       self_op!(self, neg)
+        self_op!(self, neg)
     }
     pub fn neg_(&mut self) -> &mut Self {
         self_inplace_op!(self, neg)
@@ -570,7 +580,7 @@ impl<T: NumLimits> Tensor<T> {
     // potrs
     //
     pub fn pow(&self) -> Self {
-       self_op!(self, pow)
+        self_op!(self, pow)
     }
     pub fn pow_(&mut self) -> &mut Self {
         self_inplace_op!(self, pow)
@@ -590,7 +600,7 @@ impl<T: NumLimits> Tensor<T> {
     // random_
     //
     pub fn reciprocal(&self) -> Self {
-       self_op!(self, reciprocal)
+        self_op!(self, reciprocal)
     }
     pub fn reciprocal_(&mut self) -> &mut Self {
         self_inplace_op!(self, reciprocal)
@@ -627,7 +637,7 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, round)
     }
     pub fn rsqrt(&self) -> Self {
-       self_op!(self, rsqrt)
+        self_op!(self, rsqrt)
     }
     pub fn rsqrt_(&mut self) -> &mut Self {
         self_inplace_op!(self, rsqrt)
@@ -648,7 +658,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn sigmoid(&self) -> Self {
-       self_op!(self, sigmoid)
+        self_op!(self, sigmoid)
 
     }
     pub fn sigmoid_(&mut self) -> &mut Self {
@@ -667,7 +677,7 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, sin)
     }
     pub fn sinh(&self) -> Self {
-       self_op!(self, sinh)
+        self_op!(self, sinh)
     }
     pub fn sinh_(&mut self) -> &mut Self {
         self_inplace_op!(self, sinh)
@@ -679,7 +689,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn sqrt(&self) -> Self {
-       self_op!(self, sqrt)
+        self_op!(self, sqrt)
     }
     pub fn sqrt_(&mut self) -> &mut Self {
         self_inplace_op!(self, sqrt)
@@ -744,7 +754,7 @@ impl<T: NumLimits> Tensor<T> {
         self_inplace_op!(self, tan)
     }
     pub fn tanh(&self) -> Self {
-       self_op!(self, tanh)
+        self_op!(self, tanh)
     }
     pub fn tanh_(&mut self) -> &mut Self {
         self_inplace_op!(self, tanh)
@@ -756,7 +766,7 @@ impl<T: NumLimits> Tensor<T> {
         unimplemented!()
     }
     pub fn trace(&self) -> Self {
-       self_op!(self, trace)
+        self_op!(self, trace)
     }
     pub fn transpose(&self, dim0: usize, dim1: usize) -> Self {
         let t = self.new(()).resize_as_(self);
