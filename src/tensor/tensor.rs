@@ -433,6 +433,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn fmod(&mut self, src: *mut c_void, value: T);
     fn frac(&mut self, src: *mut c_void);
     fn from_rust_tensor(&mut self, rt: RustTensor<T>);
+    fn gels(&mut self, src: *mut c_void, other: *mut c_void);
     fn ge_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn ge_value(&self, value: T, out: *mut c_void);
     fn get_storage(&self, data: &mut [T]);
@@ -444,6 +445,7 @@ pub trait TensorImpl<T: NumLimits>: Index<Ix, Output = T> + IndexMut<Ix> {
     fn le_tensor(&self, other: *mut c_void, out: *mut c_void);
     fn le_value(&self, value: T, out: *mut c_void);
     fn len(&self) -> usize;
+    fn lerp(&mut self, src: *mut c_void, start: *mut c_void, end: *mut c_void, weight: f32);
     fn log(&mut self, src: *mut c_void);
     fn log1p(&mut self, src: *mut c_void);
     fn lt_tensor(&self, other: *mut c_void, out: *mut c_void);
@@ -825,6 +827,9 @@ macro_rules! impl_tensor_impl {
                 let d = (unsafe { ((*(*self.t).storage).data) }) as *mut c_void;
                 unsafe {memcpy(d, s, rt.storage.len()) };
             }
+            fn gels(&mut self, src: *mut c_void, other: *mut c_void) {
+                unimplemented!()
+            }
             fn ge_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 unimplemented!()
             }
@@ -862,6 +867,13 @@ macro_rules! impl_tensor_impl {
             }
             fn len(&self) -> usize {
                 self.len()
+            }
+            fn lerp(&mut self,
+                    src: *mut c_void,
+                    start: *mut c_void,
+                    end: *mut c_void,
+                    weight: f32) {
+                unimplemented!()
             }
             fn log(&mut self, src: *mut c_void) {
                 unimplemented!();

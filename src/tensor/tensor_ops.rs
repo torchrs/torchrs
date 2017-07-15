@@ -306,8 +306,8 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow().eq_tensor(other.inner(), out.inner());
         out
     }
-    pub fn eq_tensor_(&self, other: &Self) -> Self {
-        unimplemented!()
+    pub fn eq_tensor_(&mut self, other: &Self) -> &mut Self {
+        binary_inplace_op!(self, other, eq_tensor)
     }
     pub fn exp(&self) -> Self {
         self_op!(self, exp)
@@ -356,19 +356,19 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow().ge_tensor(other.inner(), out.inner());
         out
     }
-    pub fn ge_tensor_(&self, other: &Self) -> Self {
-        unimplemented!()
+    pub fn ge_tensor_(&mut self, other: &Self) -> &mut Self {
+        binary_inplace_op!(self, other, ge_tensor)
     }
     pub fn gels(&self, other: &Self) -> Self {
-        unimplemented!();
+        binary_op!(self, other, gels)
     }
     pub fn gt_tensor(&self, other: &Self) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
         self.value.borrow().gt_tensor(other.inner(), out.inner());
         out
     }
-    pub fn gt_tensor_(&self, other: &Self) -> Self {
-        unimplemented!()
+    pub fn gt_tensor_(&mut self, other: &Self) -> &mut Self {
+        binary_inplace_op!(self, other, gt_tensor)
     }
     pub fn half(&mut self) -> Self {
         unimplemented!()
@@ -421,8 +421,8 @@ impl<T: NumLimits> Tensor<T> {
         self.value.borrow().le_tensor(other.inner(), out.inner());
         out
     }
-    pub fn le_tensor_(&self, other: &Self) -> Self {
-        unimplemented!()
+    pub fn le_tensor_(&mut self, other: &Self) -> &mut Self {
+        binary_inplace_op!(self, other, le_tensor)
     }
     pub fn le_value(&self, value: T) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
@@ -430,10 +430,17 @@ impl<T: NumLimits> Tensor<T> {
         out
     }
     pub fn lerp(&self, start: &Self, end: &Self, weight: f32) -> Self {
-        unimplemented!()
+        let t = self.new(());
+        t.value
+            .borrow_mut()
+            .lerp(self.inner(), start.inner(), end.inner(), weight);
+        t
     }
-    pub fn lerp_(&self, start: &Self, end: &Self, weight: f32) -> Self {
-        unimplemented!()
+    pub fn lerp_(&mut self, start: &Self, end: &Self, weight: f32) -> &mut Self {
+        self.value
+            .borrow_mut()
+            .lerp(self.inner(), start.inner(), end.inner(), weight);
+        self
     }
     pub fn log(&self) -> Self {
         self_op!(self, log)
@@ -459,7 +466,7 @@ impl<T: NumLimits> Tensor<T> {
         out
     }
     pub fn lt_tensor_(&mut self, other: &Self) -> &mut Self {
-        unimplemented!()
+        binary_inplace_op!(self, other, lt_tensor)
     }
     pub fn lt_value(&self, value: T) -> Tensor<u8> {
         let out: Tensor<u8> = ::torch::tensor(());
