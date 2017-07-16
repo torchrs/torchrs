@@ -631,11 +631,13 @@ macro_rules! impl_tensor_impl {
 
         impl TensorImpl<$type> for $name {
             fn abs(&mut self, src: *mut c_void) {
-                unimplemented!();
-             }
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _abs)(self.t, srcp) };
+            }
             fn acos(&mut self, src: *mut c_void) {
-                unimplemented!();
-             }
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _acos)(self.t, srcp) };
+            }
             fn add(&mut self, src: *mut c_void, value: $type) {
                 let srcp = src as *mut $thname;
                 unsafe {concat_idents!($thname, _add)(self.t, srcp, value)};
@@ -747,10 +749,12 @@ macro_rules! impl_tensor_impl {
                 unsafe { concat_idents!($thname, _cadd)(self.t, valuep, alpha, srcp)};
             }
             fn asin(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _asin)(self.t, srcp) };
              }
             fn atan(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _atan)(self.t, srcp) };
              }
             fn atan2(&mut self, src: *mut c_void) {
                 unimplemented!();
@@ -780,7 +784,8 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn ceil(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _ceil)(self.t, srcp) };
              }
             fn clamp(&mut self, src: *mut c_void, min: $type, max: $type) {
                 unimplemented!()
@@ -790,10 +795,12 @@ macro_rules! impl_tensor_impl {
                 unsafe {concat_idents!($thname, _copy)(self.t, t)}
             }
             fn cos(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _cos)(self.t, srcp) };
              }
             fn cosh(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _cosh)(self.t, srcp) };
              }
             fn cross(&mut self, src: *mut c_void, dim: Option<i32>) {
                 unimplemented!()
@@ -834,7 +841,8 @@ macro_rules! impl_tensor_impl {
                 unsafe {concat_idents!($thname, _eqTensor)(outp, self.t, otherp) }
             }
             fn exp(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _exp)(self.t, srcp) };
              }
             fn expand(&self, dims: &[usize]) -> Tensor<$type> {
                 let dims_long : Vec<i64> = dims.iter().map(|t| *t as i64).collect();
@@ -849,13 +857,15 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn floor(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _floor)(self.t, srcp) };
              }
             fn fmod(&mut self, src: *mut c_void, value: $type) {
                 unimplemented!()
             }
             fn frac(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _frac)(self.t, srcp) };
              }
             fn from_rust_tensor(&mut self, rt: RustTensor<$type>) {
                 let size : Vec<usize> = rt.size.iter().map(|t| *t as usize).collect();
@@ -939,10 +949,12 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn log(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _log)(self.t, srcp) };
              }
             fn log1p(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _log1p)(self.t, srcp) };
              }
             fn lt_tensor(&self, other: *mut c_void, out: *mut c_void) {
                 unimplemented!()
@@ -1030,7 +1042,8 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn neg(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _neg)(self.t, srcp) };
              }
             fn new(&self) -> Tensor<$type> {
                 Tensor { value: RcMutNew($name ::new()) }
@@ -1045,7 +1058,8 @@ macro_rules! impl_tensor_impl {
                 unimplemented!();
              }
             fn pow(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _pow)(self.t, srcp, 1.) };
              }
             fn prod(&self, mut result: &mut f64) {
                 let val: $type;
@@ -1067,10 +1081,12 @@ macro_rules! impl_tensor_impl {
                 unsafe { concat_idents!($thname, _resize)(self.t, dims.t, std::ptr::null_mut()) };
             }
             fn round(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _round)(self.t, srcp) };
              }
             fn rsqrt(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _rsqrt)(self.t, srcp) };
              }
             fn s(&self, dims: &[isize]) -> Tensor<$type> {
                 let sizes = self.size();
@@ -1103,16 +1119,19 @@ macro_rules! impl_tensor_impl {
                 }
             }
             fn sigmoid(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _sigmoid)(self.t, srcp) };
              }
             fn sign(&mut self, src: *mut c_void) {
                 unimplemented!();
              }
             fn sin(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _sin)(self.t, srcp) };
              }
             fn sinh(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _sinh)(self.t, srcp) };
              }
             fn size(&self) -> Vec<usize> {
                 let d = unsafe { std::slice::from_raw_parts((*self.t).size as *mut usize,
@@ -1123,7 +1142,8 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn sqrt(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _sqrt)(self.t, srcp) };
              }
             fn squeeze(&mut self, dim: Option<usize>) {
                 let mut dims = Vec::new();
@@ -1168,10 +1188,12 @@ macro_rules! impl_tensor_impl {
                 unimplemented!()
             }
             fn tan(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _tan)(self.t, srcp) };
              }
             fn tanh(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _tanh)(self.t, srcp) };
              }
             fn to_rust_tensor(&self) -> RustTensor<$type> {
                 self.to_rust_tensor()
@@ -1194,7 +1216,8 @@ macro_rules! impl_tensor_impl {
                 unsafe {concat_idents!($thname, _transpose)(self.t, srcp, dim0, dim1)};
             }
             fn trunc(&mut self, src: *mut c_void) {
-                unimplemented!();
+                let srcp = src as *mut $thname;
+                unsafe { concat_idents!($thname, _trunc)(self.t, srcp) };
              }
             fn unfold(&self, src: *mut c_void, dim: i32, size: i32, step: i32) {
                 unimplemented!()
@@ -1366,6 +1389,68 @@ pub fn THLongTensor_uniform(self_: *mut THLongTensor,
     panic!("no such function")
 }
 
+
+
+macro_rules! impl_tensor_unary_stub {
+    ($thname:ident, $fnname:ident) => {
+        #[allow(non_snake_case)]
+        unsafe fn $fnname (r_: *mut $thname, t: *mut $thname) {
+            panic!("no such function {:?}", r_);
+        }
+    }
+}
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_abs);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_acos);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_asin);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_atan);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_ceil);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_cos);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_cosh);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_exp);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_floor);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_frac);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_log);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_log1p);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_neg);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_round);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_rsqrt);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_sqrt);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_sigmoid);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_sin);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_sinh);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_tan);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_tanh);
+impl_tensor_unary_stub!(THByteTensor, THByteTensor_trunc);
+#[allow(non_snake_case)]
+unsafe fn THByteTensor_pow(r_: *mut THByteTensor, t: *mut THByteTensor, value: f64) {
+    panic!("no such function {:?}", r_);
+}
+
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_acos);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_asin);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_atan);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_ceil);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_cos);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_cosh);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_exp);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_floor);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_frac);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_log);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_log1p);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_neg);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_round);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_rsqrt);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_sqrt);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_sigmoid);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_sin);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_sinh);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_tan);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_tanh);
+impl_tensor_unary_stub!(THLongTensor, THLongTensor_trunc);
+#[allow(non_snake_case)]
+unsafe fn THLongTensor_pow(r_: *mut THLongTensor, t: *mut THLongTensor, value: f64) {
+    panic!("no such function {:?}", r_);
+}
 
 
 
